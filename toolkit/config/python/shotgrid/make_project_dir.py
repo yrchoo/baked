@@ -41,8 +41,9 @@ class FolderStructure():
         self._check_file_exist(f"{addr}/TK")
 
     def _check_file_exist(self, addr):
-        if os.path.exists(addr) : return
         print(addr)
+        os.system(f"touch {addr}/.gitkeep")
+        if os.path.exists(addr) : return
         os.makedirs(addr)
 
     def _get_entity_from_project(self, entity_name):
