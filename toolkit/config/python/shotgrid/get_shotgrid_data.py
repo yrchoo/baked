@@ -3,15 +3,15 @@ try :
     from get_user_data import Get_User_Data
 except :
     from shotgrid.get_user_data import Get_User_Data
-    
+
 class Shotgrid_Data():
     def __init__(self, project_name : str):
         if not project_name or type(project_name) != str:
             raise Exception("Shotgrid_Data() needs 1 argument(str)")
         
         self._set_init_value(project_name)
-        # self._get_auth()
-        # self.get_assigned_task(self.user_info['name'])
+        self._get_auth()
+        self.get_assigned_task(self.user_info['USER_NAME'])
 
     def _set_init_value(self, project_name):
         self.connected = False
@@ -47,7 +47,7 @@ class Shotgrid_Data():
     
     def get_asset_entities(self) -> list[dict]:
         filters_for_seq = [['project', 'is', self.project_data]]
-        fields_for_seq = ['type', 'id', 'code']
+        fields_for_seq = ['type', 'id', 'code', 'sg_asset_type']
         result = self.sg.find("Asset", filters_for_seq, fields_for_seq)
         return result
 
@@ -70,6 +70,8 @@ class Shotgrid_Data():
         return seq
 
     def get_assigned_task(self, name=None) -> list[dict]:
+        if name == None:
+            name = self.user_info["USER_NAME"]
         filters_for_humanuser = [['name', 'is', name]]
         user = self.sg.find_one("HumanUser", filters_for_humanuser)
         filters_for_task = [['task_assignees', 'is', user]]
@@ -78,7 +80,6 @@ class Shotgrid_Data():
         entity_list = []
         for task in tasks:
             entity_list.append(task['entity'])
-        self.user_info.update({"assigned" : entity_list})
         return entity_list
     
     def get_asset_entity(self, asset) -> dict:
@@ -86,6 +87,22 @@ class Shotgrid_Data():
         fields_for_asset = ['id', 'sg_asset_type', 'code']
         asset = self.sg.find_one("Asset", filter_for_asset, fields_for_asset)
         return asset
+    
+    def get_shot_from_code(self, shot_code = None) -> dict:
+        if not shot_code :
+            shot_code = self.user_info["SHOT"]
+        filter_for_shot = [['code', 'is', shot_code]]
+        fields_for_shot = []
+        shot = self.sg.find_one("Shot", filter_for_shot, fields_for_shot)
+        return shot
+
+
+    def get_assets_used_at_shot(self, shot_code = None)-> list[dict]:
+        shot = self.get_shot_from_code(shot_code)
+        filters_for_asset = [['shots', 'is', shot]]
+        fields_for_asset = ['id', 'sg_asset_type', 'code']
+        assets = self.sg.find("Asset", filters_for_asset, fields_for_asset)
+        return assets
 
 
 if __name__ == "__main__":

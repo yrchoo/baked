@@ -38,7 +38,6 @@ class Loader(QWidget):
 
         self.ui.setWindowFlags(self.ui.windowFlags() | Qt.WindowStaysOnTopHint)
 
-
         ui_file.close()
         # self.show()
 
@@ -84,9 +83,17 @@ class Loader(QWidget):
 
     def _set_asset_tree_widget_by_shotgrid(self):
         asset_tree = self.ui.treeWidget_asset
-        assets = self.sg.get_asset_entities()
+        assets = self.sg.get_assets_used_at_shot()
+        
         for asset in  assets:
-            asset_item = self._add_tree_item(asset_tree, asset['code'])
+            grp = asset['sg_asset_type']
+            grp_list = asset_tree.findItems(grp, Qt.MatchExactly, 0)
+            if len(grp_list) == 0:
+                parent_item = QTreeWidgetItem(asset_tree)
+                parent_item.setText(0, grp)
+            else :
+                parent_item = grp_list[0]
+            asset_item = self._add_tree_item(parent_item, asset['code'])
             tasks = self.sg.get_task_from_ent(asset)
             for task in tasks:
                 self._add_tree_item(asset_item, task['content'])
@@ -107,17 +114,13 @@ class Loader(QWidget):
                 # task의 Seq 또는 Asset을 구해서
                 # 부모 아이템으로 추가한 다음에
                 # 그 아래에 해당 shot, task 들을 추가하기...
-                # item = QTreeWidgetItem(task_tree)
-                # item.setText(0, child)  
                 seq_ent = self.sg.get_seq_from_shot(task)
                 seq_list = task_tree.findItems(seq_ent['code'], Qt.MatchExactly, 0)
                 if len(seq_list) == 0:
-                    parent_item = QTreeWidgetItem(task_tree)
-                    parent_item.setText(0, seq_ent['code'])
+                    parent_item = self._add_tree_item(task_tree, seq_ent['code'])
                 else :
                     parent_item = seq_list[0]
-                shot_item = QTreeWidgetItem(parent_item)
-                shot_item.setText(0, task['name'])
+                self._add_tree_item(parent_item, task['name'])
 
                 # task_item = QTreeWidgetItem(shot_item)
                 # task_item.setText(0, self.sg.user_info['task'])    
@@ -129,12 +132,10 @@ class Loader(QWidget):
                 grp = asset['sg_asset_type']
                 grp_list = task_tree.findItems(grp, Qt.MatchExactly, 0)
                 if len(grp_list) == 0:
-                    parent_item = QTreeWidgetItem(task_tree)
-                    parent_item.setText(0, grp)
+                    parent_item = self._add_tree_item(task_tree, grp)
                 else :
                     parent_item = grp_list[0]
-                asset_item = QTreeWidgetItem(parent_item)
-                asset_item.setText(0, task['name'])
+                self._add_tree_item(parent_item, task['name'])
 
                 # task_item = QTreeWidgetItem(asset_item)
                 # task_item.setText(0, self.sg.user_info['task'])
