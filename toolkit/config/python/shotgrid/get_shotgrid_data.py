@@ -11,7 +11,7 @@ class Shotgrid_Data():
         
         self._set_init_value(project_name)
         self._get_auth()
-        self.get_assigned_task(self.user_info['USER_NAME'])
+        self.get_assigned_task(self.user_info['name'])
 
     def _set_init_value(self, project_name):
         self.connected = False
@@ -71,7 +71,7 @@ class Shotgrid_Data():
 
     def get_assigned_task(self, name=None) -> list[dict]:
         if name == None:
-            name = self.user_info["USER_NAME"]
+            name = self.user_info["name"]
         filters_for_humanuser = [['name', 'is', name]]
         user = self.sg.find_one("HumanUser", filters_for_humanuser)
         filters_for_task = [['task_assignees', 'is', user]]
@@ -82,15 +82,15 @@ class Shotgrid_Data():
             entity_list.append(task['entity'])
         return entity_list
     
-    def get_asset_entity(self, asset) -> dict:
-        filter_for_asset = [['id', 'is', asset['id']]]
+    def get_asset_entity(self, asset_name) -> dict:
+        filter_for_asset = [['code', 'is', asset_name]]
         fields_for_asset = ['id', 'sg_asset_type', 'code']
         asset = self.sg.find_one("Asset", filter_for_asset, fields_for_asset)
         return asset
     
     def get_shot_from_code(self, shot_code = None) -> dict:
         if not shot_code :
-            shot_code = self.user_info["SHOT"]
+            shot_code = self.user_info["shot"]
         filter_for_shot = [['code', 'is', shot_code]]
         fields_for_shot = []
         shot = self.sg.find_one("Shot", filter_for_shot, fields_for_shot)
