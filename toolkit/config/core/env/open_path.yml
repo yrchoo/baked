@@ -3,6 +3,10 @@ paths:
   sequence_root: /home/rapa/baked/show/{project}/SEQ
   asset_root: /home/rapa/baked/show/{project}/AST
   toolkit_root: /home/rapa/baked/show/{project}/TK
+  # sequence_root: /Users/yerin/Desktop/NetflixAcademy/baked/show/{project}/SEQ
+  # asset_root: /Users/yerin/Desktop/NetflixAcademy/baked/show/{project}/AST
+  # toolkit_root: /Users/yerin/Desktop/NetflixAcademy/baked/show/{project}/TK
+
 
   my_sequence_path:
     definition: '@sequence_root/{sequence}/{shot}/{task}/dev'
