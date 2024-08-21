@@ -33,7 +33,7 @@ class MakePath():
 
     def _import_yaml_template(self):
         """template.yml import 하는 메서드"""
-        with open('/home/rapa/test_python/YAML_PRAC/sy_template.yml') as f:
+        with open('/home/rapa/baked/toolkit/config/core/env/sy_template.yml') as f:
             yaml_data = yaml.load(f, Loader=yaml.FullLoader)
             yaml_path = yaml_data["paths"]
         return yaml_path
