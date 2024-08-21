@@ -5,18 +5,16 @@ import loader
 import get_shotgrid_data
 
 sg = get_shotgrid_data.Shotgrid_Data("baked")
-load = loader.Loader(sg)
+load = loader.Loader(sg, "nuke")
 
 def init():
-    pass
-
-def _path_validate(path):
-    if os.path.exists(path):
-        return
-    os.makedirs(path)
+    load.OPEN_FILE.connect(open_file)
 
 def show_loader():
     load.show()
+
+def open_file(path):
+    nuke.scriptOpen(path)
 
 init()
 show_loader()

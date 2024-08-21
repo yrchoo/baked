@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>798</width>
-    <height>423</height>
+    <width>870</width>
+    <height>663</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <x>20</x>
      <y>20</y>
      <width>191</width>
-     <height>381</height>
+     <height>571</height>
     </rect>
    </property>
    <property name="currentIndex">
@@ -35,7 +35,7 @@
        <x>0</x>
        <y>0</y>
        <width>191</width>
-       <height>351</height>
+       <height>541</height>
       </rect>
      </property>
      <attribute name="headerVisible">
@@ -95,15 +95,30 @@
     </widget>
    </widget>
   </widget>
-  <widget class="QTableView" name="tableView_files">
+  <widget class="QTableWidget" name="tableWidget_files">
    <property name="geometry">
     <rect>
-     <x>230</x>
+     <x>225</x>
      <y>50</y>
-     <width>551</width>
-     <height>351</height>
+     <width>621</width>
+     <height>541</height>
     </rect>
    </property>
+   <property name="editTriggers">
+    <set>QAbstractItemView::NoEditTriggers</set>
+   </property>
+   <property name="rowCount">
+    <number>0</number>
+   </property>
+   <attribute name="horizontalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+    <bool>false</bool>
+   </attribute>
+   <attribute name="verticalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
   </widget>
  </widget>
  <resources/>
