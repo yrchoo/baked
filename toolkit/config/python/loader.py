@@ -8,13 +8,16 @@ try :
 
 except:
     from PySide2.QtWidgets import QApplication, QWidget, QTreeWidgetItem
-    from PySide2.QtWidgets import QTreeWidget
+    from PySide2.QtWidgets import QTreeWidget, QLabel, QHBoxLayout
     from PySide2.QtUiTools import QUiLoader
     from PySide2.QtCore import QFile, Qt, Signal
     from PySide2.QtGui import QPixmap
 
 import os
-import yaml
+try :
+    import yaml
+except:
+    from pyaml import yaml
 
 try :
     from shotgrid.get_shotgrid_data import Shotgrid_Data
@@ -104,17 +107,28 @@ class Loader(QWidget):
         assets = self.sg.get_asset_entities()
         
         for asset in  assets:
-            grp = asset['sg_asset_type']
-            grp_list = asset_tree.findItems(grp, Qt.MatchExactly, 0)
+            asset_data = {
+                "project" : self.sg.user_info["project"],
+                "sequence" : None,
+                "shot" : None,
+                "asset" : "",
+                "task" : "",
+                "asset_type" : ""
+            }
+            asset_data["asset_type"] = asset['sg_asset_type']
+            grp_list = asset_tree.findItems(asset_data["asset_type"], Qt.MatchExactly, 0)
             if len(grp_list) == 0:
-                parent_item = QTreeWidgetItem(asset_tree)
-                parent_item.setText(0, grp)
+                parent_item = self._add_tree_item(asset_tree, asset_data["asset_type"])
             else :
                 parent_item = grp_list[0]
+            asset_data["asset"] = asset['code']
             asset_item = self._add_tree_item(parent_item, asset['code'])
             tasks = self.sg.get_task_from_ent(asset)
             for task in tasks:
-                self._add_tree_item(asset_item, task['content'])
+                asset_data["task"] = task['content']
+                task_item = self._add_tree_item(asset_item, task['content'])
+                asset_path = self._get_path(asset_data)
+                self._add_to_tree_widget_by_path_recursive(task_item, asset_path)
     
     def _add_tree_item(self, parent_item, text):
         item = QTreeWidgetItem(parent_item)
@@ -145,7 +159,6 @@ class Loader(QWidget):
     def _open_file_from_loader(self, path):
         if self.tool : return
         # file Open을 담당하는 class 생성 path(str)값 전달
-        print(path)
         FileOpen(path)
         
 
@@ -155,10 +168,12 @@ class Loader(QWidget):
             yaml_path = yaml_data["paths"]
         return yaml_path
 
-    def _get_path(self):
+    def _get_path(self, path_data=None):
+        if not path_data:
+            path_data = self.sg.user_info
         yaml_path = self._open_yaml_file()
 
-        if self.sg.user_info["asset"] :
+        if path_data["asset"] :
             level = "asset"
             current = "asset_path"
             root_path = yaml_path["asset_root"]
@@ -167,8 +182,11 @@ class Loader(QWidget):
             current = "sequence_path"
             root_path = yaml_path["sequence_root"]
 
+        if "name" in path_data.keys():
+            current = f"my_{current}"
+        
         new_path = yaml_path[current]["definition"].replace(f"@{level}_root", root_path)
-        new_path = new_path.format(**self.sg.user_info)
+        new_path = new_path.format(**path_data)
         
         # path = f'/home/rapa/baked/show/baked/SEQ/{self.sg.user_info["SEQ"]}/{self.sg.user_info["SHOT"]}/'
         return new_path
@@ -244,7 +262,6 @@ class Loader(QWidget):
     def _make_icon(self, path):
         img_label = QLabel()
         pixmap = QPixmap(path)
-        print(path)
         scaled_pixmap = pixmap.scaled(30, 30)
         img_label.setPixmap(scaled_pixmap)
 

@@ -21,7 +21,7 @@ class Shotgrid_Data():
         }
 
         self.user_info = Get_User_Data().return_data()   
-        print(self.user_info)
+        # print(self.user_info)
 
     def _get_auth(self):
         script_name = "baked"
