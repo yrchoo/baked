@@ -1,0 +1,138 @@
+#
+# The folder structure underneath the project folder is used to create folders on disk -
+# templates.yml (this file) refers to those folders. Therefore, the two files need to be
+# in sync. This file contains an overview of all locations.
+#
+
+
+#
+# The keys section contains the definitions for all the different keys.
+#
+keys:
+  sequence:
+    type:str
+  project:
+    type:str
+  maya_extension:
+        type: str
+        choices:
+            ma: Maya Ascii (.ma)
+            mb: Maya Binary (.mb)
+        default: mb
+        alias: extension
+  asset_type:
+    type:str
+  asset:
+    type:str
+  task:
+    type:str
+  shot:
+    type:str
+  version:
+    type:sequence
+  
+paths:
+  # Common  path definitions to use as shorthand in order to avoid repetitive and verbose
+  # templates. This also makes it easy to change any of the common root paths and have the
+  # changes apply to all templates that use them.
+  #
+  # These don't require the standard formatting (with definition and root_name) because they
+  # will be set within each template that uses the alias.
+
+  # root path
+  sequence_root: /home/rapa/show/{project}/SEQ
+  asset_root: /home/rapa/show/{project}/AST
+  toolkit_root: /home/rapa/show/{project}/TK
+
+
+
+  ##########################################################################################
+  # Sequence pipeline
+
+
+  #
+  # Maya
+  #
+  # The location of developed maya files
+  maya_sequence_dev:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}.{maya_extension}'
+  # The location of developed maya files with tag
+  maya_sequence_dev_with_tag:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}_{tag}.{maya_extension}'
+  # The location of published maya files
+  maya_sequence_pub:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/scenes/{shot}_{task}_v{version}.{maya_extension}'
+  # The location of published maya files with tag
+  maya_sequence_pub_with_tag:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/scenes/{shot}_{task}_v{version}_{tag}.{maya_extension}'
+  
+  # Rendered output
+  maya_sequence_render_movie:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}.mov'
+  maya_sequence_render_exr:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}.####.exr'
+  maya_sequence_render_jpg:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}.####.jpg'
+  maya_sequence_render_png:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}.####.png'
+  
+
+  #
+  # Nuke
+  #
+
+  nuke_sequence_dev:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/nuke/scenes/{shot}_{task}_v{version}.nknc'
+  # The location of published nuke script
+  nuke_sequence_pub:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/scenes/{shot}_{task}_v{version}.nknc'
+  # The location of developed nuke script with tag
+  nuke_sequence_dev_with_tag:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/nuke/scenes/{shot}_{task}_v{version}_{tag}.nknc'
+  # The location of published nuke script with tag
+  nuke_sequence_pub_with_tag:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/scenes/{shot}_{task}_v{version}_{tag}.nknc'
+ 
+  # Rendered output
+  nuke_sequence_render_movie:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/nuke/scenes/{shot}_{task}_v{version}.mov'
+  nuke_sequence_render_exr:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/nuke/scenes/{shot}_{task}_v{version}.####.exr'
+  nuke_sequence_render_jpg:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/nuke/scenes/{shot}_{task}_v{version}.####.jpg'
+  nuke_sequence_render_png:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/nuke/scenes/{shot}_{task}_v{version}.####.png'
+
+
+  ##########################################################################################
+  # Asset pipeline
+  /home/rapa/show/{project}/AST/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}.{maya_extension}'
+  /home/rapa/show/{project}/SEQ/{sequence}/{shot}/{task}/pub/nuke/scenes/{shot}_{task}_v{version}.nknc
+
+  project, asset type, sequence, asset, shot, task, version, maya extension
+
+  #
+  # Maya
+  #
+  # The location of developed maya files
+  maya_asset_dev:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}.{maya_extension}'
+  # The location of published maya files
+  maya_asset_pub:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{task}_v{version}.{maya_extension}'
+  # The location of developed maya files with tag
+  maya_asset_dev_with_tag:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}_{tag}.{maya_extension}'
+  # The location of published maya files with tag
+  maya_asset_pub_with_tag:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{task}_v{version}_{tag}.{maya_extension}'
+  
+  # Rendered output
+  maya_asset_render_movie:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}.mov'
+  maya_asset_render_exr:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}.####.exr'
+  maya_asset_render_jpg:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}.####.jpg'
+  maya_asset_render_png:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}.####.png'
