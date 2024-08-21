@@ -8,11 +8,6 @@ class FolderStructure():
         self._get_auth()
         self._make_project_folder("baked")
 
-        # user = self.sg.find("HumanUser", [['email', 'is', 'yeahrin0723@gmail.com']], ["name"])
-        # print(user)
-        # print("*" * 30)
-        # print(self.sg.schema_entity_read(self.project_data).keys())
-
     def _set_init_value(self):
         self.show_path = "/home/rapa/baked/show"
         self.sg = "" # Shotgun()
@@ -83,9 +78,6 @@ class FolderStructure():
         addr = f"{addr}"
         self._check_file_exist(f"{addr}")
         asset_types = self.sg.schema_field_read("Asset", "sg_asset_type", self.project_data)['sg_asset_type']['properties']['valid_values']['value']
-        # print(self.project_data)
-        # entities = self.sg.schema_entity_read(self.project_data)
-        # print(entities.keys())
         
         for asset_type in asset_types:
             asset_addr = f"{addr}/{asset_type}"

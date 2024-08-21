@@ -1,0 +1,12 @@
+paths:
+  # root path
+  sequence_root: /home/rapa/show/{project}/SEQ
+  asset_root: /home/rapa/show/{project}/AST
+  toolkit_root: /home/rapa/show/{project}/TK
+
+  seq_work_path:
+    nuke: '@sequence_root/{sequence}/{shot}/{task}/dev/nuke/Scenes'
+    maya: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/Scenes'
+
+  asset_path:
+    definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/Scenes'
