@@ -25,8 +25,11 @@ class FileOpen():
     def _run_open_file_cmd(self, tool):
         print (tool)
         if tool == "nuke":
-            cmd = f"source /home/rapa/baked/toolkit/config/core/env/nuke.env && /opt/Nuke/Nuke15.1v1/Nuke15.1 --nc {self.path}"
+            try :
+                cmd = f"source /home/rapa/baked/toolkit/config/core/env/nuke.env && /opt/Nuke/Nuke15.1v1/Nuke15.1 --nc {self.path}"
+            except :
+                print(f"Nuke에서 파일 '{self.path}'를 여는 작업을 하려고 했습니다")
         elif tool == "maya":
-            pass
+            print(f"Maya에서 파일 '{self.path}'를 여는 작업을 하려고 했습니다")
         print(cmd)
         os.system(cmd)
