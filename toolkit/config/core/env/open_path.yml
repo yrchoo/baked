@@ -1,0 +1,11 @@
+paths:
+  # root path
+  sequence_root: /home/rapa/baked/show/{project}/SEQ
+  asset_root: /home/rapa/baked/show/{project}/AST
+  toolkit_root: /home/rapa/baked/show/{project}/TK
+
+  sequence_path:
+    definition: '@sequence_root/{sequence}/{shot}/{task}/dev'
+
+  asset_path:
+    definition: '@asset_root/{asset_type}/{asset}/{task}/dev'
