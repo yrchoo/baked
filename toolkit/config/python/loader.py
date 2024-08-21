@@ -59,7 +59,7 @@ class Loader(QWidget):
         ui_loader = QUiLoader()
         self.ui = ui_loader.load(ui_file, self)
 
-        self.ui.setWindowFlags(self.ui.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.ui.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         ui_file.close()
         # self.show()
