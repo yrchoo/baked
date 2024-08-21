@@ -106,10 +106,6 @@ paths:
 
   ##########################################################################################
   # Asset pipeline
-  /home/rapa/show/{project}/AST/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}.{maya_extension}'
-  /home/rapa/show/{project}/SEQ/{sequence}/{shot}/{task}/pub/nuke/scenes/{shot}_{task}_v{version}.nknc
-
-  project, asset type, sequence, asset, shot, task, version, maya extension
 
   #
   # Maya
