@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>870</width>
-    <height>663</height>
+    <width>871</width>
+    <height>622</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,7 +35,7 @@
        <x>0</x>
        <y>0</y>
        <width>191</width>
-       <height>231</height>
+       <height>191</height>
       </rect>
      </property>
      <attribute name="headerVisible">
@@ -46,6 +46,37 @@
        <string notr="true">1</string>
       </property>
      </column>
+    </widget>
+    <widget class="QTreeWidget" name="treeWidget">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>220</y>
+       <width>191</width>
+       <height>321</height>
+      </rect>
+     </property>
+     <attribute name="headerVisible">
+      <bool>false</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string notr="true">1</string>
+      </property>
+     </column>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>200</y>
+       <width>60</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Material</string>
+     </property>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_seq">
@@ -58,7 +89,7 @@
        <x>0</x>
        <y>0</y>
        <width>191</width>
-       <height>351</height>
+       <height>541</height>
       </rect>
      </property>
      <attribute name="headerVisible">
@@ -81,7 +112,7 @@
        <x>0</x>
        <y>0</y>
        <width>191</width>
-       <height>351</height>
+       <height>541</height>
       </rect>
      </property>
      <attribute name="headerVisible">

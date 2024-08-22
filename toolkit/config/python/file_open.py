@@ -30,6 +30,9 @@ class FileOpen():
             except :
                 print(f"Nuke에서 파일 '{self.path}'를 여는 작업을 하려고 했습니다")
         elif tool == "maya":
-            print(f"Maya에서 파일 '{self.path}'를 여는 작업을 하려고 했습니다")
+            try :
+                cmd = f"'source /home/rapa/baked/toolkit/config/core/env/maya.env && /usr/autodesk/maya2023/bin/maya' {self.path}"
+            except :
+                print(f"Maya에서 파일 '{self.path}'를 여는 작업을 하려고 했습니다")
         print(cmd)
         os.system(cmd)
