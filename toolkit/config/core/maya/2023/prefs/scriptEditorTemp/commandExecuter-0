@@ -1,2 +1,9 @@
 import sys
 print ("Hello World")
+
+
+a = []
+if not a:
+    print ("asdsadasd")
+else:
+    print ("sdffdsfdsfsdfsdf")

@@ -3,6 +3,7 @@ try:
     from PySide6.QtWidgets import QTreeWidgetItem, QMessageBox
     from PySide6.QtUiTools import QUiLoader
     from PySide6.QtCore import QFile, Qt
+    from PySide6.QtGui import QIcon, QPixmap, QFont
     import sys, os, yaml
     from shotgun_api3 import shotgun
     from work_in_maya import MayaAPI
@@ -11,10 +12,12 @@ except:
     from PySide2.QtWidgets import QTreeWidgetItem, QMessageBox
     from PySide2.QtUiTools import QUiLoader
     from PySide2.QtCore import QFile, Qt
-    import sys, os
+    from PySide2.QtGui import QIcon, QPixmap, QFont
+    import sys, os, yaml
     import maya.cmds as cmds
     from shotgun_api3 import shotgun
     from work_in_maya import MayaAPI
+
 
 class Publisher(QWidget):
     def __init__(self):
@@ -26,7 +29,9 @@ class Publisher(QWidget):
         self.ui.checkBox_check.clicked.connect(self._select_all_items)
         self.ui.pushButton_collapse.clicked.connect(self._collapse_tree)
         self.ui.pushButton_expand.clicked.connect(self._expand_tree)
-        self.tree.itemChanged.connect(self._connect_check_state)
+        self.ui.pushButton_publish.clicked.connect(self._publish_file_data)
+        self.ui.pushButton_cancel.clicked.connect(self._cancel_and_close)
+        self.ui.treeWidget.itemSelectionChanged.connect(self._show_file_detail)
 
     def _set_ui(self):
         """ui 셋업해주는 메서드"""
@@ -39,16 +44,15 @@ class Publisher(QWidget):
 
     def _initial_setting(self):
         """초기 ui 세팅하는 메서드"""
+        selected_objects = MayaAPI.get_selected_objects(self)
+        print (selected_objects)
+        if not selected_objects:
+            self._show_message_to_select_item()
+            return
+        self.show()
         self._show_publish_item()
         self._get_published_file_type()
         self.ui.checkBox_check.setChecked(True)
-
-        print (MayaAPI.get_selected_objects(self))
-        if not MayaAPI.get_selected_objects(self):
-            self._show_message_to_select_item()
-        else:
-            self.show()
-
 
     def _show_publish_item(self):
         """퍼블리쉬할 파일을 보여주는 메서드"""
@@ -57,19 +61,41 @@ class Publisher(QWidget):
         self.tree.setColumnWidth(0,200)
         self.tree.setColumnWidth(1,20)
         self.tree.setColumnWidth(2,20)
+        self.tree.setStyleSheet("QTreeWidget::item { margin:5px; height: 40px}")
 
         items = MayaAPI.get_selected_objects(self)
+        file_name = MayaAPI.get_file_name(self)
+        file_parent = QTreeWidgetItem(self.tree)
+        file_parent.setText(0, file_name)
+        self._set_text_bold(file_parent)
+
         for item in items:
-            parent = QTreeWidgetItem(self.tree)
+            parent = QTreeWidgetItem(file_parent)
             parent.setText(0, item)
             parent.setText(1, "")
             parent.setText(2, "")
             parent.setFlags(parent.flags() | Qt.ItemIsUserCheckable)
             parent.setCheckState(1, Qt.Checked)
-            self._make_tree_item("ㄴ Publish to Flow", parent)
-            self._make_tree_item("ㄴ Upload for reivew", parent)
+            self._set_image_icon(parent, "/home/rapa/baked/toolkit/config/python/3d.png")
+            self._set_text_bold(parent)
+            self._make_tree_item("Publish to Flow", parent)
+            self._make_tree_item("Upload for reivew", parent)
+            self.tree.setStyleSheet("QTreeWidget {font-size:12px}")
         self.tree.expandAll()
+
+    def _set_text_bold(self, item):
+        font = QFont()
+        font.setBold(True)
+        item.setFont(0, font)
     
+    def _set_image_icon(self, item, path):
+        icon = QIcon(QPixmap(path))
+        item.setIcon(0, icon)
+    
+    def _show_file_detail(self):
+        text = self.tree.currentItem().text(0)
+        self.ui.lineEdit_file_info.setText(text)
+
     def _make_tree_item(self, text, parent):
         """트리 위젯 아이템 만드는 메서드"""
         item = QTreeWidgetItem(parent)
@@ -78,6 +104,9 @@ class Publisher(QWidget):
         item.setText(2, "")
         item.setFlags(parent.flags() | Qt.ItemIsUserCheckable)
         item.setCheckState(2, Qt.Checked)
+        font = QFont()
+        font.setPointSize(10)
+        item.setFont(0, font)
 
     def _expand_tree(self):
         """트리 위젯을 여는 메서드"""
@@ -154,20 +183,21 @@ class Publisher(QWidget):
             new_path = yaml_path[current]["definition"].replace(f"@{level}_root", root_path)
             new_path = new_path.format(**file_info_dict)   ### 각 키 이름 별로 딕셔너리랑 매칭되게 하는 겁니당
             self._check_validate(new_path)
-        return new_path, tool
+        print (new_path)
+        return new_path
 
     def _get_user_info(self):
         """유저에 대한 정보 가저오는 메서드"""
         user_file_info = {"project":"baked",
                     "seq/asset":"asset",
-                    "asset type": "character",
+                    "asset_type": "character",
                     "asset":"desk",
                     "task":"MOD",
                     "dev/pub":"dev",
                     "tool":"maya",
                     "version":"004",
                     "filename":"desk_MOD_v001",
-                    "extension":"nknc"}
+                    "maya_extension":"mb"}
         return user_file_info
 
     def _make_version_up(self):
@@ -193,6 +223,9 @@ class Publisher(QWidget):
         file_path = "".join(new_path.split("/")[:-2])
         if not os.path.exists(file_path):
             os.makedirs(file_path)
+        
+    def _cancel_and_close(self):
+        self.close()
     
     ########################################shotgun part###############################################
     
@@ -220,26 +253,21 @@ class Publisher(QWidget):
         sg = self._connect_sg()
         asset_steps_list = []
         shot_steps_list = []
-        asset_steps = sg.find("Step", [['entity_type', 'is', 'Asset']], fields=["code"])
-        shot_steps = sg.find("Step", [['entity_type', 'is', 'Shot']], fields=["code"])
-        for asset, shot in zip(asset_steps, shot_steps):
-            asset_steps_list.append(asset['code'])
-            shot_steps_list.append(shot['code'])
+        asset_steps = sg.find("Step", [['entity_type', 'is', 'Asset']], fields=["description"])
+        shot_steps = sg.find("Step", [['entity_type', 'is', 'Shot']], fields=["description"])
+        for asset in asset_steps:
+            asset_steps_list.append(f"[Asset]  {asset['description']}")
+        for shot in shot_steps:
+            shot_steps_list.append(f"[Shot]  {shot['description']}")
+            
         self.ui.comboBox_task.addItems(asset_steps_list)
         self.ui.comboBox_task.addItems(shot_steps_list)
-
-        # for step in asset_pipeline_steps:
-
-        # for info in published_file_type:
-        #     self.ui.comboBox_type.addItem(info['code'])
-        #     published_file_type_list.append(info['code'])
-        # return published_file_type
-
+    
     #######################유저가 입력한 정보를 샷그리드에 넣어주기#################
     def _publish_file_data(self):
-        pass
-        #
+        new_path = self._get_path_using_template()
+        MayaAPI.save_file(self, new_path)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)           
-    app.exec() 
+    # app.exec() 

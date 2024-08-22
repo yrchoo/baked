@@ -63,7 +63,7 @@
      </widget>
     </item>
     <item row="7" column="3">
-     <widget class="QPushButton" name="pushButton_2">
+     <widget class="QPushButton" name="pushButton_publish">
       <property name="text">
        <string>Publish</string>
       </property>
@@ -142,7 +142,7 @@
      </widget>
     </item>
     <item row="7" column="2">
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="pushButton_cancel">
       <property name="text">
        <string>Cancel</string>
       </property>
@@ -177,17 +177,17 @@
       <property name="verticalSpacing">
        <number>2</number>
       </property>
-      <item row="9" column="0" colspan="4">
+      <item row="9" column="0" colspan="5">
        <layout class="QGridLayout" name="gridLayout_5">
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_5">
+        <item row="0" column="0" colspan="3">
+         <widget class="QLabel" name="label_2">
           <property name="text">
-           <string/>
+           <string>Summary</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="0" colspan="3">
-         <widget class="QLabel" name="label_2">
+        <item row="1" column="0" colspan="3">
+         <widget class="QLabel" name="label_5">
           <property name="text">
            <string/>
           </property>
@@ -195,7 +195,54 @@
         </item>
        </layout>
       </item>
-      <item row="0" column="0" colspan="4">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Task</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QComboBox" name="comboBox_type"/>
+      </item>
+      <item row="6" column="3">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>Thumbnail</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Description</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="4">
+       <widget class="QPlainTextEdit" name="plainTextEdit_2">
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>150</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="5">
        <widget class="QLineEdit" name="lineEdit_file_info">
         <property name="minimumSize">
          <size>
@@ -203,9 +250,23 @@
           <height>50</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <pointsize>15</pointsize>
+         </font>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="4">
+      <item row="2" column="1" colspan="4">
+       <widget class="QComboBox" name="comboBox_task"/>
+      </item>
+      <item row="5" column="0" colspan="5">
        <widget class="QLabel" name="label_6">
         <property name="maximumSize">
          <size>
@@ -215,13 +276,6 @@
         </property>
         <property name="text">
          <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>Link</string>
         </property>
        </widget>
       </item>
@@ -235,14 +289,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Task</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0" colspan="4">
+      <item row="1" column="0" colspan="5">
        <spacer name="verticalSpacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -258,26 +305,20 @@
         </property>
        </spacer>
       </item>
-      <item row="3" column="1" colspan="3">
+      <item row="3" column="1" colspan="4">
        <widget class="QComboBox" name="comboBox_link"/>
       </item>
-      <item row="2" column="1" colspan="3">
-       <widget class="QComboBox" name="comboBox_task"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_9">
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_11">
         <property name="text">
-         <string>Type</string>
+         <string>Link</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
-       <widget class="QComboBox" name="comboBox_type"/>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="label_10">
+      <item row="6" column="2">
+       <widget class="QLabel" name="label_14">
         <property name="text">
-         <string>Description</string>
+         <string>    </string>
         </property>
         <property name="alignment">
          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
