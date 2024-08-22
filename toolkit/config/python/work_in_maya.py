@@ -8,6 +8,12 @@ import datetime
 class MayaAPI():
     def __init__(self):
         pass
+    
+    def get_file_name(self):
+        filepath = cmds.file(q=True, sn=True)
+        filename = os.path.basename(filepath)
+        raw_name, extension = os.path.splitext(filename)
+        return filename
 
     def get_selected_objects(self):
         assets = cmds.ls(sl=True)
@@ -68,3 +74,10 @@ class MayaAPI():
                     shader_dictionary[shader_name] = []
                 shader_dictionary[shader_name].extend(objects)
         return shader_dictionary
+
+    def save_file(self, path):
+        file_path, name = os.path.split(path)
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        cmds.file(rename=name)
+        cmds.file(save=True)

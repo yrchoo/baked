@@ -29,7 +29,7 @@ def publisher_func():
     import publisher
     reload(publisher)
     win = publisher.Publisher()
-    win.show()
+    # win.show()
     
 def add_custom_menu():
     """

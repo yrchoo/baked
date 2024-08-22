@@ -1,0 +1,19 @@
+//Maya Preference 2023 (Release 1)
+//
+//
+
+optionVar -version 3;
+
+// RecentFiles
+optionVar -cat "RecentFiles"
+ -sa "RecentFilesList"
+ -sva "RecentFilesList" "/home/rapa/my_maya/Imtestingmaya.mb"
+ -sva "RecentFilesList" "/home/rapa/my_maya/turntable_v001.mb"
+ -iv "RecentFilesMaxSize" 10
+ -sa "RecentFilesTypeList"
+ -sva "RecentFilesTypeList" "mayaBinary"
+ -sva "RecentFilesTypeList" "mayaBinary"
+ -sa "RecentProjectsList"
+ -iv "RecentProjectsMaxSize" 10
+ ;
+
