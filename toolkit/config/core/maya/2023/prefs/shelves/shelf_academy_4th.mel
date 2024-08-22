@@ -7,7 +7,7 @@ global proc shelf_academy_4th () {
     shelfButton
         -enableCommandRepeat 1
         -flexibleWidthType 3
-        -flexibleWidthValue 32
+        -flexibleWidthValue 25
         -enable 1
         -width 28
         -height 34
