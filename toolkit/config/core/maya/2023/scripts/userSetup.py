@@ -1,4 +1,4 @@
-print ("Hello userSetup.py")
+print ("------------UserSetup------------")
 import maya.utils as mu
 import test_menu
 

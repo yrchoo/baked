@@ -1,6 +1,6 @@
 {
     "autoSave": true,
-    "selectedShelf": "academy_4th",
+    "selectedShelf": "Polygons",
     "panels": [
         {
             "mainWindowPanel": true,
@@ -352,8 +352,8 @@
     "closedControls": [
         {
             "objectName": "scriptEditorPanel1Window",
-            "posX": 679,
-            "posY": 290,
+            "posX": 221,
+            "posY": 250,
             "controlHeight": 643,
             "controlWidth": 696,
             "widthProperty": "free",
