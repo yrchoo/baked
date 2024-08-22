@@ -33,7 +33,6 @@ class FolderStructure():
         self._check_file_exist(addr)
         self._make_asset_folder(f"{addr}/AST")
         self._make_seq_folder(f"{addr}/SEQ")
-        self._check_file_exist(f"{addr}/TK")
 
     def _check_file_exist(self, addr):
         print(addr)
