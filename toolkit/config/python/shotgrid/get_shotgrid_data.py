@@ -58,6 +58,8 @@ class Shotgrid_Data():
         return shots
     
     def get_task_from_ent(self, ent) -> list[dict]:
+        if not ent :
+            return []
         filters_for_task = [['entity', 'is', ent]]
         fields_for_task = ['type', 'id', 'content']
         tasks = self.sg.find("Task", filters_for_task, fields_for_task)
@@ -75,10 +77,11 @@ class Shotgrid_Data():
         filters_for_humanuser = [['name', 'is', name]]
         user = self.sg.find_one("HumanUser", filters_for_humanuser)
         filters_for_task = [['task_assignees', 'is', user]]
-        fields_for_task = ['content', 'entity']
+        fields_for_task = ['content', 'entity', 'task_assignees']
         tasks = self.sg.find("Task", filters_for_task, fields_for_task)
         entity_list = []
         for task in tasks:
+            print(task)
             entity_list.append(task['entity'])
         return entity_list
     
@@ -91,6 +94,7 @@ class Shotgrid_Data():
     def get_shot_from_code(self, shot_code = None) -> dict:
         if not shot_code :
             shot_code = self.user_info["shot"]
+        if not shot_code : return None
         filter_for_shot = [['code', 'is', shot_code]]
         fields_for_shot = []
         shot = self.sg.find_one("Shot", filter_for_shot, fields_for_shot)
