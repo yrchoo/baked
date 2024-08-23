@@ -7,11 +7,12 @@ class FileOpen():
         self.path = path
         self._set_tool_program_val()
 
-        if tool :
-            pass
-        else: # 현재 사용중인 툴이 없을 때
-            tool = self._get_tool_data(tool)
+        if not tool :
+             # 현재 사용중인 툴이 없을 때
+            tool = self._get_tool_data()
             self._run_open_file_cmd(tool)
+        else :
+            self._load_file(tool)
 
 
     def _set_tool_program_val(self):
