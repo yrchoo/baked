@@ -20,10 +20,10 @@ import yaml
 
 try :
     from shotgrid.get_shotgrid_data import Shotgrid_Data
-    from file_open import FileOpen
 except :
     from get_shotgrid_data import Shotgrid_Data
-    from file_open import FileOpen
+    
+from file_open import FileOpen
 
 class Loader(QWidget):
     OPEN_FILE = Signal(str)
@@ -261,15 +261,27 @@ class Loader(QWidget):
         dirs = os.listdir(self.my_path)
         row = 0
         self._set_table_for_file_list()
+        img_file_list = []
         for dir in dirs:
-            self.ui.tableWidget_files.setRowCount(row + 1)
             if not os.path.isdir(f"{self.my_path}/{dir}"):
+                file_name = dir.split('.')[0]
+                ext = dir.split('.')[-1]
+                print(dir)
+                if ext in ["png", "exr"] :
+                    if f"{file_name}.{ext}" in img_file_list:
+                        continue
+                    img_file_list.append(f"{dir.split('.')[0]}.{dir.split('.')[-1]}")
+                    dir = f"{file_name}.####.{ext}"
+                    print(dir)
+                print("-" * 30)
                 if dir[0] == '.' :
                     continue
+                self.ui.tableWidget_files.setRowCount(row + 1)
                 cell = self._make_file_cell(dir)
             else : 
                 if dir[0] == '.' :
                     continue
+                self.ui.tableWidget_files.setRowCount(row + 1)
                 cell = self._make_dir_cell(dir)
             self.ui.tableWidget_files.setCellWidget(row, 0, cell)
             self.ui.tableWidget_files.setRowHeight(row,50)
@@ -333,6 +345,10 @@ class Loader(QWidget):
         current_treeWidget = current_tab.findChildren(QTreeWidget)[0]
 
         cur_item = current_treeWidget.currentItem()
+        if not cur_item:
+            cur_item = current_treeWidget.findItems(item_text, Qt.MatchExactly, 0)[0]
+            current_treeWidget.setCurrentItem(cur_item, 0)
+
         cur_item.setExpanded(True)
 
         item = None
@@ -383,6 +399,7 @@ class Loader(QWidget):
     
     def _make_icon(self, path, w=30, h=30):
         img_label = QLabel()
+        img_label.setAlignment(Qt.AlignCenter)
         pixmap = QPixmap(path)
         scaled_pixmap = pixmap.scaled(w, h)
         img_label.setPixmap(scaled_pixmap)
@@ -416,6 +433,9 @@ class Loader(QWidget):
         dir_path = self._get_current_item_path("asset")
         name, ext = os.path.splitext(file_name)
         path = f"{dir_path}/.thumbnail/{name}.png"
+        if not os.path.exists(path) :
+            path = f"{os.path.dirname(__file__)}/icons/{ext.split('.')[-1]}.png"
+
         img_label = self._make_icon(path, 100, 100)
 
         name_label = QLabel()

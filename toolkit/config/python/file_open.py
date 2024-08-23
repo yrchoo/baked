@@ -1,12 +1,17 @@
 import os
 
+from load_scripts.nuke_file_load import LoadNukeFile
+
 class FileOpen():
-    def __init__(self, path):
+    def __init__(self, path, tool = None):
         self.path = path
         self._set_tool_program_val()
 
-        tool = self._get_tool_data()
-        self._run_open_file_cmd(tool)
+        if tool :
+            pass
+        else: # 현재 사용중인 툴이 없을 때
+            tool = self._get_tool_data(tool)
+            self._run_open_file_cmd(tool)
 
 
     def _set_tool_program_val(self):
@@ -36,3 +41,7 @@ class FileOpen():
                 print(f"Maya에서 파일 '{self.path}'를 여는 작업을 하려고 했습니다")
         print(cmd)
         os.system(cmd)
+
+    def _load_file(self, tool):
+        if tool == "nuke":
+            LoadNukeFile(self.path)
