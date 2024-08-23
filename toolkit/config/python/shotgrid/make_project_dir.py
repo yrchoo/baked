@@ -36,9 +36,9 @@ class FolderStructure():
 
     def _check_file_exist(self, addr):
         print(addr)
-        os.system(f"touch {addr}/.gitkeep")
+        # os.system(f"touch {addr}/.gitkeep")
         if os.path.exists(addr) : return
-        os.makedirs(addr)
+        # os.makedirs(addr)
 
     def _get_entity_from_project(self, entity_name):
         filters = [['project', 'is', self.project_data]]
@@ -91,7 +91,7 @@ class FolderStructure():
     def _make_task_folder(self, addr, obj):
         tasks = self._get_entity_from_another("Task", "entity", obj)
         for task in tasks:
-            task_name = task['content']
+            task_name = task['content'].upper()
             self._check_file_exist(f"{addr}/{task_name}")
             self._make_dev_pub(f"{addr}/{task_name}")
 
