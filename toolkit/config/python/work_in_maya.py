@@ -10,12 +10,13 @@ class MayaAPI():
         pass
     
     def get_file_name(self):
+        """현재 열려있는 마야 파일 이름 가져오는 메서드"""
         filepath = cmds.file(q=True, sn=True)
         filename = os.path.basename(filepath)
-        raw_name, extension = os.path.splitext(filename)
         return filename
 
     def get_selected_objects(self):
+        """선택한 오브젝트 리스트 가져오는 메서드"""
         assets = cmds.ls(sl=True)
         return assets # 리스트
 
@@ -76,6 +77,7 @@ class MayaAPI():
         return shader_dictionary
 
     def save_file(self, path):
+        """마야 파일 저장하는 메서드"""
         file_path, name = os.path.split(path)
         if not os.path.exists(file_path):
             os.makedirs(file_path)
