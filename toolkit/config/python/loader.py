@@ -59,17 +59,35 @@ class Loader(QWidget):
         ui_loader = QUiLoader()
         self.ui = ui_loader.load(ui_file, self)
 
-        self.ui.setWindowFlags(Qt.WindowStaysOnTopHint)
+        if self.tool :
+            self.setWindowFlags(Qt.WindowStaysOnTopHint) # tool 내에서 열릴 때에만 
 
         ui_file.close()
         # self.show()
 
     def _set_event(self):
-        self.ui.tableWidget_files.cellDoubleClicked.connect(self._find_dir_name_in_tree)
-        self.ui.treeWidget_task.currentItemChanged.connect(self._set_my_task_table_widget)
         self.OPEN_FILE.connect(self._open_file_from_loader)
+
+        self.ui.tableWidget_files.cellDoubleClicked.connect(self._find_dir_name_in_tree)
+
+        self.ui.treeWidget_task.currentItemChanged.connect(self._set_my_task_table_widget)
+        self.ui.treeWidget_task.itemClicked.connect(self._set_my_task_table_widget)
+
         self.ui.treeWidget_asset.currentItemChanged.connect(self._set_asset_table_widget)
+        self.ui.treeWidget_asset.itemClicked.connect(self._set_asset_table_widget)
+
         self.ui.treeWidget_seq.currentItemChanged.connect(self._set_seq_table_widget)
+        self.ui.treeWidget_seq.itemClicked.connect(self._set_seq_table_widget)
+
+        self.ui.tabWidget_task.currentChanged.connect(self._change_table_data)
+
+    def _change_table_data(self, index):
+        if index == 0:
+            self._set_my_task_table_widget()
+        elif index == 1:
+            self._set_seq_table_widget()
+        elif index == 2:
+            self._set_asset_table_widget()
 
     def _set_tree_widget_data(self):
         if not self.sg.connected : # Shotgrid connection failed...
@@ -100,7 +118,7 @@ class Loader(QWidget):
 
     def _set_seq_tree_widget_by_shotgrid(self):
         seq_tree = self.ui.treeWidget_seq
-        seq_data = {
+        self.seq_data = {
             "project" : self.sg.user_info["project"],
             "sequence" : None,
             "shot" : None,
@@ -110,23 +128,23 @@ class Loader(QWidget):
         }
         seqs = self.sg.get_sequences_entities()
         for seq in seqs:
-            seq_data["sequence"] = seq['code']
+            self.seq_data["sequence"] = seq['code']
             seq_item = self._add_tree_item(seq_tree, seq['code'])
             shots = self.sg.get_shot_from_seq(seq)
             for shot in shots:
-                seq_data["shot"] = shot['code']
+                self.seq_data["shot"] = shot['code']
                 shot_item = self._add_tree_item(seq_item, shot['code'])
                 tasks = self.sg.get_task_from_ent(shot)
                 for task in tasks:
-                    seq_data["task"] = task['content']
+                    self.seq_data["task"] = task['content']
                     task_item = self._add_tree_item(shot_item, task['content'])
-                    seq_path = self._get_path(seq_data)
+                    seq_path = self._get_path(self.seq_data)
                     self._add_to_tree_widget_by_path_recursive(task_item, seq_path)
 
     def _set_asset_tree_widget_by_shotgrid(self):
         asset_tree = self.ui.treeWidget_asset
         assets = self.sg.get_asset_entities()
-        asset_data = {
+        self.asset_data = {
             "project" : self.sg.user_info["project"],
             "sequence" : None,
             "shot" : None,
@@ -136,19 +154,19 @@ class Loader(QWidget):
         }
         
         for asset in  assets:
-            asset_data["asset_type"] = asset['sg_asset_type']
-            grp_list = asset_tree.findItems(asset_data["asset_type"], Qt.MatchExactly, 0)
+            self.asset_data["asset_type"] = asset['sg_asset_type']
+            grp_list = asset_tree.findItems(self.asset_data["asset_type"], Qt.MatchExactly, 0)
             if len(grp_list) == 0:
-                parent_item = self._add_tree_item(asset_tree, asset_data["asset_type"])
+                parent_item = self._add_tree_item(asset_tree, self.asset_data["asset_type"])
             else :
                 parent_item = grp_list[0]
-            asset_data["asset"] = asset['code']
+            self.asset_data["asset"] = asset['code']
             asset_item = self._add_tree_item(parent_item, asset['code'])
             tasks = self.sg.get_task_from_ent(asset)
             for task in tasks:
-                asset_data["task"] = task['content']
+                self.asset_data["task"] = task['content']
                 task_item = self._add_tree_item(asset_item, task['content'])
-                asset_path = self._get_path(asset_data)
+                asset_path = self._get_path(self.asset_data)
                 self._add_to_tree_widget_by_path_recursive(task_item, asset_path)
     
     def _add_tree_item(self, parent_item, text):
@@ -228,6 +246,8 @@ class Loader(QWidget):
                     continue
                 cell = self._make_file_cell(dir)
             else : 
+                if dir[0] == '.' :
+                    continue
                 cell = self._make_dir_cell(dir)
             self.ui.tableWidget_files.setCellWidget(row, 0, cell)
             self.ui.tableWidget_files.setRowHeight(row,50)
@@ -237,38 +257,43 @@ class Loader(QWidget):
         """
         현재 table에 띄우는 값이 seq tab의 데이터인지 asset tab인지를 받아와서 출력하는 메서드
         """
-        cur_path = self._get_current_item_path("sequence")
-        dirs = os.listdir(cur_path)
+        self.my_path = self._get_current_item_path("sequence")
+        dirs = os.listdir(self.my_path)
         row = 0
         self._set_table_for_file_list()
         for dir in dirs:
             self.ui.tableWidget_files.setRowCount(row + 1)
-            if not os.path.isdir(f"{cur_path}/{dir}"):
+            if not os.path.isdir(f"{self.my_path}/{dir}"):
                 if dir[0] == '.' :
                     continue
                 cell = self._make_file_cell(dir)
             else : 
+                if dir[0] == '.' :
+                    continue
                 cell = self._make_dir_cell(dir)
             self.ui.tableWidget_files.setCellWidget(row, 0, cell)
             self.ui.tableWidget_files.setRowHeight(row,50)
             row += 1
 
+
     def _set_asset_table_widget(self):
         """
         현재 table에 띄우는 값이 seq tab의 데이터인지 asset tab인지를 받아와서 출력하는 메서드
         """
-        cur_path = self._get_current_item_path("asset")
-        dirs = os.listdir(cur_path)
+        self.my_path = self._get_current_item_path("asset")
+        dirs = os.listdir(self.my_path)
         col = 0
         row = 0
         self._set_table_for_asset_list()
         for dir in dirs:
             self.ui.tableWidget_files.setRowCount(row + 1)
-            if not os.path.isdir(f"{cur_path}/{dir}"):
+            if not os.path.isdir(f"{self.my_path}/{dir}"):
                 if dir[0] == '.' :
                     continue
                 cell = self._make_asset_cell(dir)
             else : 
+                if dir[0] == '.' :
+                    continue
                 cell = self._make_asset_dir_cell(dir)
             self.ui.tableWidget_files.setCellWidget(row, col, cell)
             self.ui.tableWidget_files.setRowHeight(row,206)
@@ -318,7 +343,7 @@ class Loader(QWidget):
                 break
 
         if not item :
-            self._open_file(f"{self.my_path}/{item_text}")
+            self._open_file(f"{self.my_path}{item_text}")
         else : current_treeWidget.setCurrentItem(item, 0)
         
     def _make_dir_cell(self, dir_name, w=30, h=30):

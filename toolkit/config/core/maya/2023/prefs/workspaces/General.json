@@ -347,44 +347,17 @@
                     }
                 ]
             }
-        },
+        }
+    ],
+    "closedControls": [
         {
-            "mainWindowPanel": false,
-            "posX": 652,
-            "posY": 433,
-            "splitter": {
-                "orientation": "horizontal",
-                "children": [
-                    {
-                        "tabWidget": {
-                            "selectedIndex": 0,
-                            "controlWidth": 696,
-                            "controlHeight": 643,
-                            "collapsed": false,
-                            "controls": [
-                                {
-                                    "objectName": "scriptEditorPanel1Window",
-                                    "title": "Script Editor",
-                                    "uiScript": "if(!`panel -q -exists scriptEditorPanel1`) {\n\tint $menusOkayInPanels = `optionVar -q allowMenusInPanels`;\n\tstring $panelName = \"scriptEditorPanel1\";\n\tscriptedPanel -unParent  -type \"scriptEditorPanel\" -l (localizedPanelLabel(\"Script Editor\")) -mbv $menusOkayInPanels  scriptEditorPanel1;\n} else {\n\tscriptedPanel -e -unParent scriptEditorPanel1;\n}\nscriptedPanel -e -parent scriptEditorPanel1Window scriptEditorPanel1;\n",
-                                    "retain": false,
-                                    "deleteLater": true,
-                                    "loadImmediately": false,
-                                    "checkPlugins": false,
-                                    "actLikeMayaUIElement": false,
-                                    "layoutDirectionCallback": "",
-                                    "layoutDirection": "vertical",
-                                    "tabDirection": 0,
-                                    "closed": false,
-                                    "widthProperty": "free",
-                                    "heightProperty": "free",
-                                    "controlWidth": 696,
-                                    "controlHeight": 643
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
+            "objectName": "scriptEditorPanel1Window",
+            "posX": 803,
+            "posY": 246,
+            "controlHeight": 643,
+            "controlWidth": 696,
+            "widthProperty": "free",
+            "heightProperty": "free"
         }
     ]
 }
