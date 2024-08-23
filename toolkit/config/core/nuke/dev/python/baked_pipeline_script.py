@@ -9,10 +9,12 @@ import os
 import loader
 import get_shotgrid_data
 import save
+import file_tracker
 
 sg = get_shotgrid_data.Shotgrid_Data("baked")
 load_win = loader.Loader(sg, "nuke")
 save_win = save.SaveFile()
+tracker_win = file_tracker.Tracker()
 
 def init():
     load_win.OPEN_FILE.connect(open_file)
@@ -37,4 +39,5 @@ def save_file(path):
     nuke.scriptSaveAs(path)
 
 init()
-show_loader()
+if nuke.root().knob("name").value() == "" : 
+    show_loader()

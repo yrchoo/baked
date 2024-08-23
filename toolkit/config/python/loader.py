@@ -264,18 +264,15 @@ class Loader(QWidget):
         img_file_list = []
         for dir in dirs:
             if not os.path.isdir(f"{self.my_path}/{dir}"):
+                if dir[0] == '.' :
+                    continue
                 file_name = dir.split('.')[0]
                 ext = dir.split('.')[-1]
-                print(dir)
                 if ext in ["png", "exr"] :
                     if f"{file_name}.{ext}" in img_file_list:
                         continue
                     img_file_list.append(f"{dir.split('.')[0]}.{dir.split('.')[-1]}")
                     dir = f"{file_name}.####.{ext}"
-                    print(dir)
-                print("-" * 30)
-                if dir[0] == '.' :
-                    continue
                 self.ui.tableWidget_files.setRowCount(row + 1)
                 cell = self._make_file_cell(dir)
             else : 
@@ -359,7 +356,11 @@ class Loader(QWidget):
                 break
 
         if not item :
+            path = f"{self.my_path}{item_text}"
+            if os.path.isdir(path) :
+                return
             self._open_file(f"{self.my_path}{item_text}")
+            
         else : current_treeWidget.setCurrentItem(item, 0)
         
     def _make_dir_cell(self, dir_name, w=30, h=30):
@@ -384,7 +385,7 @@ class Loader(QWidget):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignCenter)
 
-        img_label = self._make_icon(f"{os.path.dirname(__file__)}/icons/folder.png", 100, 100)
+        img_label = self._make_icon(f"{os.path.dirname(__file__)}/icons/folder.png")
 
         name_label = QLabel()
         name_label.setObjectName("name_label")
@@ -397,12 +398,14 @@ class Loader(QWidget):
         cell.setLayout(layout)
         return cell
     
-    def _make_icon(self, path, w=30, h=30):
+    def _make_icon(self, path, w=None, h=None):
         img_label = QLabel()
         img_label.setAlignment(Qt.AlignCenter)
         pixmap = QPixmap(path)
-        scaled_pixmap = pixmap.scaled(w, h)
-        img_label.setPixmap(scaled_pixmap)
+        if w and h:
+            pixmap = pixmap.scaled(w, h)
+        img_label.setPixmap(pixmap)
+        img_label.setScaledContents(True)
 
         return img_label
         
@@ -412,7 +415,7 @@ class Loader(QWidget):
         layout.setAlignment(Qt.AlignLeft)
 
         ext = file_name.split('.')[-1]
-        img_label = self._make_icon(f"{os.path.dirname(__file__)}/icons/{ext}.png")
+        img_label = self._make_icon(f"{os.path.dirname(__file__)}/icons/{ext}.png", 30, 30)
 
         name_label = QLabel()
         name_label.setObjectName("name_label")
