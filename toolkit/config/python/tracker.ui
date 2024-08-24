@@ -58,7 +58,7 @@
         <widget class="QLineEdit" name="lineEdit_search"/>
        </item>
        <item>
-        <widget class="QListWidget" name="listWidget">
+        <widget class="QListWidget" name="listWidget_using">
          <property name="minimumSize">
           <size>
            <width>300</width>
