@@ -6,7 +6,8 @@ try:
     from PySide6.QtGui import QIcon, QPixmap, QFont
     import sys, os, yaml
     from shotgun_api3 import shotgun
-    from work_in_maya import MayaAPI
+    # from work_in_maya import MayaAPI
+    import department_publish 
 except:
     from PySide2.QtWidgets import QApplication, QWidget
     from PySide2.QtWidgets import QTreeWidgetItem, QMessageBox
@@ -17,7 +18,9 @@ except:
     import maya.cmds as cmds
     from shotgun_api3 import shotgun
     from work_in_maya import MayaAPI
-
+    import department_publish 
+    from importlib import reload
+    reload(department_publish)
 
 class Publisher(QWidget):
     def __init__(self):
@@ -32,6 +35,7 @@ class Publisher(QWidget):
         self.ui.pushButton_publish.clicked.connect(self._publish_file_data)
         self.ui.pushButton_cancel.clicked.connect(self._cancel_and_close)
         self.ui.treeWidget.itemSelectionChanged.connect(self._show_file_detail)
+        self.ui.comboBox_task.currentIndexChanged.connect(self._show_link_entity)
 
     def _set_ui(self):
         """ui 셋업해주는 메서드"""
@@ -44,69 +48,22 @@ class Publisher(QWidget):
 
     def _initial_setting(self):
         """초기 ui 세팅하는 메서드"""
-        selected_objects = MayaAPI.get_selected_objects(self)
-        print (selected_objects)
-        if not selected_objects:
-            self._show_message_to_select_item()
-            return
+        """tree에 데이터 넣기"""
+        self.tree = self.ui.treeWidget
+        self.tool = "maya" ##################
+        department = self._get_user_info()['task']
+        result = getattr(department_publish, department)(self.tree,'maya')
+        if not result:
+            return        
         self.show()
-        self._show_publish_item()
         self._get_published_file_type()
         self.ui.checkBox_check.setChecked(True)
-
-    def _show_publish_item(self):
-        """퍼블리쉬할 파일을 보여주는 메서드"""
-        self.tree = self.ui.treeWidget
-        self.tree.setColumnCount(3)
-        self.tree.setColumnWidth(0,200)
-        self.tree.setColumnWidth(1,20)
-        self.tree.setColumnWidth(2,20)
-        self.tree.setStyleSheet("QTreeWidget::item { margin:5px; height: 40px}")
-
-        items = MayaAPI.get_selected_objects(self)
-        file_name = MayaAPI.get_file_name(self)
-        file_parent = QTreeWidgetItem(self.tree)
-        file_parent.setText(0, file_name)
-        self._set_text_bold(file_parent)
-
-        for item in items:
-            parent = QTreeWidgetItem(file_parent)
-            parent.setText(0, item)
-            parent.setText(1, "")
-            parent.setText(2, "")
-            parent.setFlags(parent.flags() | Qt.ItemIsUserCheckable)
-            parent.setCheckState(1, Qt.Checked)
-            self._set_image_icon(parent, "/home/rapa/baked/toolkit/config/python/3d.png")
-            self._set_text_bold(parent)
-            self._make_tree_item("Publish to Flow", parent)
-            self._make_tree_item("Upload for reivew", parent)
-            self.tree.setStyleSheet("QTreeWidget {font-size:12px}")
-        self.tree.expandAll()
-
-    def _set_text_bold(self, item):
-        font = QFont()
-        font.setBold(True)
-        item.setFont(0, font)
-    
-    def _set_image_icon(self, item, path):
-        icon = QIcon(QPixmap(path))
-        item.setIcon(0, icon)
     
     def _show_file_detail(self):
         text = self.tree.currentItem().text(0)
-        self.ui.lineEdit_file_info.setText(text)
-
-    def _make_tree_item(self, text, parent):
-        """트리 위젯 아이템 만드는 메서드"""
-        item = QTreeWidgetItem(parent)
-        item.setText(0, text)
-        item.setText(1, "")
-        item.setText(2, "")
-        item.setFlags(parent.flags() | Qt.ItemIsUserCheckable)
-        item.setCheckState(2, Qt.Checked)
-        font = QFont()
-        font.setPointSize(10)
-        item.setFont(0, font)
+        if text in ["ㄴ Publish to Flow", "ㄴ Upload for reivew"]:
+            return
+        self.ui.lineEdit_file_info.setText(text) 
 
     def _expand_tree(self):
         """트리 위젯을 여는 메서드"""
@@ -166,17 +123,17 @@ class Publisher(QWidget):
     def _work_in_maya(self):
         pass
 
-
     ##########################저장하고 버전 관리##################
 
     def _get_path_using_template(self):
         """템플릿을 이용해서 저장할 경로, 파일 이름 만드는 메서드"""
+
+        ### abc 는 (버전그대로) 펍에 올라가고, mb파일, nknc 파일은 버전업돼서 저장되게
         yaml_path = self._import_yaml_template()
         file_info_dict = self._get_user_info()
         tool = file_info_dict["tool"]
         level = file_info_dict["seq/asset"]
-        step = file_info_dict["dev/pub"]
-        current = f"{tool}_{level}_{step}"
+        current = f"{tool}_{level}_pub"
 
         if current in yaml_path:
             root_path = yaml_path[f"{level}_root"]
@@ -190,9 +147,9 @@ class Publisher(QWidget):
         """유저에 대한 정보 가저오는 메서드"""
         user_file_info = {"project":"baked",
                     "seq/asset":"asset",
-                    "asset_type": "character",
+                    "asset_type": "Character",
                     "asset":"desk",
-                    "task":"MOD",
+                    "task":"Modeling",
                     "dev/pub":"dev",
                     "tool":"maya",
                     "version":"004",
@@ -202,13 +159,15 @@ class Publisher(QWidget):
 
     def _make_version_up(self):
         """버전 업해주는 메서드"""
-        file_path = self.active_user_info["file path"]
+        user_info = self._get_user_info()
+        file_path = MayaAPI.get_current_path(self)
         if os.path.exists(file_path):
-            version = self.active_user_info["version"]
+            version = user_info["version"]
+            print(version)
             version_number = int(version.split("v")[1])
             version_number += 1
             str_version = str(version_number)
-            new_version = f"v{str_version.zfill(3)}" 
+            new_version = f"{str_version.zfill(3)}" 
         return new_version
     
     def _import_yaml_template(self):
@@ -248,25 +207,47 @@ class Publisher(QWidget):
         published_file_type = sg.find("PublishedFileType", [], fields=["code"])
         for info in published_file_type:
             self.ui.comboBox_type.addItem(info['code'])
-
+        
     def _get_task_type(self):
         sg = self._connect_sg()
-        asset_steps_list = []
+        asset_steps_list = ['-----------select------------']
         shot_steps_list = []
         asset_steps = sg.find("Step", [['entity_type', 'is', 'Asset']], fields=["description"])
         shot_steps = sg.find("Step", [['entity_type', 'is', 'Shot']], fields=["description"])
+
         for asset in asset_steps:
             asset_steps_list.append(f"[Asset]  {asset['description']}")
         for shot in shot_steps:
-            shot_steps_list.append(f"[Shot]  {shot['description']}")
+            shot_steps_list.append(f"[Shot]   {shot['description']}")
             
         self.ui.comboBox_task.addItems(asset_steps_list)
         self.ui.comboBox_task.addItems(shot_steps_list)
+        return asset_steps_list, shot_steps_list
+
+    def _show_link_entity(self):
+        self.ui.comboBox_link.clear()
+        task = self.ui.comboBox_task.currentText()[9:]
+        sg = self._connect_sg()
+        link_list = ['-----------select------------']
+        step = sg.find("Step", [['description', 'is', task]], fields=["code"])[0]['code']
+        link = sg.find("Task", [['step.Step.code', 'is', step], ['project.Project.name', 'is', 'baked']], fields=["entity"])
+        for item in link:
+            link_list.append(item['entity'].get('name'))
+        if task == "-----------select------------":
+            self.ui.comboBox_link.setCurrentIndex(0)
+        self.ui.comboBox_link.addItems(link_list)
     
     #######################유저가 입력한 정보를 샷그리드에 넣어주기#################
     def _publish_file_data(self):
         new_path = self._get_path_using_template()
-        MayaAPI.save_file(self, new_path)
+        print (new_path)
+        if self.tool == "maya":
+            MayaAPI.save_file(self, new_path)
+        else:
+            NukeAPI.save_file(slef, new_path)
+
+    def _save_file_dev_version_up(self):
+        new_path = self._get_path_using_template()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)           
