@@ -9,12 +9,13 @@ import os
 import loader
 import get_shotgrid_data
 import save
-import file_tracker
+# import file_tracker
+from load_scripts.nuke_file_load import LoadNukeFile
 
 sg = get_shotgrid_data.Shotgrid_Data("baked")
 load_win = loader.Loader(sg, "nuke")
 save_win = save.SaveFile()
-tracker_win = file_tracker.Tracker(sg)
+# tracker_win = file_tracker.Tracker(sg)
 
 def init():
     load_win.OPEN_FILE.connect(open_file)
@@ -25,7 +26,10 @@ def show_loader():
 
 @ Slot()
 def open_file(path):
-    nuke.scriptOpen(path)
+    if nuke.root().knob("name").value():
+        LoadNukeFile(path)
+    else : 
+        nuke.scriptOpen(path)
 
 def pop_save_file_ui():
     path = nuke.root().knob("name").value()
