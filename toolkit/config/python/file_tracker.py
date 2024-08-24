@@ -17,7 +17,7 @@ except:
 import os
 import time
 
-from webhook_server import WebhookServer # 서버를 시작하기
+# from webhook_server import WebhookServer # 서버를 시작하기
 
 ## 마야나 누크가 열릴 때 tracker 코드가 작동되게 하며 메뉴바를 통해서 유아이를 열게 한다
 
@@ -43,7 +43,7 @@ class Tracker(QWidget):
             self.sg = Shotgrid_Data("baked")
         else : self.sg = sg
 
-        WebhookServer() # flask server open
+        # WebhookServer() # flask server open
 
     def _set_ui(self):
         ui_file_path = f"{self.py_file_path}/tracker.ui"
