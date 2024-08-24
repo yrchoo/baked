@@ -14,7 +14,7 @@ import file_tracker
 sg = get_shotgrid_data.Shotgrid_Data("baked")
 load_win = loader.Loader(sg, "nuke")
 save_win = save.SaveFile()
-tracker_win = file_tracker.Tracker()
+tracker_win = file_tracker.Tracker(sg)
 
 def init():
     load_win.OPEN_FILE.connect(open_file)

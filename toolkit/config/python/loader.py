@@ -192,9 +192,9 @@ class Loader(QWidget):
         self.OPEN_FILE.emit(path)
 
     def _open_file_from_loader(self, path):
-        if self.tool : return
+        # if self.tool : return
         # file Open을 담당하는 class 생성 path(str)값 전달
-        FileOpen(path)
+        FileOpen(path, self.tool)
         
 
     def _open_yaml_file(self):
