@@ -472,6 +472,6 @@ class Loader(QWidget):
         
 if __name__ == "__main__":
     app = QApplication()
-    win = Loader(Shotgrid_Data("baked"))
+    win = Loader(Shotgrid_Data())
     win.show()
     app.exec()

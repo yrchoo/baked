@@ -12,7 +12,7 @@ import save
 # import file_tracker
 from load_scripts.nuke_file_load import LoadNukeFile
 
-sg = get_shotgrid_data.Shotgrid_Data("baked")
+sg = get_shotgrid_data.Shotgrid_Data()
 load_win = loader.Loader(sg, "nuke")
 save_win = save.SaveFile()
 # tracker_win = file_tracker.Tracker(sg)

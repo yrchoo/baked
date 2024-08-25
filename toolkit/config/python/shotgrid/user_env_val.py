@@ -4,7 +4,7 @@ class Make_User_Data():
     def __init__(self, name="추예린", project="baked", seq="ABC", shot="ABC_0010", asset="", task="CMP",asset_type=""):
         user_file_path = "/home/rapa/env_baked/user/"
         user_string = f"""
-export USER_NAME='{name}'
+export NAME='{name}'
 export PROJECT='{project}'
 export SEQ='{seq}'
 export SHOT='{shot}'

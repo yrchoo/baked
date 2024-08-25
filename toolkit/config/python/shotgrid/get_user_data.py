@@ -11,7 +11,7 @@ class Get_User_Data():
         self.user_data["task"] = os.getenv("TASK")
         self.user_data["asset_type"] = os.getenv("ASSET_TYPE")
 
-        if None in self.user_data.values() :
+        if not self.user_data["name"] :
             self.user_data["name"] = name
             self.user_data["project"] = project
             self.user_data["sequence"] = seq
