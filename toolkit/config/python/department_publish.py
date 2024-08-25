@@ -1,27 +1,12 @@
 try:
-    from PySide6.QtWidgets import QApplication, QWidget
     from PySide6.QtWidgets import QTreeWidgetItem, QMessageBox
-    from PySide6.QtUiTools import QUiLoader
-    from PySide6.QtCore import QFile, Qt
+    from PySide6.QtCore import Qt
     from PySide6.QtGui import QIcon, QPixmap, QFont
-    import sys, os, yaml
-    from shotgun_api3 import shotgun
-    # from work_in_maya import MayaAPI
-    import department_publish 
 except:
-    from PySide2.QtWidgets import QApplication, QWidget
     from PySide2.QtWidgets import QTreeWidgetItem, QMessageBox
-    from PySide2.QtUiTools import QUiLoader
-    from PySide2.QtCore import QFile, Qt
+    from PySide2.QtCore import Qt
     from PySide2.QtGui import QIcon, QPixmap, QFont
-    import sys, os, yaml
-    import maya.cmds as cmds
-    from shotgun_api3 import shotgun
     from work_in_maya import MayaAPI
-try:
-    import maya.cmds as cmds
-except:
-    import nuke
 
 class DepartmentTree():
     def __init__(self, treewidget, tool):
@@ -29,45 +14,35 @@ class DepartmentTree():
         self.tool = tool
 
         data = self.make_data()
-        if not data:
-            return
-        self.put_data_in_tree(data)
         self.initial_tree_setting()
-        
-        path = "/home/rapa/,,./maya"
-        from maya_ligpub_set import PubSet
-        PubSet.export_rig_mb(path)
-
+        self.put_data_in_tree(data)
+    
     def put_data_in_tree(self, data_dict):
         
-        items = self.check_selection()
         file_name = self.get_current_file_name()
-
         file_parent = QTreeWidgetItem(self.tree)
         file_parent.setText(0, file_name)
         self._set_text_bold(file_parent)
 
+        data_dict[f"{file_name}.mov"] = "mov"
+
         for item in data_dict:
             parent = QTreeWidgetItem(file_parent)
             parent.setText(0, item)
-            parent.setText(1, "")
-            parent.setText(2, "")
-            parent.setFlags(parent.flags() | Qt.ItemIsUserCheckable)
-            parent.setCheckState(1, Qt.Checked)
-            self.put_icon("3d", parent)
             self._set_text_bold(parent)
             self._make_tree_item("ㄴ Publish to Flow", parent)
             self._make_tree_item("ㄴ Upload for reivew", parent)
+        
         self.tree.expandAll()
-        print (data_dict.keys())
-        return data_dict.keys()
+
+        return data_dict
     
     def _make_tree_item(self, text, parent):
         """트리 위젯 아이템 만드는 메서드"""
         self.tree.setStyleSheet("QTreeWidget {font-size:12px}")
-        item = QTreeWidgetItem(parent, [f"{text}", "", ""])
+        item = QTreeWidgetItem(parent, [f"{text}", ""])
         item.setFlags(parent.flags() | Qt.ItemIsUserCheckable)
-        item.setCheckState(2, Qt.Checked)
+        item.setCheckState(1, Qt.Checked)
         font = QFont()
         font.setPointSize(10)
         item.setFont(0, font)
@@ -79,10 +54,9 @@ class DepartmentTree():
     
     def initial_tree_setting(self):
         """트리위젯 초기 설정"""
-        self.tree.setColumnCount(3)
-        self.tree.setColumnWidth(0,200)
-        self.tree.setColumnWidth(1,20)
-        self.tree.setColumnWidth(2,20)
+        self.tree.setColumnCount(2)
+        self.tree.setColumnWidth(0,250)
+        self.tree.setColumnWidth(1,10)
 
     def get_current_file_name(self):
         pass
@@ -103,47 +77,57 @@ class DepartmentTree():
             selected_data = nuke.selectedNode()
         if selected_data:
             return selected_data
-        self._show_message_to_select_item()
-        return
     
     def get_current_file_name(self):
         if self.tool == "maya":
             return MayaAPI.get_file_name(self)
         else:
             return nuke.basename() #####
-
-    def _show_message_to_select_item(self):
-        msg = QMessageBox()
-        msg.setWindowTitle("Important")
-        msg.setText("Please select the data to publish")
-        msg.setIcon(QMessageBox.Information)
-        msg.setDefaultButton(QMessageBox.Yes)
-        msg.exec()    
-        return None
-
+    
+    def object_type_dictionary(self):
+        # transform (group 노드인경우 ) => mb
+        object_type_dict = MayaAPI.get_object_type
+        print(object_type_dict)
+        return object_type_dict
+    
 
 class Modeling(DepartmentTree):
     """Publish Data: mb, mov(턴테이블)/ jpg(playblast)"""
     def make_data(self):
-        """데이터 : mb"""
+        """publish 데이터 : mb"""
         selected_data = self.check_selection()
         data_dict = {}
         try: 
             for data in selected_data:
                 data_dict[data] = "mb"
+            return data_dict
         except:
             return
+    
+    def save_data(self):
+        pass
+
+class Rigging(DepartmentTree):
+    def make_data(self):
+        data_dict = ['mb', 'mov']
+
+
+class Lighting(DepartmentTree):
+    def make_data(self):
+        pass
+
+class Lookdev(DepartmentTree):
+    """Publish Data: mb, """    
+    pass
+
+class Animation(DepartmentTree):
+    def make_data(self):
+        selected_data = self.check_selection()
+        data_dict = {}
+        for data in selected_data:
+            data_dict[data] = "abc"
         return data_dict
 
-# class Rigging(DepartmentTree):
-#     """Publish Data: mb, mov(턴테이블)/ jpg(playblast)"""
-#     def make_data(self):
-#         selected_data = self.check_selection()
-#         for data in selected_data:
-#             pass
-
-# class Lookdev(DepartmentTree):
-#     """Publish Data: mb, """
 
 # class Animation(DepartmetTree):
 #     """Publish Data: cache, camera, playblast"""

@@ -1,6 +1,6 @@
 try:
-    from PySide6.QtWidgets import QApplication, QWidget
-    from PySide6.QtWidgets import QTreeWidgetItem, QMessageBox
+    from PySide6.QtWidgets import QApplication, QWidget,QVBoxLayout,QHBoxLayout
+    from PySide6.QtWidgets import QTreeWidgetItem, QMessageBox, QLabel
     from PySide6.QtUiTools import QUiLoader
     from PySide6.QtCore import QFile, Qt
     from PySide6.QtGui import QIcon, QPixmap, QFont
@@ -10,7 +10,7 @@ try:
     import department_publish 
 except:
     from PySide2.QtWidgets import QApplication, QWidget
-    from PySide2.QtWidgets import QTreeWidgetItem, QMessageBox
+    from PySide2.QtWidgets import QMessageBox
     from PySide2.QtUiTools import QUiLoader
     from PySide2.QtCore import QFile, Qt
     from PySide2.QtGui import QIcon, QPixmap, QFont
@@ -28,7 +28,9 @@ class Publisher(QWidget):
         self._set_ui()
         self._initial_setting()
         self._get_task_type()
+        self._set_event()
 
+    def _set_event(self):
         self.ui.checkBox_check.clicked.connect(self._select_all_items)
         self.ui.pushButton_collapse.clicked.connect(self._collapse_tree)
         self.ui.pushButton_expand.clicked.connect(self._expand_tree)
@@ -39,7 +41,7 @@ class Publisher(QWidget):
 
     def _set_ui(self):
         """ui 셋업해주는 메서드"""
-        ui_file_path = '/home/rapa/baked/toolkit/config/python/publisher.ui' 
+        ui_file_path = '/home/rapa/baked/toolkit/config/python/publisher_final.ui' 
         ui_file = QFile(ui_file_path)
         ui_file.open(ui_file.ReadOnly)
         loader = QUiLoader()
@@ -52,7 +54,9 @@ class Publisher(QWidget):
         self.tree = self.ui.treeWidget
         self.tool = "maya" ##################
         department = self._get_user_info()['task']
-        result = getattr(department_publish, department)(self.tree,'maya')
+        result = getattr(department_publish, department)(self.tree, 'maya')
+        print (result)
+        
         if not result:
             return        
         self.show()
@@ -62,8 +66,19 @@ class Publisher(QWidget):
     def _show_file_detail(self):
         text = self.tree.currentItem().text(0)
         if text in ["ㄴ Publish to Flow", "ㄴ Upload for reivew"]:
+            ## parent text 로 잡히게 하기
             return
-        self.ui.lineEdit_file_info.setText(text) 
+        
+        self.ui.label_name.setText(text)
+        self.ui.label_info.setText(f"file")
+        self.ui.label_name.setAlignment(Qt.AlignLeft)
+        self.ui.label_info.setAlignment(Qt.AlignLeft)
+
+        label_image = self.ui.label
+        data_type = 'grp'
+        pixmap = QPixmap(f"/home/rapa/baked/toolkit/config/python/{data_type}.png") 
+        scaled_pixmap = pixmap.scaled(50, 50) 
+        label_image.setPixmap(scaled_pixmap)
 
     def _expand_tree(self):
         """트리 위젯을 여는 메서드"""
@@ -76,52 +91,21 @@ class Publisher(QWidget):
     def _select_all_items(self):
         """모든 아이템 체크박스 선택되게 하는 메서드"""
         parent_count = self.tree.topLevelItemCount()
-        for i in range(parent_count):
-            parent_item = self.tree.topLevelItem(i)
-            child_item_pub = parent_item.child(0)
-            child_item_ver = parent_item.child(1)
-            if self.ui.checkBox_check.isChecked():
-                parent_item.setCheckState(1, Qt.Checked)
-                child_item_pub.setCheckState(2, Qt.Checked)
-                child_item_ver.setCheckState(2, Qt.Checked)
-            else:
-                parent_item.setCheckState(1, Qt.Unchecked)
-                child_item_pub.setCheckState(2, Qt.Unchecked)
-                child_item_ver.setCheckState(2, Qt.Unchecked)
+        child_count = self.tree.childCount()
+        for parent in range(parent_count):
+            for i in range(child_count):
+                parent_item = self.tree.topLevelItem(i)
+                child_item_pub = parent_item.child(0)
+                child_item_ver = parent_item.child(1)
+                if self.ui.checkBox_check.isChecked():
+                    parent_item.setCheckState(0, Qt.Checked)
+                    child_item_pub.setCheckState(1, Qt.Checked)
+                    child_item_ver.setCheckState(1, Qt.Checked)
+                else:
+                    parent_item.setCheckState(0, Qt.Unchecked)
+                    child_item_pub.setCheckState(1, Qt.Unchecked)
+                    child_item_ver.setCheckState(1, Qt.Unchecked)
 
-    def _update_check_state(self):
-        pass
-    
-    def _connect_check_state(self):
-        parent_count = self.tree.topLevelItemCount()
-        for i in range(parent_count):
-            parent_item = self.tree.topLevelItem(i)
-            child_item_pub = parent_item.child(0)
-            child_item_ver = parent_item.child(1)
-            if parent_item(1).isChecked():
-                child_item_pub.setCheckState(2, True)
-                child_item_ver.setCehcekd(2, True)
-            else:
-                child_item_pub.setChecked(False)
-                child_item_ver.setChecked(False)
-            if child_item_pub.isChecked() and child_item_ver.isChecked():
-                parent_item.setChecked(True)
-            else:
-                parent_item.setChecked(False)
-
-    def _show_message_to_select_item(self):
-        msg = QMessageBox()
-        msg.setWindowTitle("Important")
-        msg.setText("Please select the objects to publish")
-        msg.setIcon(QMessageBox.Information)
-        msg.setDefaultButton(QMessageBox.Yes)
-        msg.exec()
-        
-    def _work_in_nuke(self):
-        pass
-
-    def _work_in_maya(self):
-        pass
 
     ##########################저장하고 버전 관리##################
 
@@ -140,7 +124,6 @@ class Publisher(QWidget):
             new_path = yaml_path[current]["definition"].replace(f"@{level}_root", root_path)
             new_path = new_path.format(**file_info_dict)   ### 각 키 이름 별로 딕셔너리랑 매칭되게 하는 겁니당
             self._check_validate(new_path)
-        print (new_path)
         return new_path
 
     def _get_user_info(self):
@@ -198,9 +181,6 @@ class Publisher(QWidget):
                          API_KEY)
         return sg
 
-    def _get_current_work_list(self):
-        pass
-
     def _get_published_file_type(self):
         """published file type 콤보박스에 넣어주는 메서드"""
         sg = self._connect_sg()
@@ -243,8 +223,8 @@ class Publisher(QWidget):
         print (new_path)
         if self.tool == "maya":
             MayaAPI.save_file(self, new_path)
-        else:
-            NukeAPI.save_file(slef, new_path)
+        # else:
+        #     NukeAPI.save_file(slef, new_path)
 
     def _save_file_dev_version_up(self):
         new_path = self._get_path_using_template()

@@ -17,8 +17,7 @@ class MayaAPI():
 
     def get_selected_objects(self):
         """선택한 오브젝트 리스트 가져오는 메서드"""
-        assets = cmds.ls(sl=True)
-        return assets # 리스트
+        return cmds.ls(sl=True)
 
     def export_alemibc(self, path):
         """
@@ -87,3 +86,10 @@ class MayaAPI():
     
     def get_current_path(self):
         return cmds.file(query=True, sceneName=True)
+    
+    # def get_object_type(self):
+    #     object_type_dict = {}
+    #     selected_objects = self.get_selected_objects()
+    #     for object in selected_objects:
+    #         object_type_dict[object] = cmds.objectType(object)
+    #     return object_type_dict
