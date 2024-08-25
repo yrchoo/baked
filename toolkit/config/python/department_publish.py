@@ -33,6 +33,10 @@ class DepartmentTree():
             return
         self.put_data_in_tree(data)
         self.initial_tree_setting()
+        
+        path = "/home/rapa/,,./maya"
+        from maya_ligpub_set import PubSet
+        PubSet.export_rig_mb(path)
 
     def put_data_in_tree(self, data_dict):
         
