@@ -327,6 +327,7 @@ class Loader(QWidget):
             item = item.parent()
         
         new_path = f"{root_path}/{path}"
+        print(f"_get_current_item_path : {new_path}")
         return new_path
         
 
@@ -342,26 +343,27 @@ class Loader(QWidget):
         current_treeWidget = current_tab.findChildren(QTreeWidget)[0]
 
         cur_item = current_treeWidget.currentItem()
-        if not cur_item:
-            cur_item = current_treeWidget.findItems(item_text, Qt.MatchExactly, 0)[0]
-            current_treeWidget.setCurrentItem(cur_item, 0)
-
-        cur_item.setExpanded(True)
-
         item = None
-        for i in range(0, cur_item.childCount()):
-            child = cur_item.child(i)
-            if child.text(0) == item_text:
-                item = child
-                break
+
+        if not cur_item:
+            item = current_treeWidget.findItems(item_text, Qt.MatchExactly, 0)[0]
+            
+        if not item:
+            for i in range(0, cur_item.childCount()):
+                child = cur_item.child(i)
+                if child.text(0) == item_text:
+                    item = child
+                    break
 
         if not item :
             path = f"{self.my_path}{item_text}"
             if os.path.isdir(path) :
                 return
             self._open_file(f"{self.my_path}{item_text}")
-            
-        else : current_treeWidget.setCurrentItem(item, 0)
+            if self.tool : self.close()
+        else : 
+            current_treeWidget.setCurrentItem(item, 0)
+            current_treeWidget.currentItem().setExpanded(True)
         
     def _make_dir_cell(self, dir_name, w=30, h=30):
         cell = QWidget()

@@ -11,8 +11,6 @@ class FileOpen():
              # 현재 사용중인 툴이 없을 때
             tool = self._get_tool_data()
             self._run_open_file_cmd(tool)
-        else :
-            self._load_file(tool)
 
 
     def _set_tool_program_val(self):
@@ -43,6 +41,3 @@ class FileOpen():
         print(cmd)
         os.system(cmd)
 
-    def _load_file(self, tool):
-        if tool == "nuke":
-            LoadNukeFile(self.path)
