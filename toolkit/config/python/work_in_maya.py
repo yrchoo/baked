@@ -79,7 +79,11 @@ class MayaAPI():
     def save_file(self, path):
         """마야 파일 저장하는 메서드"""
         file_path, name = os.path.split(path)
+        print (file_path, name)
         if not os.path.exists(file_path):
             os.makedirs(file_path)
-        cmds.file(rename=name)
+        cmds.file(rename=file_path)
         cmds.file(save=True)
+    
+    def get_current_path(self):
+        return cmds.file(query=True, sceneName=True)
