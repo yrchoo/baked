@@ -4,7 +4,7 @@ try :
     from PySide6.QtWidgets import QVBoxLayout
     from PySide6.QtUiTools import QUiLoader
     from PySide6.QtCore import QFile, Qt, Signal
-    from PySide6.QtGui import QPixmap
+    from PySide6.QtGui import QPixmap, QColor
 
 except:
     from PySide2.QtWidgets import QApplication, QWidget, QTreeWidgetItem
@@ -12,10 +12,10 @@ except:
     from PySide2.QtWidgets import QVBoxLayout
     from PySide2.QtUiTools import QUiLoader
     from PySide2.QtCore import QFile, Qt, Signal
-    from PySide2.QtGui import QPixmap
+    from PySide2.QtGui import QPixmap, QColor
 
 import os
-import time
+import re
 
 from pprint import pprint
 
@@ -40,6 +40,7 @@ class Tracker(QWidget):
         self._get_opened_file_list()
         self._get_file_list_related_to_my_work()
         self._get_lastest_file_data()
+        self._check_version()
 
     def _set_instance_val(self, sg):
         self.py_file_path = os.path.dirname(__file__)
@@ -67,9 +68,26 @@ class Tracker(QWidget):
         ## nuke : 현재 존재하는 모든 write node에 knob("file")을 읽어오기
         ## maya : 선생님이 알려주신.... 뭔가의 캐시 파일 경로와 버전을 저장하는 방식을 사용하기
         self.opened_file_list = {
-            "ABC_0010_CMP_v001.nknc" : "/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/dev/nuke/scenes/ABC_0010_CMP_v001.nknc",
-            "ABC_0010_LGT_v001.####.exr" : "/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr",
+            "ABC_0010_CMP_v001.nknc" : {},
+            "ABC_0010_LGT_v001.####.exr" : {},
         }
+
+        for data in self.opened_file_list.keys():
+            filters = [
+                ["project", "is", self.sg.project_data],
+                ["code", "contains", data]
+            ]
+            fields = ["id", "code", "path", "task", "version"]
+
+            cur_file_data = self.sg.sg.find_one("PublishedFile", filters, fields, order=[{'field_name': 'created_at', 'direction': 'asc'}])
+            pprint(cur_file_data)
+
+            if not cur_file_data:
+                continue
+
+            self.opened_file_list.update(
+                { data : cur_file_data }
+            )
 
         ## 현재 열려있는 파일들의 버전 파일 정보를 가져올까말까... 가져와서 띄울까 말까 개고민됨묘
 
@@ -94,7 +112,7 @@ class Tracker(QWidget):
         ## my_content_list에 들어있는 데이터들이 모두 최신의 것이어야 함
         ## 현재 내가 열어놓은 파일과 버전이 다르면 list에 출력할 때 색상을 변경하도록 하자
 
-        for data in self.opened_file_list.keys():
+        for data in self.my_content_list:
             filters = [
                 ["project", "is", self.sg.project_data],
                 ["code", "contains", data]
@@ -130,8 +148,20 @@ class Tracker(QWidget):
         'version': {'id': 7800, 'name': 'v001', 'type': 'Version'}}
         """
 
+    def _check_version(self):
+        for key in self.opened_file_list:
+            p = re.compile("[v]\d{3}")
+            version = p.search(key).group()
+            mat = key.split(version)[0]
 
-    
+            for last_key in self.lastest_file_dict.keys():
+                if mat in last_key:
+                    if version == self.lastest_file_dict[last_key]['version']:
+                        break
+                    item = self.ui.listWidget_using.findItems(key, Qt.MatchFlag.MatchExactly)[0]
+                    item.setBackground(QColor("yellow"))
+                    break
+                    
 
 
 if __name__ == "__main__":
