@@ -1,5 +1,5 @@
 print ("*" * 30)
-print ("menu.py")
+print ("meny.py")
 print ("menu script is processed")
 print ("*" * 30)
 
@@ -11,6 +11,17 @@ from importlib import reload
 
 sys.path.append("/home/rapa/baked/toolkit/config/python")
 
+from shotgrid.get_shotgrid_data import Shotgrid_Data
+from load_scripts.maya_file_load import LoadMayaFile
+
+sg = Shotgrid_Data()
+
+import loader
+load_win = loader.Loader(sg, "maya")
+
+def init():
+    load_win.OPEN_FILE.connect(open_file)
+
 def loader_func():
     """
     메뉴를 선언하는 함수보다 윗쪽에 이 코드를 적어주세요.
@@ -18,11 +29,15 @@ def loader_func():
     이 함수는 메뉴를 테스트하는 함수입니다.
     """
     ### 예린님 로더에 input값 연결해주기 ###
-    global win
-    import loader
-    reload(loader)
-    win = loader.Loader(Shotgrid_Data)
-    win.show()
+    # reload(loader)
+    load_win.show()
+
+def open_file(path):
+    current_file_path = cmds.file(query=True, sceneName=True)
+    if current_file_path :
+        LoadMayaFile(path)
+    else :
+        cmds.file(path, open=True, force=True)
 
 def publisher_func():
     global win
@@ -40,3 +55,6 @@ def add_custom_menu():
     custom_menu = cmds.menu(parent=gMainWindow, tearOff = True, label = 'BAKED') 
     cmds.menuItem(label="Loader", parent=custom_menu, command=lambda *args: loader_func())
     cmds.menuItem(label="Publisher", parent=custom_menu, command=lambda *args: publisher_func())
+
+
+init()
