@@ -11,7 +11,7 @@ class MakeVersionTest():
         self._set_init_value()
         self._get_auth()
         self._set_entity_data()
-        # self._make_new_version_pub_file()
+        self._make_new_version_pub_file()
         self._print_data()
 
     def _set_init_value(self):
@@ -45,17 +45,22 @@ class MakeVersionTest():
 
         self.task = self.sg.find_one("Task", [["content", "is", "LGT"], ["project", "is", self.project]], ["id"])
         self.shot = self.sg.find_one("Shot", [["code", "is", "ABC_0010"], ["project", "is", self.project]], ["id"])
+        self.user = self.sg.find_one("HumanUser", [["name", "is", "추예린"]], ["id", "name"])
+
+    def _make_new_version_pub_file(self):
+
+        file_name = os.path.basename(self.open_folder_path)
 
         new_version_data = {
             "project" : self.project,
-            "code": file_ver,
+            "code": "v002",
             "description": "tracker test를 위해 생성한 version입니당",
             "entity" : self.shot,
             "sg_task": self.task,
-            # "user": self.sg.find_one("HumanUser", [["login", "is", "추예린"]], ["id"]),
+            "user": self.user,
+            "created_by" : self.user,
+            "sg_status_list" : "rev",
         }
-
-    def _make_new_version_pub_file(self):
 
         version = self.sg.create("Version", new_version_data)
         print(f"version : {version}")
@@ -74,6 +79,20 @@ class MakeVersionTest():
 
         publish = self.sg.create("PublishedFile", published_file)
         print(f"publish : {publish}")
+
+        note_data = {
+            "project": self.project,
+            "note_links": [self.project, version],  # 노트를 생성할 버전과 연결
+            "subject": f"New Version Created",  # 노트 제목
+            "content": f"{self.user['name']} create new {version['code']} of {published_file['code']}",  # 노트 내용
+            # "sg_note_type": "Internal",  # 노트 타입 (필요시)
+            "user": self.user,  # 노트 작성자
+            "created_by" : self.user,
+            "tasks": [self.task],  # 태스크와 연결
+            "addressings_to" : [self.user],
+        }
+        note = self.sg.create("Note", note_data)
+        # print("Create Note : " + note['id'])
         
     def _print_data(self):
         print('-' * 50)
