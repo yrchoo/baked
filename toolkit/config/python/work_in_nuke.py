@@ -1,12 +1,10 @@
-import maya.cmds as cmds 
-import maya.mel as mel 
 import os
 import json
 import subprocess
 import datetime
 import nuke
 
-class MayaAPI():
+class NukeAPI():
     def __init__(self):
         pass
     
