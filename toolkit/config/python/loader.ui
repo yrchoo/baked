@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>871</width>
+    <width>942</width>
     <height>622</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <rect>
      <x>20</x>
      <y>20</y>
-     <width>191</width>
+     <width>271</width>
      <height>571</height>
     </rect>
    </property>
@@ -34,8 +34,8 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>191</width>
-       <height>191</height>
+       <width>271</width>
+       <height>541</height>
       </rect>
      </property>
      <attribute name="headerVisible">
@@ -47,14 +47,22 @@
       </property>
      </column>
     </widget>
-    <widget class="QTreeWidget" name="treeWidget">
+   </widget>
+   <widget class="QWidget" name="tab_content">
+    <attribute name="title">
+     <string>Content</string>
+    </attribute>
+    <widget class="QTreeWidget" name="treeWidget_content">
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>220</y>
-       <width>191</width>
-       <height>321</height>
+       <y>30</y>
+       <width>271</width>
+       <height>511</height>
       </rect>
+     </property>
+     <property name="editTriggers">
+      <set>QAbstractItemView::NoEditTriggers</set>
      </property>
      <attribute name="headerVisible">
       <bool>false</bool>
@@ -65,17 +73,14 @@
       </property>
      </column>
     </widget>
-    <widget class="QLabel" name="label">
+    <widget class="QLineEdit" name="lineEdit_search">
      <property name="geometry">
       <rect>
-       <x>0</x>
-       <y>200</y>
-       <width>60</width>
-       <height>16</height>
+       <x>2</x>
+       <y>2</y>
+       <width>261</width>
+       <height>26</height>
       </rect>
-     </property>
-     <property name="text">
-      <string>Material</string>
      </property>
     </widget>
    </widget>
@@ -88,7 +93,7 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>191</width>
+       <width>271</width>
        <height>541</height>
       </rect>
      </property>
@@ -111,7 +116,7 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>191</width>
+       <width>271</width>
        <height>541</height>
       </rect>
      </property>
@@ -129,7 +134,7 @@
   <widget class="QTableWidget" name="tableWidget_files">
    <property name="geometry">
     <rect>
-     <x>225</x>
+     <x>300</x>
      <y>50</y>
      <width>621</width>
      <height>541</height>
