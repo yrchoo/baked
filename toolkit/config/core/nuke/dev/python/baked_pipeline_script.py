@@ -42,6 +42,8 @@ def save_file(path):
     print(path)
     nuke.scriptSaveAs(path)
 
+
+
 init()
 if nuke.root().knob("name").value() == "" : 
     show_loader()

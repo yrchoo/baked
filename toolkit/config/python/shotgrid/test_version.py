@@ -60,6 +60,7 @@ class MakeVersionTest():
             "user": self.user,
             "created_by" : self.user,
             "sg_status_list" : "rev",
+            "upload_file" : "review.mov"
         }
 
         version = self.sg.create("Version", new_version_data)
@@ -72,7 +73,7 @@ class MakeVersionTest():
             "description": "Description of the published file",
             "task": self.task,
             "entity" : self.shot,
-            "version": {"type": "Version", "id": version["id"]},  # 버전과 연결
+            "version": version,  # 버전과 연결
             "path": {"local_path": self.open_folder_path},
             # "published_file_type": {"type": "PublishedFileType", "id": 2},  # 필요에 따라 유형 ID를 조정
         }

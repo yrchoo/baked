@@ -38,6 +38,9 @@ def open_file(path):
         LoadMayaFile(path)
     else :
         cmds.file(path, open=True, force=True)
+        # setprojectlocation이 이루어지는 곳
+        # 기본적인 maya에 필요한 경로들이 생성되어야함
+        
 
 def publisher_func():
     global win
@@ -58,3 +61,4 @@ def add_custom_menu():
 
 
 init()
+
