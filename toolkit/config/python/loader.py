@@ -17,6 +17,7 @@ except:
 
 import os
 import yaml
+from pprint import pprint
 
 try :
     from shotgrid.get_shotgrid_data import Shotgrid_Data
@@ -50,6 +51,7 @@ class Loader(QWidget):
         self.sg : Shotgrid_Data = sg 
         self.project_path = f"{self.home_path}/show/{self.project_name}"
         self.tool = tool
+        self.content_files_data = {} # 현재 작업에서 사용되는 파일들의 정보들이 들어가는 곳
 
     def _set_ui(self):
         ui_file_path = f"{self.py_file_path}/loader.ui"
@@ -79,24 +81,32 @@ class Loader(QWidget):
         self.ui.treeWidget_seq.currentItemChanged.connect(self._set_seq_table_widget)
         self.ui.treeWidget_seq.itemClicked.connect(self._set_seq_table_widget)
 
+        self.ui.treeWidget_content.currentItemChanged.connect(self._set_content_table_widget)
+        self.ui.treeWidget_content.itemClicked.connect(self._set_content_table_widget)
+
         self.ui.tabWidget_task.currentChanged.connect(self._change_table_data)
 
     def _change_table_data(self, index):
         if index == 0:
             self._set_my_task_table_widget()
         elif index == 1:
-            self._set_seq_table_widget()
+            self._set_content_table_widget()
         elif index == 2:
+            self._set_seq_table_widget()
+        elif index == 3:
             self._set_asset_table_widget()
+
 
     def _set_tree_widget_data(self):
         if not self.sg.connected : # Shotgrid connection failed...
             self._set_seq_tree_widget_by_path()
             self._set_asset_tree_widget_by_path()
+
         else : # Shotgrid connected
             self._set_seq_tree_widget_by_shotgrid()
             self._set_asset_tree_widget_by_shotgrid()
             self._set_task_tree_widget_by_shotgrid()
+            self._set_content_tree_widget_by_shotgrid()
 
     def _set_seq_tree_widget_by_path(self):
         seq_tree = self.ui.treeWidget_seq
@@ -187,10 +197,75 @@ class Loader(QWidget):
         my_task_path = self._get_path()
         self._add_to_tree_widget_by_path_recursive(work_item, my_task_path)
 
+    def _set_content_tree_widget_by_shotgrid(self):
+        content_tree = self.ui.treeWidget_content
+        my_task = self.sg.user_info["task"]
+        task_level = {
+            "MOD" : [0],
+            "RIG" : [1],
+            "LKD" : [1],
+            "ANI" : [0, 2],
+            "LGT" : [0, 2, 3],
+            "CMP" : [0, 4],
+        }
+        file_types = {}
+        for i in task_level[my_task]:
+            filters = [['sg_level', 'is', f'{i}']]
+            fields = ['code', 'id', 'sg_level']
+            file_type = self.sg.sg.find("PublishedFileType", filters, fields)
+            if not file_type :
+                break
+            for ft in file_type:
+                file_types[ft['code']] = ft
 
-    def _open_file(self, path):
-        self.OPEN_FILE.emit(path)
+        self._add_tree_item(content_tree, "All Content")
+        for f_type in file_types.keys():
+            self._add_tree_item(content_tree, f_type)
 
+        if task_level[my_task][-1] < 2 : # Asset 작업자일 경우
+            working = [self.sg.user_info['asset']]
+        else : 
+            working = [self.sg.user_info['shot']]
+            assets = self.sg.get_assets_used_at_shot()
+            for asset in assets:
+                working.append(asset['code'])
+
+        self.content_files_data = {}
+
+        for w in working:
+            for t in task_level.keys():
+                filters = [
+                    ["project", "is", self.sg.project_data],
+                    ["code", "contains", t],
+                    ["code", "contains", w],
+                ]
+                fields = ["id", "code", "path", "published_file_type"]
+                file_data = self.sg.sg.find_one("PublishedFile", filters, fields, order=[{'field_name': 'created_at', 'direction': 'asc'}])
+                if not file_data:
+                    continue
+                self.content_files_data[file_data['code']] = file_data
+                print(file_data)
+
+                """
+                {'type': 'PublishedFile', 'id': 337, 'code': 'ABC_0010_LGT_v001.####.exr', 
+                'path': {
+                    'content_type': 'image/exr', 'link_type': 'local', 'name': 'ABC_0010_LGT_v001.####.exr', 
+                    'local_storage': {'type': 'LocalStorage', 'id': 3, 'name': 'show'}, 
+                    'local_path_mac': None, 
+                    'local_path_linux': '/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr', 
+                    'local_path_windows': 'D:\\show\\baked\\show\\baked\\SEQ\\ABC\\ABC_0010\\LGT\\pub\\nuke\\images\\ABC_0010_LGT_v001\\ABC_0010_LGT_v001.####.exr', 
+                    'type': 'Attachment', 'id': 1154, 
+                    'local_path': '/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr', 
+                    'url': 'file:///home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr'
+                    }, 
+                'published_file_type': {'id': 185, 'name': 'EXR Image', 'type': 'PublishedFileType'}}
+                """
+            
+        # for file, data in self.content_files_data.items():
+        #     parent_item = content_tree.findItems(data["published_file_type"]['name'], Qt.MatchFlag.MatchExactly, 0)[0]
+        #     self._add_tree_item(parent_item, file)
+
+        
     def _open_file_from_loader(self, path):
         # if self.tool : return
         # file Open을 담당하는 class 생성 path(str)값 전달
@@ -212,7 +287,7 @@ class Loader(QWidget):
             level = "asset"
             current = "asset_path"
             root_path = yaml_path["asset_root"]
-        else:
+        elif path_data["sequence"] :
             level = "sequence"
             current = "sequence_path"
             root_path = yaml_path["sequence_root"]
@@ -229,16 +304,19 @@ class Loader(QWidget):
         self.my_path = self._get_path()
         item = self.ui.treeWidget_task.currentItem()
         sub_path = ""
+        self._set_table_for_file_list()
+
         while item :
             text = item.text(0).split('/')[-1]
             if text in self.sg.user_info.values():
                 break
             sub_path = f"{text}/{sub_path}"
             item = item.parent()
+
         self.my_path = f"{self.my_path}/{sub_path}"
         dirs = os.listdir(self.my_path)
+
         row = 0
-        self._set_table_for_file_list()
         for dir in dirs:
             self.ui.tableWidget_files.setRowCount(row + 1)
             if not os.path.isdir(f"{self.my_path}/{dir}"):
@@ -253,6 +331,21 @@ class Loader(QWidget):
             self.ui.tableWidget_files.setRowHeight(row,50)
             row += 1
 
+        path = f"{self._get_path()}/"
+
+        if self.my_path == path:
+            self.ui.tableWidget_files.setRowCount(row + 2)
+
+            nuke_cell = self._make_file_cell("Make New Nuke File.nknc")
+            self.ui.tableWidget_files.setCellWidget(row, 0, nuke_cell)
+            self.ui.tableWidget_files.setRowHeight(row, 50)
+            row += 1
+
+            maya_cell = self._make_file_cell("Make New Maya File.mb")
+            self.ui.tableWidget_files.setCellWidget(row, 0, maya_cell)
+            self.ui.tableWidget_files.setRowHeight(row, 50)
+            return
+        
     def _set_seq_table_widget(self):
         """
         현재 table에 띄우는 값이 seq tab의 데이터인지 asset tab인지를 받아와서 출력하는 메서드
@@ -311,6 +404,37 @@ class Loader(QWidget):
                 col = 0
                 row += 1
 
+    def _set_content_table_widget(self):
+        cur_item = self.ui.treeWidget_content.currentItem()
+
+        if cur_item == None:
+            cur_item = self.ui.treeWidget_content.findItems("All Content", Qt.MatchFlag.MatchExactly, 0)[0]
+            self.ui.treeWidget_content.setCurrentItem(cur_item, 0)
+            
+        cur_file_type = cur_item.text(0)
+         
+        row = 0
+        if cur_file_type == 'All Content':
+            self._set_table_for_file_list()
+            for data in self.content_files_data.keys():
+                self.ui.tableWidget_files.setRowCount(row + 1)
+                cell = self._make_file_cell(data)
+                self.ui.tableWidget_files.setCellWidget(row, 0, cell)
+                self.ui.tableWidget_files.setRowHeight(row,50)
+                row += 1
+        else :
+            col = 0
+            self._set_table_for_content_list()
+            for file, data in self.content_files_data.items():
+                if data['published_file_type']['name'] == cur_file_type:
+                    self.ui.tableWidget_files.setRowCount(row + 1)
+                    cell = self._make_asset_cell(file)
+                    self.ui.tableWidget_files.setCellWidget(row, col, cell)
+                    self.ui.tableWidget_files.setRowHeight(row,206)
+                    if col == 3:
+                        col = 0
+                        row += 1
+
 
     def _get_current_item_path(self, data):
         yaml_path = self._open_yaml_file()
@@ -345,9 +469,14 @@ class Loader(QWidget):
         cur_item = current_treeWidget.currentItem()
         item = None
 
+        if current_treeWidget.objectName() == "treeWidget_content":
+            path = self.content_files_data[item_text]['path']['local_path']
+            self.OPEN_FILE.emit(path)
+            return
+
         if not cur_item:
             item = current_treeWidget.findItems(item_text, Qt.MatchExactly, 0)[0]
-            
+                
         if not item:
             for i in range(0, cur_item.childCount()):
                 child = cur_item.child(i)
@@ -359,7 +488,10 @@ class Loader(QWidget):
             path = f"{self.my_path}{item_text}"
             if os.path.isdir(path) :
                 return
-            self._open_file(f"{self.my_path}{item_text}")
+            if not os.path.exists(path) :
+                self._create_new_file(path)
+                return
+            self.OPEN_FILE.emit(f"{self.my_path}{item_text}")
             if self.tool : self.close()
         else : 
             current_treeWidget.setCurrentItem(item, 0)
@@ -453,6 +585,36 @@ class Loader(QWidget):
 
         cell.setLayout(layout)
         return cell
+    
+    def _create_new_file(self, path):
+        # print(self.my_path) # /home/rapa/baked/show/baked/SEQ/ABC/ABC_0020/LGT/dev/
+        _, ext = os.path.splitext(path)
+        if ext in [".nknc", "nk"]:
+            path = f"{self.my_path}nuke/scenes/"
+        elif ext in [".mb"]:
+            path = f"{self.my_path}maya/scenes/"
+        else :
+            return
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+        
+        working = self.sg.user_info['asset']
+        if not working :
+            working = self.sg.user_info['shot']
+
+        new_file_path = f"{path}{working}_{self.sg.user_info['task']}_v001{ext}"
+        
+        with open(new_file_path, 'w') as file:
+            file.close()
+
+        self.OPEN_FILE.emit(new_file_path)
+
+        if self.tool:
+            self.close()
+
+
+
 
     def _set_table_for_file_list(self):
         file_table = self.ui.tableWidget_files
@@ -467,11 +629,19 @@ class Loader(QWidget):
         file_table.setColumnWidth(0, 206)
         file_table.setColumnWidth(1, 206)
         file_table.setColumnWidth(2, 206)
+
+    def _set_table_for_content_list(self):
+        file_table = self.ui.tableWidget_files
+        file_table.clear()
+        file_table.setColumnCount(2)
+        file_table.setColumnWidth(0, 309)
+        file_table.setColumnWidth(1, 309)
+
         
         
         
 if __name__ == "__main__":
     app = QApplication()
-    win = Loader(Shotgrid_Data("baked"))
+    win = Loader(Shotgrid_Data())
     win.show()
     app.exec()

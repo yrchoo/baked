@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>676</width>
+    <width>659</width>
     <height>595</height>
    </rect>
   </property>
@@ -372,20 +372,6 @@
          </property>
         </widget>
        </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="Line" name="line_6">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <property name="rightMargin">
-        <number>10</number>
-       </property>
       </layout>
      </item>
     </layout>

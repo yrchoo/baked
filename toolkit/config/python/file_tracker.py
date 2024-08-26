@@ -45,7 +45,7 @@ class Tracker(QWidget):
     def _set_instance_val(self, sg):
         self.py_file_path = os.path.dirname(__file__)
         if not sg :
-            self.sg = Shotgrid_Data("baked")
+            self.sg = Shotgrid_Data()
         else : self.sg = sg
 
         self.lastest_file_dict = {}
@@ -161,7 +161,8 @@ class Tracker(QWidget):
                     item = self.ui.listWidget_using.findItems(key, Qt.MatchFlag.MatchExactly)[0]
                     item.setBackground(QColor("yellow"))
                     break
-                    
+    
+    
 
 
 if __name__ == "__main__":

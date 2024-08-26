@@ -1,10 +1,9 @@
 #!/bin/sh
  
-export USER_NAME=추예린
+export NAME=추예린
 export PROJECT=baked
 export SEQ=ABC
-export SHOT=ABC_0010
+export SHOT=ABC_0020
 export ASSET=
-export TASK=CMP
-export CURRENT=ABC_0010
-        
+export TASK=LGT
+export ASSET_TYPE=

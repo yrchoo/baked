@@ -4,24 +4,23 @@ try :
 except :
     from shotgrid.get_user_data import Get_User_Data
 
+import os
+
 class Shotgrid_Data():
-    def __init__(self, project_name : str):
-        if not project_name or type(project_name) != str:
-            raise Exception("Shotgrid_Data() needs 1 argument(str)")
-        
-        self._set_init_value(project_name)
+    def __init__(self):
+        self._set_init_value()
         self._get_auth()
         self.get_assigned_task(self.user_info['name'])
 
-    def _set_init_value(self, project_name):
+    def _set_init_value(self):
+        self.user_info = Get_User_Data().return_data()   
         self.connected = False
         self.sg = "" # Shotgun()
         self.project_data = {
-            "name" : project_name
+            "name" : self.user_info['project']
         }
 
-        self.user_info = Get_User_Data().return_data()   
-        # print(self.user_info)
+        print(self.user_info)
 
     def _get_auth(self):
         script_name = "baked"
@@ -81,7 +80,7 @@ class Shotgrid_Data():
         tasks = self.sg.find("Task", filters_for_task, fields_for_task)
         entity_list = []
         for task in tasks:
-            print(task)
+            # print(task)
             entity_list.append(task['entity'])
         return entity_list
     
