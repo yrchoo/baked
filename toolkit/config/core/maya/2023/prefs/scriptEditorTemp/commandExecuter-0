@@ -1,11 +1,4 @@
 import maya.cmds as cmds
-import os
-path = "/home/rapa/show/baked/AST/Character/desk/MOD/dev/maya/scenes/desk_MOD_v005.mb"
-file_path, name = os.path.split(path)
-if not os.path.exists(file_path):
-    os.makedirs(file_path)
-print("hiii")
-print(f"name, {name}")
-print(file_path)
-cmds.file(rename=path)
-cmds.file(save=True)
+selected = cmds.ls(selection=True)
+cameras = [obj for obj in selected if cmds.nodeType(obj) == 'camera']
+print (cameras)

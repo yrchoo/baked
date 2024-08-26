@@ -1,9 +1,11 @@
-import os
-import json
-import subprocess
-import datetime
-import nuke
-
+try:
+    import os
+    import json
+    import subprocess
+    import datetime
+    import nuke
+except: 
+    pass
 class NukeAPI():
     def __init__(self):
         pass

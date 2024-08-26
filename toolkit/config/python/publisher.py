@@ -1,6 +1,5 @@
 try:
-    from PySide6.QtWidgets import QApplication, QWidget,QVBoxLayout,QHBoxLayout
-    from PySide6.QtWidgets import QTreeWidgetItem, QMessageBox, QLabel
+    from PySide6.QtWidgets import QApplication, QWidget
     from PySide6.QtUiTools import QUiLoader
     from PySide6.QtCore import QFile, Qt
     from PySide6.QtGui import QIcon, QPixmap, QFont
@@ -10,14 +9,14 @@ try:
     import department_publish 
 except:
     from PySide2.QtWidgets import QApplication, QWidget
-    from PySide2.QtWidgets import QMessageBox
     from PySide2.QtUiTools import QUiLoader
     from PySide2.QtCore import QFile, Qt
-    from PySide2.QtGui import QIcon, QPixmap, QFont
+    from PySide2.QtGui import QBrush, QColor
     import sys, os, yaml
     import maya.cmds as cmds
     from shotgun_api3 import shotgun
     from work_in_maya import MayaAPI
+    from work_in_nuke import NukeAPI
     import department_publish 
     from importlib import reload
     reload(department_publish)
@@ -29,15 +28,24 @@ class Publisher(QWidget):
         self._initial_setting()
         self._get_task_type()
         self._set_event()
+        self.publish_dict = {}
 
     def _set_event(self):
+
         self.ui.checkBox_check.clicked.connect(self._select_all_items)
+
         self.ui.pushButton_collapse.clicked.connect(self._collapse_tree)
         self.ui.pushButton_expand.clicked.connect(self._expand_tree)
         self.ui.pushButton_publish.clicked.connect(self._publish_file_data)
         self.ui.pushButton_cancel.clicked.connect(self._cancel_and_close)
-        self.ui.treeWidget.itemSelectionChanged.connect(self._show_file_detail)
+        self.ui.pushButton_load.clicked.connect(self._load_publish_summary)
+
         self.ui.comboBox_task.currentIndexChanged.connect(self._show_link_entity)
+        self.ui.comboBox_type.currentIndexChanged.connect(self._put_publish_type_info_dict)
+
+        self.ui.treeWidget.itemSelectionChanged.connect(self._show_file_detail)
+        self.ui.treeWidget.itemClicked.connect(self._make_publish_info_dict)
+        self.ui.treeWidget.itemChanged.connect(self._connect_check_state)
 
     def _set_ui(self):
         """ui 셋업해주는 메서드"""
@@ -53,32 +61,28 @@ class Publisher(QWidget):
         """tree에 데이터 넣기"""
         self.tree = self.ui.treeWidget
         self.tool = "maya" ##################
+
         department = self._get_user_info()['task']
-        result = getattr(department_publish, department)(self.tree, 'maya')
-        print (result)
-        
-        if not result:
-            return        
+        getattr(department_publish, department)(self.tree,'maya')    
+
         self.show()
-        self._get_published_file_type()
+        self._get_published_file_category()
         self.ui.checkBox_check.setChecked(True)
     
     def _show_file_detail(self):
         text = self.tree.currentItem().text(0)
-        if text in ["ㄴ Publish to Flow", "ㄴ Upload for reivew"]:
-            ## parent text 로 잡히게 하기
-            return
-        
+        if text in ["Publish to Flow", "Upload for reivew"]:
+            text = self.tree.currentItem().parent().text(0)
         self.ui.label_name.setText(text)
         self.ui.label_info.setText(f"file")
         self.ui.label_name.setAlignment(Qt.AlignLeft)
         self.ui.label_info.setAlignment(Qt.AlignLeft)
 
-        label_image = self.ui.label
-        data_type = 'grp'
-        pixmap = QPixmap(f"/home/rapa/baked/toolkit/config/python/{data_type}.png") 
-        scaled_pixmap = pixmap.scaled(50, 50) 
-        label_image.setPixmap(scaled_pixmap)
+        # label_image = self.ui.label
+        # data_type = 'grp'
+        # pixmap = QPixmap(f"/home/rapa/baked/toolkit/config/python/{data_type}.png") 
+        # scaled_pixmap = pixmap.scaled(50, 50) 
+        # label_image.setPixmap(scaled_pixmap)
 
     def _expand_tree(self):
         """트리 위젯을 여는 메서드"""
@@ -89,23 +93,28 @@ class Publisher(QWidget):
         self.tree.collapseAll()
     
     def _select_all_items(self):
-        """모든 아이템 체크박스 선택되게 하는 메서드"""
+        """모든 아이템 체크박스 선택되게/선택 안 되게 하는 메서드"""
         parent_count = self.tree.topLevelItemCount()
-        child_count = self.tree.childCount()
-        for parent in range(parent_count):
-            for i in range(child_count):
-                parent_item = self.tree.topLevelItem(i)
-                child_item_pub = parent_item.child(0)
-                child_item_ver = parent_item.child(1)
+        for count_parent in range(parent_count): 
+            child_count = self.tree.topLevelItem(count_parent).childCount() # object 개수
+            for count in range(child_count):
+                object = self.tree.topLevelItem(count_parent).child(count)
+                child_ver = object.child(0)
+                child_pub = object.child(1)
                 if self.ui.checkBox_check.isChecked():
-                    parent_item.setCheckState(0, Qt.Checked)
-                    child_item_pub.setCheckState(1, Qt.Checked)
-                    child_item_ver.setCheckState(1, Qt.Checked)
+                    child_ver.setCheckState(1, Qt.Checked)
+                    child_pub.setCheckState(1, Qt.Checked)
                 else:
-                    parent_item.setCheckState(0, Qt.Unchecked)
-                    child_item_pub.setCheckState(1, Qt.Unchecked)
-                    child_item_ver.setCheckState(1, Qt.Unchecked)
+                    child_ver.setCheckState(1, Qt.Unchecked)
+                    child_pub.setCheckState(1, Qt.Unchecked)
 
+    def _connect_check_state(self, item, column):
+        """publish 체크랑 review 체크 연동시키기"""
+        if item.text(0) == "Upload for review":
+            return
+        if item.checkState(column) == Qt.Checked:
+            parent = item.parent()
+            parent.child(1).setCheckState(1, Qt.Checked)
 
     ##########################저장하고 버전 관리##################
 
@@ -128,14 +137,16 @@ class Publisher(QWidget):
 
     def _get_user_info(self):
         """유저에 대한 정보 가저오는 메서드"""
-        user_file_info = {"project":"baked",
+        user_file_info = {
+                    "name":"Seoyeon Yoon",
+                    "project":"baked",
                     "seq/asset":"asset",
                     "asset_type": "Character",
-                    "asset":"desk",
+                    "asset":"Apple",
                     "task":"Modeling",
                     "dev/pub":"dev",
                     "tool":"maya",
-                    "version":"004",
+                    "version":"001",
                     "filename":"desk_MOD_v001",
                     "maya_extension":"mb"}
         return user_file_info
@@ -181,12 +192,14 @@ class Publisher(QWidget):
                          API_KEY)
         return sg
 
-    def _get_published_file_type(self):
+    def _get_published_file_category(self):
         """published file type 콤보박스에 넣어주는 메서드"""
         sg = self._connect_sg()
-        published_file_type = sg.find("PublishedFileType", [], fields=["code"])
-        for info in published_file_type:
-            self.ui.comboBox_type.addItem(info['code'])
+        published_file_type = ['']
+        published_file_type_sg = sg.find("PublishedFileType", [["sg_level", "is_not", None]], fields=["code"])
+        for info in published_file_type_sg:
+            published_file_type.append(info['code'])
+        self.ui.comboBox_type.addItems(published_file_type)
         
     def _get_task_type(self):
         sg = self._connect_sg()
@@ -208,27 +221,164 @@ class Publisher(QWidget):
         self.ui.comboBox_link.clear()
         task = self.ui.comboBox_task.currentText()[9:]
         sg = self._connect_sg()
-        link_list = ['-----------select------------']
+        link_list = ['']
         step = sg.find("Step", [['description', 'is', task]], fields=["code"])[0]['code']
         link = sg.find("Task", [['step.Step.code', 'is', step], ['project.Project.name', 'is', 'baked']], fields=["entity"])
         for item in link:
             link_list.append(item['entity'].get('name'))
-        if task == "-----------select------------":
+        if task == "":
             self.ui.comboBox_link.setCurrentIndex(0)
         self.ui.comboBox_link.addItems(link_list)
+
+    ################### 펍할 데이터들 #######################
+    def _connect_file_and_type(self):
+        file = self.ui.currentItem.text(0) # 현재 클릭된 파일 이름
+        file_type = self.publish_dict[file]['file type']
+        self.ui.comboBox_type.setCurrentText(file_type)
+
+    def _make_publish_info_dict(self, item, column):
+        """"""
+        file = item.text(column)
+        if file == "Publish to Flow" or file == "Upload for review" or item.parent() == None:
+            return
+        if file not in self.publish_dict:
+            self.publish_dict[file] = {'pub': "", 'review': "", 'file type': ""}
+        try:
+            if item.child(0).checkState(1) == Qt.Checked:
+                self.publish_dict[file]['pub'] = 'pub'
+            elif item.child(1).checkState(1) == Qt.Checked:
+                self.publish_dict[file]['review'] = 'review'
+
+            if self.publish_dict[file]['file type'] == "":
+                self.ui.comboBox_type.setCurrentText("")
+            else:
+                self.ui.comboBox_type.setCurrentText(self.publish_dict[file]['file type'])
+        except:
+            pass
+
+    def _check_pub_or_version(self):
+        """모든 아이템 체크박스 선택되게/선택 안 되게 하는 메서드"""
+        parent_count = self.tree.topLevelItemCount()
+        for count_parent in range(parent_count): 
+            child_count = self.tree.topLevelItem(count_parent).childCount() # object 개수
+            for count in range(child_count):
+                object = self.tree.topLevelItem(count_parent).child(count)
+                child_ver = object.child(0)
+                child_pub = object.child(1)
+                object_text = object.text(0)
+                if child_pub.checkState(1) == Qt.Checked:
+                    self.publish_dict[object_text]['pub'] = 'pub'
+                elif child_ver.checkState(1) == Qt.Checked:
+                    self.publish_dict[object_text]['review'] = 'review'
     
-    #######################유저가 입력한 정보를 샷그리드에 넣어주기#################
+
+    def _put_publish_type_info_dict(self):
+        item = self.tree.currentItem()
+        file = item.text(0)
+        if file in ['Publish to Flow', 'Upload for review']:
+            return
+        if file not in self.publish_dict and file != "":
+            self.publish_dict[file] = {'pub': "", 'review': "", 'file type': ""}
+        self.publish_dict[file]['file type'] = self.ui.comboBox_type.currentText()
+        if self.publish_dict[file]['file type'] != '':
+            item.setText(1, "O")
+            item.setForeground(1, QBrush(QColor("orange")))
+    
+    def _load_publish_summary(self):
+        self.ui.textEdit.clear()
+        self._check_pub_or_version()
+        for file, value in self.publish_dict.items(): 
+            if file == "":
+                continue
+            self.ui.textEdit.append(file) 
+            if value['pub'] == "pub":
+                self.ui.textEdit.append('- Publish to Flow')
+                self.ui.textEdit.append('- Upload for review')
+            elif value['review'] == "review":
+                self.ui.textEdit.append('- Upload for review')
+            self.ui.textEdit.append(f"- File type: {value['file type']}")
+            self.ui.textEdit.append("")
+
+
+    ##############################################PUBLISH#############################################33
     def _publish_file_data(self):
+        # 1. 체크박스 체크 =>  publish (check 된 데이터만) :
+        # 2. 샷그리드 업로드 : (published) mb,cache,nknc (versions)mov/jpg
+             # => ui에 있는 정보 다 가져와서 딕셔너리에 넣어서 => 넣어주기
+        # 3. save (이건 여기 적힌 모든 데이터를 다 pub으로 세이브)
+            # publish 할때 cache, mb 한 묶음으로? 
+            # camera 데이터는 따로 
+        #3. 모델링에서 그룹이 여러개 선택되는 경우 ) 경고문 (하나만 선택하시오) 
+        #4. 
         new_path = self._get_path_using_template()
         print (new_path)
         if self.tool == "maya":
             MayaAPI.save_file(self, new_path)
-        # else:
-        #     NukeAPI.save_file(slef, new_path)
+        else:
+            NukeAPI.save_file(self, new_path)
+
+    def _show_publish_summary(self):
+        """textEdit에 퍼블리쉬할 데이터 입력하는 함수"""
+        pass
+        
+
+    def _show_published_type(self):
+        """해당 파일을 click 할때마다 type 설정할 수 있게 해주는"""
+
+    def create_version(self):
+        task = self.ui.comboBox_task.currentText()
+        link = self.ui.comboBox_link.currentText()
+        name = self._get_user_info['name']
+        # description = self.file_pub_data[]
+        version = self._get_user_info['version']
+        project = self._get_user_info['project']
+        #review_path = # mov 저장하고 나온 데이터로 
+        # pub_path = # pub 저장하고 나온 데이터로 => 
+        version_data = {'project': project,
+                        'code': f"V{version}",     # 이름 (추후 입력되는 데이터를 받아오는걸로 수정가능)
+                        'entity': link,
+                        'sg_task': task,
+                        'sg_status_list': 'wip', # 상태 (추후 수정가능)
+                        'user': name,
+                        'sg_upload_movie': "review_path",
+                        'description': 'description',
+                        'published_files' : pub_path}
+        
+        version = self.sg.create('Version', version_data)
+        self.sg.upload_thumbnail("Version", version['id'], thumbnail_path)
+        return version
+
+
+# published file을 생성한다.
+    def create_published_file(self, published_file_type):
+        task = self.ui.comboBox_task.currentText()
+        link = self.ui.comboBox_link.currentText()
+        name = self._get_user_info['name']
+        # description = self.file_pub_data[]
+        version = self._get_user_info['version']
+        project = self._get_user_info['project']
+        # pub_path = # pub 저장하고 나온 데이터로
+        published_file_data = {'project': self.project,
+                               'code': "Name",   # 이름 (추후 입력되는 데이터를 받아오는걸로 수정가능)
+                               'published_file_type': {'type': 'PublishedFileType', 'id': pub_types},
+                               'sg_status_list': 'ip', # 상태 (추후 수정가능)
+                               'description': description,
+                               'entity': link,
+                               'task': task,
+                               'version': version,
+                               'path': {'local_path': pub_path},
+                               'created_by': name,
+                               'published_file_type' : published_file_type}
+        published_file = self.sg.create('PublishedFile', published_file_data)
+        return published_file
 
     def _save_file_dev_version_up(self):
         new_path = self._get_path_using_template()
 
+    def _save_file_pub(self):
+         ### dev 에서 VER up 해주는거 & pub에서 Ver 그대로인거
+         pass
+    
 if __name__ == "__main__":
-    app = QApplication(sys.argv)           
+    app = QApplication(sys.argv)        
     # app.exec() 

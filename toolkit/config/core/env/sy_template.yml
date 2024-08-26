@@ -55,19 +55,19 @@ paths:
   #
   # The location of developed maya files
   maya_sequence_dev:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}.{maya_extension}'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}.mb'
   # The location of developed maya files with tag
   maya_sequence_dev_with_tag:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}_{tag}.{maya_extension}'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}_{tag}.mb'
   # The location of published maya files
   maya_sequence_pub:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/scenes/{shot}_{task}_v{version}.{maya_extension}'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/scenes/{shot}_{task}_v{version}.mb'
   # The location of published maya files with tag
   maya_sequence_pub_with_tag:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/scenes/{shot}_{task}_v{version}_{tag}.{maya_extension}'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/scenes/{shot}_{task}_v{version}_{tag}.mb'
   # The location of published maya abc files
   maya_sequence_pub_abc:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/scenes/{shot}_{task}_v{version}.abc'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/cache/{shot}_{object}_{task}_v{version}.abc'
   
   # Rendered output
   maya_sequence_render_movie:
@@ -115,16 +115,16 @@ paths:
   #
   # The location of developed maya files
   maya_asset_dev:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}.{maya_extension}'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}.mb'
   # The location of published maya files
   maya_asset_pub:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{task}_v{version}.{maya_extension}'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{task}_v{version}.mb'
   # The location of developed maya files with tag
   maya_asset_dev_with_tag:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}_{tag}.{maya_extension}'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}_{tag}.mb'
   # The location of published maya files with tag
   maya_asset_pub_with_tag:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{task}_v{version}_{tag}.{maya_extension}'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{task}_v{version}_{tag}.mb'
   # The location of published maya abc files 
   maya_asset_pub_abc:
       definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{task}_v{version}_{tag}.abc'
