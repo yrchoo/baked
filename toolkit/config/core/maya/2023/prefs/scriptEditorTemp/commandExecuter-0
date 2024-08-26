@@ -1,4 +1,9 @@
 import maya.cmds as cmds
+<<<<<<< HEAD
+selected = cmds.ls(selection=True)
+cameras = [obj for obj in selected if cmds.nodeType(obj) == 'camera']
+print (cameras)
+=======
 import os
 path = "/home/rapa/show/baked/AST/Character/desk/MOD/dev/maya/scenes/desk_MOD_v005.mb"
 file_path, name = os.path.split(path)
@@ -94,3 +99,4 @@ for shader, obj_list in shader_data.items():
 
 
 
+>>>>>>> de72e6917cd1764d643baa7246ac37fd1edbbffb
