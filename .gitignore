@@ -17,5 +17,5 @@ Icon\r
 **/maya/2023/prefs
 
 # Python bytecode files
-.pyc
+*.pyc
 **/__pycache__/
