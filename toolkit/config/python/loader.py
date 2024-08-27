@@ -505,6 +505,9 @@ class Loader(QWidget):
             maya_cell = self._make_file_cell("Make New Maya File.mb")
             self.ui.tableWidget_files.setCellWidget(row, 0, maya_cell)
             self.ui.tableWidget_files.setRowHeight(row, 50)
+
+            # 하단에 새로운 툴 파일을 만들 수 있는 cell을 추가할 수 있습니다 ***************************
+
             return
         
     def _set_seq_table_widget(self):
@@ -660,6 +663,8 @@ class Loader(QWidget):
         """
         # print(self.my_path) # /home/rapa/baked/show/baked/SEQ/ABC/ABC_0020/LGT/dev/
         _, ext = os.path.splitext(path)
+
+        # 파일 확장자에 따라 세부 경로 지정 ********************************
         if ext in [".nknc", "nk"]:
             path = f"{self.my_path}nuke/scenes/"
         elif ext in [".mb"]:
@@ -676,6 +681,7 @@ class Loader(QWidget):
 
         new_file_path = f"{path}{working}_{self.sg.user_info['task']}_v001{ext}"
 
+        # 새로운 파일이 생성되는 방식을 작성 ************************************************
         if ext in [".nknc", "nk"]:
             with open(new_file_path, "w") as file:
                 pass
