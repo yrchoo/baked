@@ -7,6 +7,7 @@ import maya.cmds as cmds
 import maya.mel as mel
 
 import sys
+import os
 from importlib import reload
 
 sys.path.append("/home/rapa/baked/toolkit/config/python")
@@ -19,8 +20,12 @@ sg = Shotgrid_Data()
 import loader
 load_win = loader.Loader(sg, "maya")
 
+import save
+save_win = save.SaveFile()
+
 def init():
     load_win.OPEN_FILE.connect(open_file)
+    save_win.SAVE_FILE.connect(save_file)
 
 def loader_func():
     """
@@ -37,9 +42,14 @@ def open_file(path):
     if current_file_path :
         LoadMayaFile(path)
     else :
+        current_file_path = path
         cmds.file(path, open=True, force=True)
-        # setprojectlocation이 이루어지는 곳
-        # 기본적인 maya에 필요한 경로들이 생성되어야함
+
+    _check_dir(current_file_path)
+
+def save_file(path):
+    cmds.file(rename=path)
+    cmds.file(save=True, type='mayaBinary')
         
 
 def publisher_func():
@@ -58,6 +68,47 @@ def add_custom_menu():
     custom_menu = cmds.menu(parent=gMainWindow, tearOff = True, label = 'BAKED') 
     cmds.menuItem(label="Loader", parent=custom_menu, command=lambda *args: loader_func())
     cmds.menuItem(label="Publisher", parent=custom_menu, command=lambda *args: publisher_func())
+
+def _check_dir(external_path):
+    # 외부 경로 안에 'maya' 폴더를 추가
+    maya_project_dir = os.path.join(os.path.dirname(external_path), "maya")
+
+    # 파일 시스템에서 경로의 존재 여부를 확인
+    if not os.path.exists(maya_project_dir):
+        os.makedirs(maya_project_dir) 
+        print(f"Created Maya project directory at: {maya_project_dir}")
+
+    # Maya 프로젝트 workspace 설정
+    cmds.workspace(maya_project_dir, openWorkspace=True)
+    print(f"Maya workspace set to: {maya_project_dir}")
+
+    # 필요한 디렉토리 생성
+    subdirectories = [
+        "scenes", 
+        "images", 
+        "sourceimages", 
+        "assets", 
+        "renderData", 
+        "clips", 
+        "sound", 
+        "scripts", 
+        "data", 
+        "movies", 
+        "data", 
+        "Time Editor", 
+        "autosave", 
+        "sceneAssembly"
+    ]
+
+    for subdir in subdirectories:
+        dir_path = os.path.join(maya_project_dir, subdir)
+        if not os.path.exists(dir_path):
+            print(f"Checking directory: {dir_path}")  # 각 디렉토리 경로를 확인
+
+            os.makedirs(dir_path)
+            print(f"Created directory: {dir_path}")
+        else:
+            print(f"Directory already exists: {dir_path}")
 
 
 init()

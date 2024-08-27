@@ -16,10 +16,10 @@ except:
 
 import os
 import re
-
+import threading
 from pprint import pprint
 
-# from webhook_server import WebhookServer # 서버를 시작하기
+from webhook_server import WebhookServer # 서버를 시작하기
 
 ## 마야나 누크가 열릴 때 tracker 코드가 작동되게 하며 메뉴바를 통해서 유아이를 열게 한다
 
@@ -33,6 +33,7 @@ class Tracker(QWidget):
         super().__init__()
         self._set_instance_val(sg)
         self._set_ui()
+        self._set_event()
 
         self._test_exec()
 
@@ -42,6 +43,8 @@ class Tracker(QWidget):
         self._get_lastest_file_data()
         self._check_version()
 
+        self._open_flask_server_for_webhook()
+
     def _set_instance_val(self, sg):
         self.py_file_path = os.path.dirname(__file__)
         if not sg :
@@ -50,7 +53,18 @@ class Tracker(QWidget):
 
         self.lastest_file_dict = {}
 
-        # WebhookServer() # flask server open
+        self.server = WebhookServer() # flask server open
+        self.server.NEW_DATA_OCCUR.connect(self._check_new_data_type)
+
+    def _open_flask_server_for_webhook(self):
+        threads = []
+        server_t = threading.Thread(target=self.server.open_server)
+        
+        threads.append(server_t)
+
+        # for t in threads:
+            # t.start()
+
 
     def _set_ui(self):
         ui_file_path = f"{self.py_file_path}/tracker.ui"
@@ -63,12 +77,16 @@ class Tracker(QWidget):
 
         ui_file.close()
 
+    def _set_event(self):
+        self.ui.listWidget_using.itemClicked.connect(self._show_selected_item_data)
+        self.ui.pushButton_load.clicked.connect(self._load_new_version)
+
     def _get_opened_file_list(self):
         ## 현재 내가 작업중인 파일에 열려있는 모든 파일 리스트를 가져온다
         ## nuke : 현재 존재하는 모든 write node에 knob("file")을 읽어오기
         ## maya : 선생님이 알려주신.... 뭔가의 캐시 파일 경로와 버전을 저장하는 방식을 사용하기
         self.opened_file_list = {
-            "ABC_0010_CMP_v001.nknc" : {},
+            # "ABC_0010_CMP_v001.nknc" : {},
             "ABC_0010_LGT_v001.####.exr" : {},
         }
 
@@ -77,7 +95,7 @@ class Tracker(QWidget):
                 ["project", "is", self.sg.project_data],
                 ["code", "contains", data]
             ]
-            fields = ["id", "code", "path", "task", "version"]
+            fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"]
 
             cur_file_data = self.sg.sg.find_one("PublishedFile", filters, fields, order=[{'field_name': 'created_at', 'direction': 'asc'}])
             pprint(cur_file_data)
@@ -88,8 +106,6 @@ class Tracker(QWidget):
             self.opened_file_list.update(
                 { data : cur_file_data }
             )
-
-        ## 현재 열려있는 파일들의 버전 파일 정보를 가져올까말까... 가져와서 띄울까 말까 개고민됨묘
 
         self.ui.listWidget_using.clear()
         self.ui.listWidget_using.addItems(self.opened_file_list.keys())
@@ -117,7 +133,7 @@ class Tracker(QWidget):
                 ["project", "is", self.sg.project_data],
                 ["code", "contains", data]
             ]
-            fields = ["id", "code", "path", "task", "version"]
+            fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"]
 
             last_file_data = self.sg.sg.find_one("PublishedFile", filters, fields, order=[{'field_name': 'created_at', 'direction': 'desc'}])
             pprint(last_file_data)
@@ -130,10 +146,13 @@ class Tracker(QWidget):
             )
 
         """
-        {'code': 'ABC_0010_LGT_v001.####.exr',
-        'id': 322,
+        {
+        'code': 'ABC_0010_LGT_v001.####.exr',
+        'created_by': {'id': 99, 'name': 'baked 1.0', 'type': 'ApiUser'},
+        'description': 'Description of the published file',
+        'id': 338,
         'path': {'content_type': 'image/exr',
-                'id': 1131,
+                'id': 1155,
                 'link_type': 'local',
                 'local_path': '/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr',
                 'local_path_linux': '/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr',
@@ -143,9 +162,13 @@ class Tracker(QWidget):
                 'name': 'ABC_0010_LGT_v001.####.exr',
                 'type': 'Attachment',
                 'url': 'file:///home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr'},
+        'published_file_type': {'id': 185,
+                                'name': 'EXR Image',
+                                'type': 'PublishedFileType'},
         'task': {'id': 6128, 'name': 'LGT', 'type': 'Task'},
         'type': 'PublishedFile',
-        'version': {'id': 7800, 'name': 'v001', 'type': 'Version'}}
+        'version': {'id': 7840, 'name': 'v002', 'type': 'Version'}
+        }
         """
 
     def _check_version(self):
@@ -162,6 +185,66 @@ class Tracker(QWidget):
                     item.setBackground(QColor("yellow"))
                     break
     
+    def _show_selected_item_data(self, item):
+        key = item.text()
+        file_data = self.opened_file_list[key]
+
+        self.ui.label_file.setText(key)
+        # self.ui.label_path.setText(file_data['path']['local_path'])
+        self.ui.label_user.setText(file_data['created_by']['name'])
+        self.ui.label_task.setText(file_data['task']['name'])
+        self.ui.label_type.setText(file_data['published_file_type']['name'])
+
+        self.ui.plainTextEdit_comment.clear()
+        self.ui.plainTextEdit_comment.insertPlainText(file_data['description'])
+
+        if self.opened_file_list[key]['version']['name'] != self.lastest_file_dict[key]['version']['name']:
+            self.ui.label_version.setText("You have a new version for this file")
+            self.ui.pushButton_load.setEnabled(True)
+        else:
+            self.ui.label_version.setText("")
+            self.ui.pushButton_load.setEnabled(False)
+
+
+    def _check_new_data_type(self, data : dict):
+        """
+        flask 서버에서 받아온 data로 원하는 entity 값을 뽑아내서
+        last version에 넣고 리스트의 정보를 업데이트 해준다
+        """
+        key = data['code']
+        p = re.compile("[v]\d{3}")
+        version = p.search(key).group()
+        mat = key.split(version)[0]
+
+        for cur_data in self.lastest_file_dict.keys():
+            if mat in cur_data:
+                self.lastest_file_dict.pop(cur_data)
+                self.lastest_file_dict[key] = data
+                break
+
+        self._check_version()
+        self._show_selected_item_data()
+
+    def _load_new_version(self):
+        cur_item = self.ui.listWidget_using.currentItem()
+        key = cur_item.text()
+
+        p = re.compile("[v]\d{3}")
+        version = p.search(key).group()
+        mat = key.split(version)[0]
+
+        new_v_key = next((n for n in self.lastest_file_dict.keys() if mat in n), None)
+
+        self.opened_file_list.pop(key)
+        self.opened_file_list[new_v_key] = self.lastest_file_dict[new_v_key]
+
+        cur_item.setText(new_v_key)
+
+        path = self.opened_file_list[new_v_key]['path']['local_path']
+
+        self._show_selected_item_data(cur_item)
+        cur_item.setBackground(QColor("white"))
+        print(f"Reload {path}")
     
 
 

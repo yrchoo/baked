@@ -48,7 +48,7 @@ class Loader(QWidget):
         self._set_init_val(sg, tool)
         self._set_ui()
         self._set_event()
-        self._set_tree_widget_data()
+        self.set_tree_widget_data()
         self._set_my_task_table_widget()
 
     def _set_init_val(self, sg, tool):
@@ -134,10 +134,16 @@ class Loader(QWidget):
 
 ################# treeWidget 연관 메서드 ##################################################
 
-    def _set_tree_widget_data(self):
+    def set_tree_widget_data(self):
         """
         Loader가 실행될 때 각 treeWidget에 데이터를 넣어주는 메서드
         """
+        self.ui.treeWidget_seq.clear()
+        self.ui.treeWidget_asset.clear()
+        self.ui.treeWidget_content.clear()
+        self.ui.treeWidget_task.clear()
+
+
         if not self.sg.connected : # Shotgrid connection failed...
             self._set_seq_tree_widget_by_path()
             self._set_asset_tree_widget_by_path()
@@ -178,7 +184,7 @@ class Loader(QWidget):
         my_task = self.sg.user_info["task"]
         task_level = {
             # 각 task에서 필요한 데이터들의 level을 저장해둔 것
-            # published_file_type의 level field 값을 나눠두었습니다 참고 부탁
+            # published_file_type의 level field 값을 나눠두었습니다 참고
             "MOD" : [0],
             "RIG" : [1],
             "LKD" : [1],
@@ -669,10 +675,15 @@ class Loader(QWidget):
             working = self.sg.user_info['shot']
 
         new_file_path = f"{path}{working}_{self.sg.user_info['task']}_v001{ext}"
-        
-        with open(new_file_path, 'w') as file:
-            file.close()
 
+        if ext in [".nknc", "nk"]:
+            with open(new_file_path, "w") as file:
+                pass
+        elif ext in [".mb"]:
+            os.system(f"cp /home/rapa/baked/toolkit/config/core/maya/empty_mb_file.mb {new_file_path}")
+        else :
+            return
+       
         self.OPEN_FILE.emit(new_file_path)
 
         if self.tool:
@@ -813,7 +824,7 @@ class Loader(QWidget):
         file_table.setColumnWidth(0, 309)
         file_table.setColumnWidth(1, 309)
 
-#########################################################################
+#####################################################################################
 
         
 
