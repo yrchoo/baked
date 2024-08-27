@@ -1,25 +1,29 @@
 from flask import Flask, request, jsonify
 
 try :
-    from PySide6.QtCore import Signal
+    from PySide6.QtCore import Signal, QObject
 except:
-     from PySide2.QtCore import Signal
+     from PySide2.QtCore import Signal, QObject
 
-class WebhookServer():
-    NEW_TASK_VERSION = Signal(dict)
+class WebhookServer(QObject):
+    NEW_DATA_OCCUR = Signal(dict)
 
     APP = Flask(__name__)
 
     def __init__(self):
+        super().__init__()
+        # self._open_server()
 
-        self._open_server()
-
-    def _open_server(self):
+    def open_server(self):
         self.APP.run(host='0.0.0.0', port=5000)
 
     @APP.route('/webhook', methods=['POST'])
-    def webhook(self):
+    def webhook():
         data = request.json
         print(f"Received data: {data}")
-        self.NEW_TASK_VERSION.emit(data)
+        # NEW_DATA_OCCUR.emit(data)
         return 'OK', 200
+
+
+if __name__ == "__main__":
+    WebhookServer()

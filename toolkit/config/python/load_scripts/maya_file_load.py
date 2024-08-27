@@ -61,6 +61,7 @@ class LoadMayaFile():
                     continue
                 cmds.select(obj, add=True)
             cmds.hyperShade(assign=matching_shader)
+            cmds.select(clear=True)
             
     def _import_maya_file(self, path):
         cmds.ABCImport(path, mode="import")
