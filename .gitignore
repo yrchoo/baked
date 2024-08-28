@@ -14,8 +14,8 @@ Icon\r
 .Trashes
 
 # maya에서 사용자에 종속되는 설정값들이 저장되는 폴더
-/toolkit/config/core/maya/2023/prefs
+**/toolkit/config/core/maya/2023/prefs
 
 # Python bytecode files
-.pyc
-/__pycache__/
+*.pyc
+**/__pycache__/

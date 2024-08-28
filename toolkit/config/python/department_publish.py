@@ -1,52 +1,67 @@
 try:
-    from PySide6.QtWidgets import QTreeWidgetItem, QMessageBox, QRadioButton
+    from PySide6.QtWidgets import QTreeWidgetItem
     from PySide6.QtCore import Qt
-    from PySide6.QtGui import QIcon, QPixmap, QFont
+    from PySide6.QtGui import QFont, QBrush, QColor
 except:
     from PySide2.QtWidgets import QTreeWidgetItem
     from PySide2.QtCore import Qt
-    from PySide2.QtGui import QIcon, QPixmap, QFont, QBrush, QColor
-    from work_in_maya import MayaAPI
-    from work_in_nuke import NukeAPI
-    import re
+    from PySide2.QtGui import QFont, QBrush, QColor
+
+from work_in_maya import MayaAPI
+from work_in_nuke import NukeAPI
+from functools import partial
 
 class DepartmentTree():
     def __init__(self, treewidget, tool):
         self.tree = treewidget
         self.tool = tool
-
-        data = self.make_data()
         self.initial_tree_setting()
-        self.put_data_in_tree(data)
-
-        ## publish button 누르면 get ready for publish 되게끔
-    
-    def _get_ready_for_publish(self):
-        pass
         
-    def put_data_in_tree(self, data_dict):
+    def initial_tree_setting(self):
+        """트리위젯 초기 설정"""
+        self.tree.setColumnCount(2)
+        self.tree.setColumnWidth(0,250)
+        self.tree.setColumnWidth(1,10)
+
+    def put_data_in_tree(self):
         """아이템을 트리위젯에 넣는 메서드"""
         file_name = self.get_current_file_name()
         file_parent = QTreeWidgetItem(self.tree)
         file_parent.setText(0, file_name)
+        file_parent.setText(1, "---")
+        file_parent.setForeground(1, QBrush(QColor("green")))
         self._set_text_bold(file_parent)
+        publish_dict = self.make_data()
+        print (publish_dict)
 
-        # 데이터가 없는 경우
-        if not data_dict:
+        # 데이터가 없는 경우에도 오류없이 import 되게끔
+        if not publish_dict:
             return
-        for item in data_dict:
+        for item in publish_dict: # 파일 (mb) 가장 앞에 있어서 빼주기
+            if item == file_name:
+                continue
             parent = QTreeWidgetItem(file_parent)
             parent.setText(0, item)
             parent.setText(1, "---")
             parent.setForeground(1, QBrush(QColor("green")))
             self._set_text_bold(parent)
             self._make_tree_item("Publish to Flow", parent)
-            self._make_tree_item("Upload for reivew", parent)
-
+            self._make_tree_item("Upload for review", parent)
+      
         self.tree.expandAll()
+        publish_dict[file_name] = {'pub':True, 'rev':True, 'description':'', 'file type':'', 'ext':''}
+        return publish_dict
 
-        return data_dict
-    
+    def make_data(self):
+        selected_data = self.check_selection()
+        publish_dict = {self.get_current_file_name():{'pub':True, 'rev':True, 'description':'', 'file type':'', 'ext': ''}}
+        try:
+            for data in selected_data:
+                publish_dict[data] = {'pub':True, 'rev':True, 'description':'', 'file type':'', 'ext': ''}
+        except: 
+            return
+        return publish_dict
+        
     def _make_tree_item(self, text, parent):
         """트리 위젯 아이템 만드는 메서드"""
         self.tree.setStyleSheet("QTreeWidget {font-size:12px}")
@@ -61,23 +76,6 @@ class DepartmentTree():
         font = QFont()
         font.setBold(True)
         item.setFont(0, font)
-    
-    def initial_tree_setting(self):
-        """트리위젯 초기 설정"""
-        self.tree.setColumnCount(2)
-        self.tree.setColumnWidth(0,250)
-        self.tree.setColumnWidth(1,10)
-
-    def get_current_file_name(self):
-        pass
-    
-    def put_icon(self, data_type, item):
-        image_path  = f"/home/rapa/baked/toolkit/config/python/{data_type}.png"
-        icon = QIcon(QPixmap(image_path))
-        item.setIcon(0, icon)
-
-    def make_data(self):
-        pass
 
     def check_selection(self):
         """선택한 object/node 확인하는 메서드"""
@@ -92,46 +90,42 @@ class DepartmentTree():
         if self.tool == "maya":
             return MayaAPI.get_file_name(self)
         else:
-            return NukeAPI.basename() #####
+            return NukeAPI.get_file_name() #####
     
-    def object_type_dictionary(self):
-        # transform (group 노드인경우 ) => mb
-        object_type_dict = MayaAPI.get_object_type
-        return object_type_dict
-    
-
 class Modeling(DepartmentTree):
-    """Publish Data: mb, mov(턴테이블)/ jpg(playblast)"""
-    """modeling data는 한 파일에 하나씩만 있음"""
-    def make_data(self):
-        selected_data = self.check_selection()
-        data_dict = {}
-        try: 
-            for data in selected_data:
-                data_dict[data] = "mb"
-            return data_dict
-        except:
-            return
+    def get_ready_for_publish(self):
+        # 인희님 API
+        pass
     
-#     def save_data(self):
-#         # 
-#         pass
+    def save_data(self, new_path):
+        pass
+        # mb, cache 파일 따로 내보내기 
 
-#     def _get_ready_for_publish(self):
-#         pass
+class Rigging(DepartmentTree):
+    def get_ready_for_publish(self):
+        # 인희님 API
+        pass
+    
+    def save_data(self, new_path):
+        pass
 
-# class Rigging(DepartmentTree):
-#     def make_data(self):
-#         data_dict = ['mb', 'mov']
+class Lookdev(DepartmentTree):
+    """Publish Data: mb, ma(shader), png(texture) """    
+    def make_data(self):
+        # 인희님 API
+        pass
 
+class Lighting(DepartmentTree):
+    def make_data(self):
+        pass
 
-# class Lighting(DepartmentTree):
-#     def make_data(self):
-#         pass
+class Animation(DepartmentTree):
+    def make_data(self):
+        pass
+    
+    def _get_ready_for_publish(self):
+        pass
 
-# class Lookdev(DepartmentTree):
-#     """Publish Data: mb, """    
-#     pass
 
 # class Animation(DepartmentTree):
 #     def make_data(self):
