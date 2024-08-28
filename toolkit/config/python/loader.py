@@ -17,13 +17,11 @@ except:
 
 import os
 import yaml
-from pprint import pprint
+# from pprint import pprint
 
-try :
-    from shotgrid.get_shotgrid_data import Shotgrid_Data
-except :
-    from get_shotgrid_data import Shotgrid_Data
-    
+
+from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
+
 from file_open import FileOpen
 
 class Loader(QWidget):
@@ -40,7 +38,7 @@ class Loader(QWidget):
 
 ######################## __init__ 시점에서 불려지는 함수들 ###########################
 
-    def __init__(self, sg : Shotgrid_Data, tool : str = None):
+    def __init__(self, sg : ShotGridDataFetcher, tool : str = None):
         """
         처음 Loader가 생성될 때 설정되어야하는 메서드들이 작성되어있는 생성자 
         """
@@ -66,7 +64,7 @@ class Loader(QWidget):
 
         self.project_name = "baked" # 프로젝트 이름 데이터 후에 login 시 읽어온 데이터로 사용해야됨. (추후 제거)
         self.py_file_path = os.path.dirname(__file__)
-        self.sg : Shotgrid_Data = sg # login 시에 지정된 userdata를 가지고 Shotgrid에서 정보를 가져오는 Shotgrid_Data() 클래스
+        self.sg : ShotGridDataFetcher = sg # login 시에 지정된 userdata를 가지고 Shotgrid에서 정보를 가져오는 Shotgrid_Data() 클래스
         self.project_path = f"{self.home_path}/show/{self.project_name}" # shotgrid가 실행되지 않을 때를 위한 기본 경로값 (추후 제거?)
         self.tool = tool # 현재 loader가 tool 프로그램을 통해서 실행되었을 때 값이 들어가는 변수
         self.content_files_data = {} # 현재 작업에서 사용되는 파일들의 정보들이 들어가는 dict
@@ -839,6 +837,6 @@ class Loader(QWidget):
         
 if __name__ == "__main__":
     app = QApplication()
-    win = Loader(Shotgrid_Data())
+    win = Loader(ShotGridDataFetcher())
     win.show()
     app.exec()

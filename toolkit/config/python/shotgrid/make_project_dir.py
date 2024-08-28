@@ -1,107 +1,108 @@
+import os
 from shotgun_api3 import Shotgun
 
-import os
+class FolderStructureCreator:
+    def __init__(self, fetcher, base_path): # ***** shotgridDataFetcher가 선언될 때 현재 작업물이 저장될 경로들을 체크하는 게 좋을 것 같아서
+                                   # shotgridDataFetcher에서 FolderStructureCreator를 호출하고 fetcher 객체를 넘겨주는 걸로 수정했습니다
+        self.base_path = base_path
+        self.fetcher = fetcher
+        self.project_id = self.fetcher.project['id'] # ***** 수정했습니다
 
-class FolderStructure():
-    def __init__(self):
-        self._set_init_value()
-        self._get_auth()
-        self._make_project_folder("baked")
+        self.create_asset_folder()
+        self.create_seq_folders()
 
-    def _set_init_value(self):
-        self.show_path = "/home/rapa/baked/show"
-        self.sg = "" # Shotgun()
-        self.project_data = {
-            "name" : "baked"
-        }
-        self.template = {
-            "Shot" : 'Baked Shot Template', "Asset" : 'Baked Character Asset Template'
-        }
+    # ***** 프로젝트 이름으로 된 폴더부터 만들어야됩니다! 수정 부탁드려욥
+    # 폴더가 존재하는 지를 확인하고 파일을 만드는 과정이 각 메서드에서 반복되는데 
+    # 이 부분을 또 하나의 메서드로 빼두면 나중에 폴더 안만들고 테스트만 해보거나 할 때 유용할 것 같아요
 
-    def _get_auth(self):
-        script_name = "baked"
-        script_key = "p)ghhlikzcyzwq4gdgZpnhmkz"
+    # 에셋 폴더를 만드는 툴
+    def asset_folder_making_tool(self, asset_type, asset_code, asset_task_content):
+        path = os.path.join(self.base_path, "AST", asset_type, asset_code, asset_task_content)
+        print(path)
+        if not os.path.exists(path):
+            os.makedirs(path)
+            print(f"Folder Created: {path}")
+        else:    
+            pass
+            print(f"Folder Already Exists: {path}")
 
-        self.sg = Shotgun("https://4thacademy.shotgrid.autodesk.com/", 
-                    script_name, 
-                    script_key)
-        
-        self.project_data.update(self.sg.find_one("Project", [['name', 'is', self.project_data['name']]]))
-        
-    def _make_project_folder(self, project_name):
-        addr = f"{self.show_path}/{project_name}"
-        self._check_file_exist(addr)
-        self._make_asset_folder(f"{addr}/AST")
-        self._make_seq_folder(f"{addr}/SEQ")
+        for subfolder in ['dev', 'pub']:
+            subfolder_path = os.path.join(path, subfolder)
+            print(subfolder_path)
+            if not os.path.exists(subfolder_path):
+                os.makedirs(subfolder_path)
+                print (f"Folder Created: {subfolder_path}")
+            else:
+                pass
+                print (f"Folder Already Exists: {subfolder_path}")
 
-    def _check_file_exist(self, addr):
-        print(addr)
-        # os.system(f"touch {addr}/.gitkeep")
-        if os.path.exists(addr) : return
-        # os.makedirs(addr)
 
-    def _get_entity_from_project(self, entity_name):
-        filters = [['project', 'is', self.project_data]]
-        fields = ['code']
-        result = self.sg.find(entity_name, filters, fields)
-        return result
+
+    # 시퀀스 폴더를 만드는 툴
+    def seq_folder_making_tool(self, base_folder, folder_code, task_content=None):
+        path = os.path.join(self.base_path, base_folder, folder_code, task_content or '')
+        print(path)
+        if not os.path.exists(path):
+            os.makedirs(path)
+            print(f"Folder Created: {path}")
+        else:    
+            pass
+            print(f"Folder Already Exists: {path}")
+
+            for subfolder in ['dev', 'pub']:
+                subfolder_path = os.path.join(path, subfolder)
+                if not os.path.exists(subfolder_path):
+                    os.makedirs(subfolder_path)
+                    print(f"Folder Created: {subfolder_path}")
+                else:
+                    pass
+                    print(f"Folder Already Exists: {subfolder_path}")
+
     
-    def _get_shot_from_sequence(self, seq):
-        filters = [['sequence', 'is', seq]]
-        result = self.sg.find("Shot", filters)
-        return result
-    
-    def _get_entity_from_another(self, entity_type, field, from_ent):
-        filters = [[field, 'is', from_ent]]
-        fields = ['code', 'content']
-        result = self.sg.find(entity_type, filters, fields)
-        return result
 
-    def _make_seq_folder(self, addr):
-        addr = f"{addr}"
-        self._check_file_exist(f"{addr}")
-        seqs = self._get_entity_from_project("Sequence")
+    def create_asset_folder(self):
+        assets = self.fetcher.fetch_assets(self.project_id)
+        asset_tasks = self.fetcher.fetch_asset_tasks(assets)
+        for asset in assets:
+            asset_type = asset['sg_asset_type']
+            asset_code = asset['code']
+
+            for task in asset_tasks:
+                if task['entity']['id'] == asset['id']:
+                    asset_task_content = task['content']
+                    self.asset_folder_making_tool(asset_type, asset_code, asset_task_content)
+
+
+    def create_seq_folders(self):
+        seqs = self.fetcher.fetch_seq(self.project_id)
+        all_shots = self.fetcher.fetch_shots(seqs)
+        seq_tasks = self.fetcher.fetch_seq_tasks()
+
         for seq in seqs:
-            seq_name = seq['code']
-            self._check_file_exist(f"{addr}/{seq_name}")
-            self._make_shot_folder(f"{addr}/{seq_name}", seq)
+            seq_code = seq['code']
+            self.seq_folder_making_tool('SEQ', seq_code)
 
-    def _make_shot_folder(self, addr, seq):
-        shots = self._get_entity_from_another("Shot", "sg_sequence", seq)
-        for shot in shots:
-            shot_name = shot['code']
-            self._check_file_exist(f"{addr}/{shot_name}")
-            self._make_task_folder(f"{addr}/{shot_name}", shot)
+            for shot in all_shots:
+                if shot['sg_sequence']['id'] == seq['id']:
+                    shot_code = shot['code']
+                    self.seq_folder_making_tool(os.path.join('SEQ', seq_code), shot_code)
 
-    def _make_asset_folder(self, addr):
-        addr = f"{addr}"
-        self._check_file_exist(f"{addr}")
-        asset_types = self.sg.schema_field_read("Asset", "sg_asset_type", self.project_data)['sg_asset_type']['properties']['valid_values']['value']
-        
-        for asset_type in asset_types:
-            asset_addr = f"{addr}/{asset_type}"
-            self._check_file_exist(asset_addr)
-            assets = self.sg.find('Asset', [['project', 'is', self.project_data],['sg_asset_type', 'is', asset_type]], ['code'])
-            for ast in assets:
-                ast_name = ast['code']
-                self._check_file_exist(f"{asset_addr}/{ast_name}")
-                self._make_task_folder(f"{asset_addr}/{ast_name}", ast)
-
-
-    def _make_task_folder(self, addr, obj):
-        tasks = self._get_entity_from_another("Task", "entity", obj)
-        for task in tasks:
-            task_name = task['content'].upper()
-            self._check_file_exist(f"{addr}/{task_name}")
-            self._make_dev_pub(f"{addr}/{task_name}")
-
-    def _make_dev_pub(self, addr):
-        dev_path = f"{addr}/dev"
-        pub_path = f"{addr}/pub"
-        self._check_file_exist(dev_path)
-        self._check_file_exist(pub_path)
+                    for task in seq_tasks:
+                        if task['entity']['id'] == shot['id']:
+                            seq_task_content = task['content'] 
+                            self.seq_folder_making_tool(os.path.join('SEQ',seq_code, shot_code), seq_task_content)
 
 
 
 if __name__ == "__main__":
-    FolderStructure()
+
+    SCRIPT_NAME = "baked"    
+    SCRIPT_KEY = "p)ghhlikzcyzwq4gdgZpnhmkz"
+    SERVER_URL = "https://4thacademy.shotgrid.autodesk.com"
+    base_path = "/home/rapa2/SHOW/baked/"
+
+    # client = FolderStructureCreator(base_path)
+    creator = FolderStructureCreator(SERVER_URL, SCRIPT_NAME, SCRIPT_KEY, base_path) 
+    creator.create_asset_folder()
+    creator.create_seq_folders()
+    
