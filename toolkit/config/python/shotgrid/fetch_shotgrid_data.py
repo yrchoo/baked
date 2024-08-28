@@ -29,7 +29,7 @@ class ShotGridDataFetcher:
         self._set_instance_val()
         self.sg = self._get_auth()
         self._get_current_user_data()
-        if self.connect:
+        if self.connected:
             self._fetch_project_id()
             FolderStructureCreator(self, "/home/rapa/baked/show/baked/") # 이건 나중에 yaml에 저장된 경로로 바꿔주세요!
 
@@ -40,7 +40,7 @@ class ShotGridDataFetcher:
         기본적으로 해당 변수에 어떤 값이 들어갈 건지 주석과 함께 달아주시면 좋습니다
         """
         self.sg = None # Shotgun() 객체가 저장되는 곳
-        self.connect = False # Shotgun API가 잘 연결되었는지 값을 저장해줍니다
+        self.connected = False # Shotgun API가 잘 연결되었는지 값을 저장해줍니다
 
         # project나 현재 작업을 하고 있는 HumanUser entity들은 자주 사용되고 전체 프로젝트가 돌아가는 동안 변경되지 않으니
         # instance 변수에 저장해두는 것이 좋을 것 같습니다
@@ -62,10 +62,10 @@ class ShotGridDataFetcher:
             sg = Shotgun(shotgun_url, 
                         script_name, 
                         script_key)
-            self.connect = True
+            self.connected = True
         except:
             sg = None
-            self.connect = None
+            self.connected = None
 
         return sg
     
@@ -176,16 +176,16 @@ class ShotGridDataFetcher:
     # 이 아래에는 Loader와 연결을 위해 Loader에서 필요한 shotgrid api 기능들을 메서드로 작성한 것입니다
     #
     #####################################################################################
-    # 일단 긁어만 왔고... 위에 있는 메서드랑 중복되는 건 loader에서 이름 수정 후 아래 메서드는 지우겠습니다
+    # 일단 다른 곳에 작성했던 코드를 긁어만 왔고... 위에 있는 메서드랑 중복되는 건 loader에서 이름 수정 후 아래 메서드는 지우겠습니다
 
     def get_sequences_entities(self) -> list[dict]:
-        filters_for_seq = [['project', 'is', self.project_data]]
+        filters_for_seq = [['project', 'is', self.project]]
         fields_for_seq = ['type', 'id', 'code']
         result = self.sg.find("Sequence", filters_for_seq, fields_for_seq)
         return result
     
     def get_asset_entities(self) -> list[dict]:
-        filters_for_seq = [['project', 'is', self.project_data]]
+        filters_for_seq = [['project', 'is', self.project]]
         fields_for_seq = ['type', 'id', 'code', 'sg_asset_type']
         result = self.sg.find("Asset", filters_for_seq, fields_for_seq)
         return result
