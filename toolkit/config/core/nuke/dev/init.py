@@ -10,6 +10,7 @@ print("Initialize Script is executed.")
 print("*" * 30)
 
 import nuke
+import os
 
 
 nuke.pluginAddPath("./gizmo")
