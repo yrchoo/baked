@@ -16,6 +16,8 @@ Icon\r
 # maya에서 사용자에 종속되는 설정값들이 저장되는 폴더
 **/maya/2023/prefs
 
+**/maya/mayaLog
+
 # Python bytecode files
 *.pyc
 **/__pycache__/
