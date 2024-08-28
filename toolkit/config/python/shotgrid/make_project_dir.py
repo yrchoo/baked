@@ -19,22 +19,22 @@ class FolderStructureCreator:
     def asset_folder_making_tool(self, asset_type, asset_code, asset_task_content):
         path = os.path.join(self.base_path, "AST", asset_type, asset_code, asset_task_content)
         print(path)
-        if not os.path.exists(path):
-            os.makedirs(path)
-            print(f"Folder Created: {path}")
-        else:    
-            pass
-            print(f"Folder Already Exists: {path}")
+        # if not os.path.exists(path):
+        #     os.makedirs(path)
+        #     print(f"Folder Created: {path}")
+        # else:    
+        #     pass
+        #     print(f"Folder Already Exists: {path}")
 
-        for subfolder in ['dev', 'pub']:
-            subfolder_path = os.path.join(path, subfolder)
-            print(subfolder_path)
-            if not os.path.exists(subfolder_path):
-                os.makedirs(subfolder_path)
-                print (f"Folder Created: {subfolder_path}")
-            else:
-                pass
-                print (f"Folder Already Exists: {subfolder_path}")
+        # for subfolder in ['dev', 'pub']:
+        #     subfolder_path = os.path.join(path, subfolder)
+        #     print(subfolder_path)
+        #     if not os.path.exists(subfolder_path):
+        #         os.makedirs(subfolder_path)
+        #         print (f"Folder Created: {subfolder_path}")
+        #     else:
+        #         pass
+        #         print (f"Folder Already Exists: {subfolder_path}")
 
 
 
@@ -42,21 +42,21 @@ class FolderStructureCreator:
     def seq_folder_making_tool(self, base_folder, folder_code, task_content=None):
         path = os.path.join(self.base_path, base_folder, folder_code, task_content or '')
         print(path)
-        if not os.path.exists(path):
-            os.makedirs(path)
-            print(f"Folder Created: {path}")
-        else:    
-            pass
-            print(f"Folder Already Exists: {path}")
+        # if not os.path.exists(path):
+        #     os.makedirs(path)
+        #     print(f"Folder Created: {path}")
+        # else:    
+        #     pass
+        #     print(f"Folder Already Exists: {path}")
 
-            for subfolder in ['dev', 'pub']:
-                subfolder_path = os.path.join(path, subfolder)
-                if not os.path.exists(subfolder_path):
-                    os.makedirs(subfolder_path)
-                    print(f"Folder Created: {subfolder_path}")
-                else:
-                    pass
-                    print(f"Folder Already Exists: {subfolder_path}")
+        #     for subfolder in ['dev', 'pub']:
+        #         subfolder_path = os.path.join(path, subfolder)
+        #         if not os.path.exists(subfolder_path):
+        #             os.makedirs(subfolder_path)
+        #             print(f"Folder Created: {subfolder_path}")
+        #         else:
+        #             pass
+        #             print(f"Folder Already Exists: {subfolder_path}")
 
     
 

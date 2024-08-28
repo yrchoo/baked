@@ -73,7 +73,7 @@ class Loader(QWidget):
         """
         Loader의 UI File이 설정되는 메서드
         """
-        ui_file_path = f"{self.py_file_path}/loader.ui"
+        ui_file_path = f"{self.py_file_path}/ui_files/loader.ui"
         ui_file = QFile(ui_file_path)
         ui_file.open(QFile.ReadOnly)
 
@@ -219,7 +219,7 @@ class Loader(QWidget):
         for w in working: # 현재 작업에 필요한 shot, asset 데이터들을 하나씩 가져와서
             for t in task_level.keys():
                 filters = [
-                    ["project", "is", self.sg.project_data],
+                    ["project", "is", self.sg.project],
                     ["code", "contains", t],
                     ["code", "contains", w],
                 ]
