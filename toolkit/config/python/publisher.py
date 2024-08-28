@@ -149,12 +149,13 @@ class Publisher(QWidget):
         current = f"{tool}_{level}_{work}"
         if ext: 
             current += f"_{ext}"
-
+        print (f"current : {current}")
         if current in yaml_path:
             root_path = yaml_path[f"{level}_root"]
             new_path = yaml_path[current]["definition"].replace(f"@{level}_root", root_path)
             new_path = new_path.format(**file_info_dict)
             self._check_validate(new_path)
+        print(f"new_path :{new_path}")
         return new_path
 
     def _get_user_info(self):
@@ -373,8 +374,9 @@ class Publisher(QWidget):
         elif button.text() == "Render":
             # 부서별로 펍할 external 입력받기
             image_path = self._get_path_using_template("pub", ext="")
-        
+        print(f"image_path: {image_path}")
         path = image_path.split("/")[:-2]
+        print(path)
         files = glob.glob(path)
         if not files:
             return

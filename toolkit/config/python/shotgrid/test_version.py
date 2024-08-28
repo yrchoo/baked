@@ -53,46 +53,61 @@ class MakeVersionTest():
 
         new_version_data = {
             "project" : self.project,
-            "code": "v002",
+            "code": "v010",
             "description": "tracker test를 위해 생성한 version입니당",
             "entity" : self.shot,
             "sg_task": self.task,
             "user": self.user,
             "created_by" : self.user,
             "sg_status_list" : "rev",
-            "upload_file" : "review.mov"
+            # "upload_file" : "review.mov"
         }
 
         version = self.sg.create("Version", new_version_data)
         print(f"version : {version}")
 
-
-        published_file = {
-            "project": self.project,
-            "code": file_name,
-            "description": "Description of the published file",
-            "task": self.task,
-            "entity" : self.shot,
-            "version": version,  # 버전과 연결
-            "path": {"local_path": self.open_folder_path},
-            # "published_file_type": {"type": "PublishedFileType", "id": 2},  # 필요에 따라 유형 ID를 조정
+        event_data = {
+            'event_type': 'Shotgun_Version_New',
+            'description': f"Version {version['code']} created by script",
+            'entity': {'type': 'Version', 'id': version['id']},
+            'project': self.project,
+            'user' : self.user,
+            'meta': {
+                'new_value': version['code'],
+                'entity_type': 'Version'
+            },
         }
 
-        publish = self.sg.create("PublishedFile", published_file)
-        print(f"publish : {publish}")
+        event = self.sg.create('EventLogEntry', event_data)
+        print(f"Created Event: {event}")
 
-        note_data = {
-            "project": self.project,
-            "note_links": [self.project, version],  # 노트를 생성할 버전과 연결
-            "subject": f"New Version Created",  # 노트 제목
-            "content": f"{self.user['name']} create new {version['code']} of {published_file['code']}",  # 노트 내용
-            # "sg_note_type": "Internal",  # 노트 타입 (필요시)
-            "user": self.user,  # 노트 작성자
-            "created_by" : self.user,
-            "tasks": [self.task],  # 태스크와 연결
-            "addressings_to" : [self.user],
-        }
-        note = self.sg.create("Note", note_data)
+
+        # published_file = {
+        #     "project": self.project,
+        #     "code": file_name,
+        #     "description": "Description of the published file",
+        #     "task": self.task,
+        #     "entity" : self.shot,
+        #     "version": version,  # 버전과 연결
+        #     "path": {"local_path": self.open_folder_path},
+        #     # "published_file_type": {"type": "PublishedFileType", "id": 2},  # 필요에 따라 유형 ID를 조정
+        # }
+
+        # publish = self.sg.create("PublishedFile", published_file)
+        # print(f"publish : {publish}")
+
+        # note_data = {
+        #     "project": self.project,
+        #     "note_links": [self.project, version],  # 노트를 생성할 버전과 연결
+        #     "subject": f"New Version Created",  # 노트 제목
+        #     "content": f"{self.user['name']} create new {version['code']} of {published_file['code']}",  # 노트 내용
+        #     # "sg_note_type": "Internal",  # 노트 타입 (필요시)
+        #     "user": self.user,  # 노트 작성자
+        #     "created_by" : self.user,
+        #     "tasks": [self.task],  # 태스크와 연결
+        #     "addressings_to" : [self.user],
+        # }
+        # note = self.sg.create("Note", note_data)
         # print("Create Note : " + note['id'])
         
     def _print_data(self):
