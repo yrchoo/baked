@@ -15,7 +15,7 @@ try:
     import yaml
     import glob
 except:
-    from PySide2.QtWidgets import QApplication, QWidget
+    from PySide2.QtWidgets import QApplication, QWidget, QButtonGroup
     from PySide2.QtUiTools import QUiLoader
     from PySide2.QtCore import QFile, Qt
     from PySide2.QtGui import QBrush, QColor, QIcon
@@ -63,11 +63,11 @@ class Publisher(QWidget):
         self.ui.treeWidget.itemClicked.connect(self._show_description)
         self.ui.plainTextEdit_description.textChanged.connect(self._write_description)
 
-        button_group = QButtonGroup()
+        self.button_group = QButtonGroup()
         button_list = [self.ui.radioButton_playblast, self.ui.radioButton_capture, self.ui.radioButton_render]
         for button in button_list:
-            button_group.addButton(button)
-        button_group.buttonClicked.connect(self._show_thumbnail)
+            self.button_group.addButton(button)
+        self.button_group.buttonClicked.connect(self._show_thumbnail)
 
     def _set_ui(self):
         """ui 셋업해주는 메서드"""
