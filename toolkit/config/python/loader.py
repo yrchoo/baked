@@ -397,6 +397,7 @@ class Loader(QWidget):
             yaml_data = yaml.load(f, Loader=yaml.FullLoader)
             yaml_path = yaml_data["paths"]
         return yaml_path
+    
 
     def _get_path(self, path_data=None):
         """

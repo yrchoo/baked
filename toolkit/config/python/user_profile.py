@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 
 import shotgrid_total_profile
-from login import Login
+from config.python.offline_login import Login
 import sys
 
 from shotgrid.user_env_val import Make_User_Data

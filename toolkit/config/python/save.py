@@ -32,7 +32,7 @@ class SaveFile(QWidget):
 
 
     def _set_ui(self):
-        ui_file_path = f"{self.py_file_path}/save.ui"
+        ui_file_path = f"{self.py_file_path}/ui_files/save.ui"
         ui_file = QFile(ui_file_path)
         ui_file.open(QFile.ReadOnly)
 

@@ -24,12 +24,12 @@ from webhook_server import WebhookServer # 서버를 시작하기
 ## 마야나 누크가 열릴 때 tracker 코드가 작동되게 하며 메뉴바를 통해서 유아이를 열게 한다
 
 try :
-    from shotgrid.get_shotgrid_data import Shotgrid_Data
+    from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
 except:
     pass
 
 class Tracker(QWidget):
-    def __init__(self, sg : Shotgrid_Data = None):
+    def __init__(self, sg : ShotGridDataFetcher = None):
         super().__init__()
         self._set_instance_val(sg)
         self._set_ui()
@@ -48,7 +48,7 @@ class Tracker(QWidget):
     def _set_instance_val(self, sg):
         self.py_file_path = os.path.dirname(__file__)
         if not sg :
-            self.sg = Shotgrid_Data()
+            self.sg = ShotGridDataFetcher()
         else : self.sg = sg
 
         self.lastest_file_dict = {}
@@ -67,7 +67,7 @@ class Tracker(QWidget):
 
 
     def _set_ui(self):
-        ui_file_path = f"{self.py_file_path}/tracker.ui"
+        ui_file_path = f"{self.py_file_path}/ui_files/tracker.ui"
         ui_file = QFile(ui_file_path)
         ui_file.open(QFile.ReadOnly)
 
@@ -92,7 +92,7 @@ class Tracker(QWidget):
 
         for data in self.opened_file_list.keys():
             filters = [
-                ["project", "is", self.sg.project_data],
+                ["project", "is", self.sg.project],
                 ["code", "contains", data]
             ]
             fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"]
@@ -130,7 +130,7 @@ class Tracker(QWidget):
 
         for data in self.my_content_list:
             filters = [
-                ["project", "is", self.sg.project_data],
+                ["project", "is", self.sg.project],
                 ["code", "contains", data]
             ]
             fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"]
