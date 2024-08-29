@@ -6,34 +6,25 @@ try:
     from PySide6.QtGui import QPixmap, QTextCursor
     from PySide6.QtMultimedia import QMediaPlayer, QMediaContent
     from PySide6.QtMultimediaWidgets import QVideoWidget
-    from shotgun_api3 import shotgun
-    import department_publish 
-    import work_in_maya
-    from importlib import reload
-    from capture_module import SubWindow_Open, MakeScreenCapture
-    from work_in_maya import MayaAPI
-    from work_in_nuke import NukeAPI
-    import sys
-    import os
-    import yaml
-    import glob
 except:
     from PySide2.QtWidgets import QApplication, QWidget, QButtonGroup
     from PySide2.QtUiTools import QUiLoader
     from PySide2.QtCore import QFile, Qt
     from PySide2.QtGui import QBrush, QColor, QIcon
     from PySide2.QtGui import QPixmap, QTextCursor
-    from shotgun_api3 import shotgun
-    import department_publish 
-    from importlib import reload
-    from capture_module import SubWindow_Open, MakeScreenCapture
-    from work_in_maya import MayaAPI
-    from work_in_nuke import NukeAPI
-    import work_in_maya
-    import sys
-    import os
-    import yaml
-    import glob
+
+from shotgun_api3 import shotgun
+import department_publish 
+from importlib import reload
+from capture_module import SubWindow_Open, MakeScreenCapture
+from work_in_maya import MayaAPI
+from work_in_nuke import NukeAPI
+import work_in_maya
+import sys
+import os
+import yaml
+import glob
+import re
 
 class Publisher(QWidget):
     def __init__(self):
@@ -42,6 +33,7 @@ class Publisher(QWidget):
         self.initial_setting()
         self._get_task_type()
         self._set_event()
+        self.test_setting()
 
     def _set_event(self):
         """이벤트 발생 메서드"""
@@ -56,7 +48,7 @@ class Publisher(QWidget):
         self.ui.pushButton_thumbnail.clicked.connect(self._make_thumbnail)
 
         self.ui.comboBox_task.currentIndexChanged.connect(self._show_link_entity)
-        self.ui.comboBox_task.currentTextChanged.connect(self._connect_to_department)
+        self.ui.comboBox_task.currentTextChanged.connect(self._connect_department)
         self.ui.comboBox_type.currentIndexChanged.connect(self._put_publish_type_info_dict)
 
         self.ui.treeWidget.itemChanged.connect(self._connect_check_state)
@@ -90,24 +82,29 @@ class Publisher(QWidget):
 
         reload(department_publish)
         reload(work_in_maya)
-        self.publish_dict = department_publish.DepartmentTree(self.tree, 'maya').put_data_in_tree()
+        self.publish_dict = department_publish.DepartmentWork(self.tree, 'maya').put_data_in_tree()
         print("*****", self.publish_dict, '*****')
 
         self.show()
         self._get_published_file_category()
         self.ui.checkBox_check.setChecked(True)
         self.ui.pushButton_load.setIcon(QIcon(f"/home/rapa/baked/toolkit/config/python/icons/reload.png"))
+        self.user_file_info = self._get_user_info()
+        
 
     def _show_file_detail(self, item, _):
         """ 선택한 treewidget 아이템 정보 크게 보여주는 메서드 """
         text = item.text(0)
-
         if text in ["Publish to Flow", "Upload for review"]:
-            text = self.tree.currentItem().parent().text(0)
+            text = item.parent().text(0)
+        if not item.parent():
+            pixmap = QPixmap("/home/rapa/baked/toolkit/config/python/scene.png")         
+        else:
+            pixmap = QPixmap("/home/rapa/baked/toolkit/config/python/object.png") 
+        scaled_pixmap = pixmap.scaled(50, 50) 
+        self.ui.label.setPixmap(scaled_pixmap)
         self.ui.label_name.setText(text)
-        self.ui.label_info.setText(f"file")
         self.ui.label_name.setAlignment(Qt.AlignLeft)
-        self.ui.label_info.setAlignment(Qt.AlignLeft)
 
         # 선택되는 파일에 따라 이미지 변경해주기
         # label_image = self.ui.label
@@ -136,12 +133,12 @@ class Publisher(QWidget):
 
     def _connect_check_state(self, item, column):
         """ publish 체크랑 review 체크 연동시키기 """
-        pass
-        # if item.text(0) == "Upload for review":
-        #     return
-        # if item.checkState(column) == Qt.Checked:
-        #     parent = item.parent()
-        #     parent.child(1).setCheckState(1, Qt.Checked)
+
+        if item.text(0) == "Upload for review" or not item.parent().parent():
+            return
+        elif item.checkState(column) == Qt.Checked:
+            parent = item.parent()
+            parent.child(1).setCheckState(1, Qt.Checked)
 
     ########################## 저장하고 버전 관리 #############################
 
@@ -149,7 +146,7 @@ class Publisher(QWidget):
         """ yaml 템플릿을 이용해서 저장할 경로, 파일 이름 만드는 메서드 """
 
         yaml_path = self._import_yaml_template()
-        file_info_dict = self._get_user_info()
+        file_info_dict = self.user_file_info
         tool = file_info_dict["tool"]
         level = file_info_dict["seq/asset"]
         current = f"{tool}_{level}_{work}"
@@ -170,7 +167,7 @@ class Publisher(QWidget):
         """ 유저에 대한 정보 가저오는 메서드 """ # 임시 설정 
         """ 유저 커스텀 버튼 있으면 좋을듯 """
 
-        self.user_file_info = {
+        user_file_info = {
                     "name":"Seoyeon Yoon",
                     "project":"baked",
                     "seq/asset":"asset",
@@ -182,12 +179,12 @@ class Publisher(QWidget):
                     "tool":"maya",
                     "version":"001",
                     "filename":"desk_MOD_v001",
-                    "maya_extension":"mb"}
-        return self.user_file_info
+                    "maya_extension":"mb"
+                    }
+        return user_file_info
     
-    def _connect_to_department(self, task):
-        print(task)
-        self.department = task[9:]
+    def _connect_department(self):
+        """나중에는 ui에서 가져오는 거롤"""
         self.department = "MOD"
         self.dep_class = getattr(department_publish, self.department)(self.tree,'maya')
 
@@ -196,10 +193,9 @@ class Publisher(QWidget):
         user_info = self._get_user_info()
         file_path = self._get_path_using_template('dev')
         if os.path.exists(file_path):
-            version = user_info["version"]
-            version_number = int(version.split("v")[1])
-            version_number += 1
-            str_version = str(version_number)
+            version = int(user_info["version"])
+            version += 1
+            str_version = str(version)
             new_version = f"{str_version.zfill(3)}" 
         return new_version
     
@@ -252,8 +248,10 @@ class Publisher(QWidget):
     def _write_description(self):
         """수정된 description 딕셔너리에 저장하는 메서드"""
         item = self.tree.currentItem()
-        file = item.text(0)
-        print (file)
+        try:
+            file = item.text(0)
+        except:
+            return # disabled 된 경우
         if file in ["Upload for review", "Publish to Flow"]:
             item = self.tree.currentItem().parent()
             file = item.text(0)
@@ -314,44 +312,42 @@ class Publisher(QWidget):
             self.ui.comboBox_link.setCurrentIndex(0)
         self.ui.comboBox_link.addItems(link_list)
 
-    def _check_pub_or_version(self, item, _):
+    def _check_pub_or_version(self, item, column):
         """treewidget 아이템별로 publish/review 구분하는 메서드"""
-        if item.text(1): 
+        if item.text(1) or column == 0: 
             return 
 
         key = item.parent().text(0)
         val = item.checkState(1)
-        value = self._is_checked(item) # checkState는 True/False 로 찍히지 않는다..
-            
+        value = self._is_checked(item) # checkState는 True/False 로 찍히지 않는다..    
+        print(key, value, "????")
         if "Publish to Flow" in item.text(0):
-            print ('flow누름')
-            print (f"key:{key}, val:{val}")
             option = "pub"
             parent_item = item.parent()
             child = parent_item.child(1)
-            if value == False:
-                item.setForeground(0, QBrush(QColor("gray")))
-                child.setForeground(0, QBrush(QColor("gray")))
+            if not item.parent().parent():
+                self.publish_dict[key][option] = value
             else:
-                item.setForeground(0, QBrush(QColor("white")))
-                if not item.parent().parent():
-                    child.setForeground(0, QBrush(QColor("gray")))
-                else:
-                    child.setForeground(0, QBrush(QColor("white")))
-                    # child.setCheckState(1, val)
+                child.setCheckState(1, val)
         elif "Upload for review" in item.text(0):
-            print("review 누름")
             option = "rev"
             parent_item = item.parent()
             child = parent_item.child(0)
-            if value == True:
-                item.setForeground(0, QBrush(QColor("white")))
-                child.setForeground(0, QBrush(QColor("gray")))
-            else:
-                item.setForeground(0, QBrush(QColor("gray")))
-                child.setForeground(0, QBrush(QColor("gray")))
+            if not value: 
+                child.setCheckState(1, val)
 
         self.publish_dict[key][option] = value
+        self._connect_check_color(item, child)
+    
+    def _connect_check_color(self, item1, item2):
+        if item1.checkState(1) == Qt.Checked:
+            item1.setForeground(0, QBrush(QColor("white")))
+        else:
+            item1.setForeground(0, QBrush(QColor("gray")))
+        if item2.checkState(1) == Qt.Checked:
+            item2.setForeground(0, QBrush(QColor("white")))
+        else:
+            item2.setForeground(0, QBrush(QColor("gray")))
 
     def _is_checked(self, item):
         """checkbox checked 일때 True 리턴하는 메서드"""
@@ -373,9 +369,8 @@ class Publisher(QWidget):
     def _load_publish_summary(self):
         """퍼블리쉬할 데이터 보여주는 메서드"""
         self.ui.textEdit.clear()
+        print (self.publish_dict)
         for file, value in self.publish_dict.items(): 
-            if file == "":
-                continue
             if value['pub'] == False and value['rev'] == False:
                 continue
             self.ui.textEdit.append(f'<b>{file}</b>') 
@@ -392,7 +387,7 @@ class Publisher(QWidget):
 
     ############################# Flow: publish/versions에 올리기 ########################################
 
-    def _make_root_path(self):
+    # def _make_root_path(self):
         """maya까지 root path 가져오기"""
         return self._get_path_using_template('root')
     
@@ -416,11 +411,35 @@ class Publisher(QWidget):
             self.ui.label_thumbnail.setText("No Thumbnail Found")
             self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
             return
+    
         recent_image_file = max(files, key=os.path.getmtime)
         pixmap = QPixmap(recent_image_file) 
         scaled_pixmap = pixmap.scaled(288, 162) 
         self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
+        start_frame, last_frame = self._get_frame_number(files)
+        self.preview_info = {'input path' : image_path, 
+                             'start frame' : int(start_frame),
+                             'last frame' : int(last_frame)}
+        print (f"420:: self.preview_info {self.preview_info}")
 
+    def _get_frame_number(self, files):
+        """플레이블라스트, 렌더, 캡처를 통해 받은 파일 경로로 프레임 넘버 가져오기"""
+        
+        if len(files) == 1:
+            return 1, None
+        
+        files = sorted(files)
+        start_image = files[0]
+        last_image = files[-1]
+        p = re.compile("[.]\d{4}[.]")      
+        p_start = p.search(start_image)  
+        p_last = p.search(last_image)
+
+        if p_start and p_last:
+            start_frame = p_start.group()[1:5]
+            last_frame = p_last.group()[1:5]        
+        return start_frame, last_frame
+        
     def _make_thumbnail(self): 
         """썸네일 만들어주는 메서드"""
         # Lighting, Comp 팀은 지원해주지 않기
@@ -448,68 +467,102 @@ class Publisher(QWidget):
     
     ######################### PUBLISH 버튼 누르면 발생하는 이벤트 ############################
 
-    def _publish_file_data(self):
+    def _publish_file_data(self): ##########MAIN############
         """publish 눌렀을 때 발생하는 이벤트"""
-        if not self._save_file_pub:
+        if self._save_file_pub() == False :
             return
-        preview_path = self._apply_ffmpeg()
-        self.publish_dict['preview'] = {'path' : preview_path}
+        print(self.preview_info)
+        input_path = self.preview_info['input path']
+        self._apply_ffmpeg(input_path, self.user_file_info['project'])
         self._save_file_dev_version_up()
-        self._create_published_file()
-        self._create_version()
+        # self._create_published_file()
+        # self._create_version()
     
     def _save_file_pub(self):
         """ (1) pub 파일에 저장하는 메서드 (scene파일, cache만) (version 작업 파일 그대로) """
         """ 펍할때는 무조건 scene파일 올리는거니까 scene파일 선택되어있지 않으면 versions로만 올린다는 이야기 """
         """ 펍한다고 하면 펍한다고 체크한 데이터들로만 진행 """
-        scene_file = self.publish_dict.keys()[0]
-        if not self.publish_dict[scene_file]['pub'] or self._get_path_for_selected_files():
+        print ("----------", list(self.publish_dict.keys()))
+        scene_file = list(self.publish_dict.keys())[0]
+        print (f"--------451 scene_file {scene_file}---------")
+        if not self.publish_dict[scene_file]['pub'] or not self._get_path_for_selected_files():
             return False
+        print('-------------------------------------------')
         for file in self.publish_dict: 
-            if not file['pub']:
+            if not self.publish_dict[file]['pub']:
                 continue
-            ext = self.publish_dict['ext']
+            try:
+                ext = self.publish_dict['ext']
+            except:
+                ext = ''
             self._get_path_using_template('pub', ext)
+
+        print (type(self.dep_class), self.dep_class, "nnnn")
         self.dep_class.save_data(self.publish_dict)
+        print (f"476: save_file_pub: {self.publish_dict}")
         return True
     
     def _get_path_for_selected_files(self):
         """선택된 파일 타입에 따라 경로 만들어서 딕셔너리에 넣어주기 """
         for file in self.publish_dict:
-            if not file['pub']:
+            if not self.publish_dict[file]['pub']:
                 continue
             if not self.publish_dict[file]['file type'] : ### check empty data
-                self.label_info.setText(f"Please select file type")
+                self.label_info_2.setText(f"Please select file type")
                 return False
-            self.publish_dict[file]['ext'] = self.file_type_ext[file['file type']]
-            path = self._get_path_using_template("capture", file['ext'])
+            self.publish_dict[file]['ext'] = self.file_type_ext[self.publish_dict[file]['file type']]
+            self.user_file_info['group'] = file
+            path = self._get_path_using_template("pub", self.publish_dict[file]['ext'])
             self.publish_dict[file]['path'] = path
+            print ("..........", file, ".........")
+        print (f"480_________{self.publish_dict}")
         return True
-            
+
+    def _apply_ffmpeg(self, input_path, project_name):
+        """ (3) ffmpeg 만드는 메서드"""
+        """ 예린님 코드로 연결시키기"""
+        output_path = self._get_path_using_template("ffmpeg")
+        start_frame = self.preview_info['start frame']
+        last_frame = self.preview_info['last frame']
+        MayaAPI.make_ffmpeg(self, start_frame, last_frame, input_path, output_path, project_name)
+        self.preview_info['output_path'] = output_path
 
     def _save_file_dev_version_up(self):
         """ (2) dev 파일에 저장하는 메서드 (dev 폴더에 저장할) """
-        """ dev에는 scene파일만 cache들은 저장 안됨 + 썸네일 저장"""
-        self._make_version_up() # scene 파일
+        """ dev에는 scene파일만 cache들은 저장 안됨 + 썸네일 저장 """
+        self.user_file_info['version'] = self._make_version_up() # scene 파일
         new_path = self._get_path_using_template('dev')
-
-    def _apply_ffmpeg(self):
-        """ (3) ffmpeg 만드는 메서드"""
-        """ 예린님 코드로 연결시키기"""
-        image_path = self._get_path_using_template("ffmpeg")
-        MayaAPI.ffmpeg
-        return image_path
+        department_publish.DepartmentWork(self.tree, self.tool).save_scene_file(new_path)
     
     ############### 샷그리드에 파일 올리는 메서드들은 따로 파일 만들예정 ###############
+
+    def _separate_pub_review(self):
+        """pub된 데이터들은 다 versions에 올라가도록"""
+        """versions에 올리는 데이터들은 published files 라는 링크는 없음"""
+        """'pub':True, 'rev':False, 'description':'', 'file type':'', 'ext': '', 'path':''}}"""
+
+        published_file_dict = {}
+        review_file_dict = {}
+        for file, info in self.publish_dict.items():
+            if self.publish_dict[file]['pub']:
+                published_file_dict[file] = info
+            else:
+                review_file_dict[file] = info
+        
+        return published_file_dict, review_file_dict
 
     def _create_published_file(self):
         """ (4) 샷그리드 published_file 에 pub 파일들 올리는 메서드 """
         print (f"PUBLISHED /// {self.publish_dict}")
+        published_file_dict, _ = self._separate_pub_review()
+        if not published_file_dict:
+            return
+        
         task = self.ui.comboBox_task.currentText()
         link = self.ui.comboBox_link.currentText()
-        name = self._get_user_info['name']
-        version = self._get_user_info['version']
-        project = self._get_user_info['project']
+        name = self.user_file_info['name']
+        version = self.user_file_info['version']
+        project = self.user_file_info['project']
         description = self.file_pub_data['description']
         published_file_type = self.publish_dict['file type']
         # pub_path = # pub 저장하고 나온 데이터로
@@ -529,12 +582,19 @@ class Publisher(QWidget):
     def _create_version(self):
         """ (5) 샷그리드 versions에 오리는 메서드 """
         print (f"REVIEW     /// {self.publish_dict}")
+        published_file_dict, review_file_dict = self._separate_pub_review()
+        if not review_file_dict:
+            return
+        
         task = self.ui.comboBox_task.currentText()
         link = self.ui.comboBox_link.currentText()
-        name = self._get_user_info['name']
+        name = self.user_file_info['name']
         description = self.publish_dict['description']
-        version = self._get_user_info['version']
-        project = self._get_user_info['project']
+        version = self.user_file_info['version']
+        project = self.user_file_info['project']
+        preview_path = self.preview_info['output_path']
+
+        # 여기 버전은 옛날 버전인데..
         # review_path = mov 저장하고 나온 경로 
         # pub_path = pub 저장하고 나온 경로
         # thumbnail_path = 썸네일 만들고 나온 경로
@@ -545,14 +605,20 @@ class Publisher(QWidget):
                         'sg_task': task,
                         'sg_status_list': 'wip', # 상태 (추후 수정가능)
                         'user': name,
-                        'sg_upload_movie': "review_path",
+                        'sg_upload_movie': preview_path,
                         'published_files': "pub된 경우",
                         'description': description,
-                        'published_files' : pub_path}
+                        'published_files' : pub_path,
+                        'image': preview_path}
         
         version = self.sg.create('Version', version_data)
         self.sg.upload_thumbnail("Version", version['id'], thumbnail_path)
         return version
     
+    def test_setting(self):
+        self.ui.comboBox_task.setCurrentText("[Asset]  Modeling")
+        self.ui.comboBox_link.setCurrentText("Apple")
+        self.ui.radioButton_playblast.toggle()
+
 if __name__ == "__main__":
     app = QApplication(sys.argv) 
