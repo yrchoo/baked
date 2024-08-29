@@ -9,7 +9,6 @@ except:
 
 from work_in_maya import MayaAPI
 from work_in_nuke import NukeAPI
-from functools import partial
 
 class DepartmentTree():
     def __init__(self, treewidget, tool):
@@ -88,24 +87,24 @@ class DepartmentTree():
         """ 선택한 object/node 확인하는 메서드 """
         if self.tool == "maya":
             selected_data = MayaAPI.get_selected_objects(self)
-        else:
+        elif self.tool == "nuke":
             selected_data = NukeAPI.get_selected_write_nodes(self)
         if selected_data:
             return selected_data
     
     def get_current_file_name(self):
-        """ 현재 작업하고 있는 파일 이름을 가져오는 메서드"""
+        """ 현재 작업하고 있는 파일 이름을 가져오는 메서드"""  ### 이런 if문 너무 별로
         if self.tool == "maya":
             return MayaAPI.get_file_name(self)
-        else:
-            return NukeAPI.get_file_name() #####
-    
-class MOD(DepartmentTree):
-    """ 겹치는 메서드 정리할 필요가 있음 .. 수정 중"""
+        elif self.tool == "nuke":
+            return NukeAPI.get_file_name(self)
+        
+    """ 부모클래스에 디폴트 값으로 렌더, 캡쳐, 플레이블라스트 확장자를 선언하고, 
+        만약 부서별로 다른 확장자로 렌더/플레이블라스트를 export 하고 싶을 때 
+        부서별 자식 클래스에서 오버라이드를 통해 확장자를 수정해준다 
+        eg) pub을 하기위해 modeling은 렌더할때 턴테이블 (mov) 로 하지만 lighting은 렌더할때 (exr)로 하기 때문에"""
 
-    def get_ready_for_publish(self):
-        """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
-        pass
+    """렌더 확장자는 다양하기 때문에 파이프라인으로 확장자를 정해서 자동으로 렌더되게 구조화함"""
 
     def set_render_ext(self):
         """ 턴테이블 확장자 정해주는 메서드 """
@@ -119,30 +118,41 @@ class MOD(DepartmentTree):
         """ 플레이블라스트 확장자 정해주는 메서드"""
         return "jpg"
     
+    def set_scene_ext(self):
+        """ 씬 파일 확장자 정해주는 메서드 """
+        return "mb"
+    
+    def save_scene_file(self, new_path):
+        if self.tool == "maya":
+            MayaAPI.save_file(self, new_path)
+        elif self.tool == "nuke":
+            NukeAPI.save_file(self, new_path)
+    
+    def save_as_alembic(self, alembic_path):
+        MayaAPI.export_alemibc(self, alembic_path)
+    
+class MOD(DepartmentTree):
+    def get_ready_for_publish(self):
+        """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
+        pass
+    
     def save_data(self, publish_dict):
         """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
-        pass
-        # mb, cache 파일 따로 내보내기 
+        scene_path = publish_dict[self.get_current_file_name()]['path']
+        self.save_scene_file(scene_path)
+        for file in publish_dict:
+            if file['file type'] == 'Model Cache':
+                self.save_as_alembic(file['path'])
 
 class Rigging(DepartmentTree):
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
         pass
-
-    def set_render_ext(self):
-        """ 턴테이블 확장자 정해주는 메서드 """
-        return "mov"
     
-    def set_capture_ext(self):
-        """ 캡쳐 확장자 정해주는 메서드 """
-        return "jpg"
-    
-    def set_playblast_ext(self):
-        """ 플레이블라스트 확장자 정해주는 메서드"""
-        return "jpg"
-    
-    def save_data(self, new_path):
-        pass
+    def save_data(self, publish_dict):
+        """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
+        scene_path = publish_dict[self.get_current_file_name()]['path']
+        self.save_scene_file(scene_path)
 
 class Lookdev(DepartmentTree):
     """ Publish Data: mb, ma(shader), png(texture) """    
@@ -157,22 +167,20 @@ class Lookdev(DepartmentTree):
         render_ext_dict["review"] = "jpg"
         return render_ext_dict
     
-    def set_capture_ext(self):
-        """ 캡쳐 확장자 정해주는 메서드 """
-        return "jpg"
+    def set_scene_ext(self):
+        return "ma"
+    
+    def save_data(self, publish_dict):
+        scene_path = publish_dict[self.get_current_file_name()]['path']
+        self.save_scene_file(scene_path)
+        for file in publish_dict:
+            if file['file type'] == 'Model Cache':
+                self.save_as_alembic(file['path'])
     
 class Animation(DepartmentTree):
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
-    
-    def set_capture_ext(self):
-        """캡쳐 확장자 정해주는 메서드"""
-        return "jpg"
-    
-    def set_playblast_ext(self):
-        """플레이블라스트 확장자 정해주는 메서드 """
-        return "jpg"
 
 class Lighting(DepartmentTree):
     def make_data(self):
@@ -181,14 +189,6 @@ class Lighting(DepartmentTree):
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
-    
-    def set_capture_ext(self):
-        """캡쳐 확장자 정해주는 메서드"""
-        return "jpg"
-    
-    def set_playblast_ext(self):
-        """ 플레이블라스트 확장자 정해주는 메서드 """
-        return "jpg"
 
 class Matchmove(DepartmentTree):
     def make_data(self):
@@ -197,15 +197,6 @@ class Matchmove(DepartmentTree):
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
-    
-    def set_capture_ext(self):
-        """ 캡쳐 확장자 정해주는 메서드 """
-        return "jpg"
-    
-    def set_playblast_ext(self):
-        """ 플레이블라스 확장자 정해주는 메서드 """
-        return "jpg"
-
 
 class FX(DepartmentTree):
     def make_data(self):

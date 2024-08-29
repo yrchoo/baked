@@ -68,7 +68,7 @@ paths:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/scenes/{shot}_{task}_v{version}_{tag}.{maya_extension}'
   # The location of published maya abc files
   maya_sequence_pub_abc:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/cache/alembic/{shot}_{object}_{task}_v{version}.abc'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/cache/alembic/{shot}_{group}_{task}_v{version}.abc'
   
   # Rendered output
   maya_sequence_render_movie:
@@ -80,14 +80,13 @@ paths:
   maya_sequence_render_png:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/images/jpg/{shot}_{task}_v{version}.####.png'
   
+  
   # Capture output
   maya_sequence_capture_jpg:
       definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/images/captures/{asset}_{task}_v{version}.jpg'
-
   # Playblast output
   maya_sequence_playblast_jpg:
       definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/images/{shot}_{task}_v{version}_playblast/{shot}_{task}_v{version}.%04d.jpg'
-
   # Ffmpeg_output
   maya_sequence_ffmpeg:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/{shot}_{task}_v{version}_slate.mov'
@@ -128,7 +127,7 @@ paths:
 
   # Capture output
   nuke_sequence_capture:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/imgaes/captures/{shot}_{task}_v{version}.jpg'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/movies/imgaes/captures/{shot}_{task}_v{version}_capture.jpg'
 
 
   ##########################################################################################
@@ -140,6 +139,7 @@ paths:
   # The location of developed maya files
   maya_asset_root:
       definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya'
+  # The location of developed maya files    
   maya_asset_dev:
       definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/scenes/{asset}_{task}_v{version}.{maya_extension}'
   # The location of published maya files
@@ -153,7 +153,7 @@ paths:
       definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{task}_v{version}_{tag}.{maya_extension}'
   # The location of published maya abc files 
   maya_asset_pub_abc:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{task}_v{version}_{tag}.abc'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{group}_{task}_v{version}_{tag}.abc'
   
   # Rendered output
   maya_asset_render_mov:
@@ -165,9 +165,16 @@ paths:
   maya_asset_render_png:
       definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/png/{asset}_{task}_v{version}.####.png'
   
+  # The location of published shader ma files
+  maya_asset_shader:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/shader/{asset}_{group}_{task}_v{version}.ma'
+  # The location of published texture tiff files
+  maya_asset_texture:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/sourceimages/texture/{asset}_{group}_{task}_v{version}.tiff'
+
   # Capture output
   maya_asset_capture_jpg:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/images/captures/{asset}_{task}_v{version}.jpg'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/images/captures/{asset}_{task}_v{version}_capture.jpg'
 
   # Playblast output
   maya_asset_playblast_jpg:
