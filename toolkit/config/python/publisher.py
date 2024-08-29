@@ -4,6 +4,8 @@ try:
     from PySide6.QtCore import QFile, Qt
     from PySide6.QtGui import QBrush, QColor, QIcon
     from PySide6.QtGui import QPixmap, QTextCursor
+    from PySide6.QtMultimedia import QMediaPlayer, QMediaContent
+    from PySide6.QtMultimediaWidgets import QVideoWidget
     from shotgun_api3 import shotgun
     import department_publish 
     import work_in_maya
@@ -168,7 +170,7 @@ class Publisher(QWidget):
         """ 유저에 대한 정보 가저오는 메서드 """ # 임시 설정 
         """ 유저 커스텀 버튼 있으면 좋을듯 """
 
-        user_file_info = {
+        self.user_file_info = {
                     "name":"Seoyeon Yoon",
                     "project":"baked",
                     "seq/asset":"asset",
@@ -181,7 +183,7 @@ class Publisher(QWidget):
                     "version":"001",
                     "filename":"desk_MOD_v001",
                     "maya_extension":"mb"}
-        return user_file_info
+        return self.user_file_info
     
     def _connect_to_department(self, task):
         print(task)
@@ -251,6 +253,7 @@ class Publisher(QWidget):
         """수정된 description 딕셔너리에 저장하는 메서드"""
         item = self.tree.currentItem()
         file = item.text(0)
+        print (file)
         if file in ["Upload for review", "Publish to Flow"]:
             item = self.tree.currentItem().parent()
             file = item.text(0)
@@ -273,9 +276,11 @@ class Publisher(QWidget):
         """published file type 콤보박스에 넣어주는 메서드"""
         sg = self._connect_sg()
         published_file_type = ['']
-        published_file_type_sg = sg.find("PublishedFileType", [["sg_level", "is_not", None]], fields=["code"])
+        self.file_type_ext = {}
+        published_file_type_sg = sg.find("PublishedFileType", [["sg_level", "is_not", None]], fields=["code", "sg_ext"])
         for info in published_file_type_sg:
             published_file_type.append(info['code'])
+            self.file_type_ext[info['code']] = info['sg_ext']
         self.ui.comboBox_type.addItems(published_file_type)
         
     def _get_task_type(self):
@@ -318,7 +323,8 @@ class Publisher(QWidget):
         val = item.checkState(1)
         value = self._is_checked(item) # checkState는 True/False 로 찍히지 않는다..
             
-        if "Flow" in item.text(0):
+        if "Publish to Flow" in item.text(0):
+            print ('flow누름')
             print (f"key:{key}, val:{val}")
             option = "pub"
             parent_item = item.parent()
@@ -332,9 +338,9 @@ class Publisher(QWidget):
                     child.setForeground(0, QBrush(QColor("gray")))
                 else:
                     child.setForeground(0, QBrush(QColor("white")))
-                    child.setCheckState(1, val)
-
-        elif "review" in item.text(0):
+                    # child.setCheckState(1, val)
+        elif "Upload for review" in item.text(0):
+            print("review 누름")
             option = "rev"
             parent_item = item.parent()
             child = parent_item.child(0)
@@ -369,6 +375,8 @@ class Publisher(QWidget):
         self.ui.textEdit.clear()
         for file, value in self.publish_dict.items(): 
             if file == "":
+                continue
+            if value['pub'] == False and value['rev'] == False:
                 continue
             self.ui.textEdit.append(f'<b>{file}</b>') 
             if value['pub'] == True and value['rev'] == True:
@@ -435,43 +443,55 @@ class Publisher(QWidget):
         elif self.ui.radioButton_render.isChecked():
             ext = self.dep_class.set_render_ext()
             image_path = self._get_path_using_template("render", ext)
-            self._check_validate(image_path)  ########### extension
+            self._check_validate(image_path)  
             self._show_thumbnail(self.ui.radioButon_render)
     
     ######################### PUBLISH 버튼 누르면 발생하는 이벤트 ############################
 
     def _publish_file_data(self):
         """publish 눌렀을 때 발생하는 이벤트"""
-        # tool 입력받아서 getAttr로 f"Maya"API.save_file 한번에 실행할지 고민됨
-        
-        self._save_file_pub()  # pub되는 파일 경로들 self.pub_dict 에 다 넣어두기
-        self._save_file_dev_version_up()
+        if not self._save_file_pub:
+            return
         preview_path = self._apply_ffmpeg()
         self.publish_dict['preview'] = {'path' : preview_path}
-        
+        self._save_file_dev_version_up()
         self._create_published_file()
         self._create_version()
-
+    
     def _save_file_pub(self):
-        """(1) pub 파일에 저장하는 메서드 (version 작업 파일 그대로)"""
-        new_path = self._get_path_using_template('pub')
+        """ (1) pub 파일에 저장하는 메서드 (scene파일, cache만) (version 작업 파일 그대로) """
+        """ 펍할때는 무조건 scene파일 올리는거니까 scene파일 선택되어있지 않으면 versions로만 올린다는 이야기 """
+        """ 펍한다고 하면 펍한다고 체크한 데이터들로만 진행 """
+        scene_file = self.publish_dict.keys()[0]
+        if not self.publish_dict[scene_file]['pub'] or self._get_path_for_selected_files():
+            return False
+        for file in self.publish_dict: 
+            if not file['pub']:
+                continue
+            ext = self.publish_dict['ext']
+            self._get_path_using_template('pub', ext)
         self.dep_class.save_data(self.publish_dict)
-        # 마야, 부서별로 나눠서 들어가야함
-        if self.tool == "maya":
-            MayaAPI.save_file(self, new_path)
-        else:
-            NukeAPI.save_file(self, new_path)
+        return True
+    
+    def _get_path_for_selected_files(self):
+        """선택된 파일 타입에 따라 경로 만들어서 딕셔너리에 넣어주기 """
+        for file in self.publish_dict:
+            if not file['pub']:
+                continue
+            if not self.publish_dict[file]['file type'] : ### check empty data
+                self.label_info.setText(f"Please select file type")
+                return False
+            self.publish_dict[file]['ext'] = self.file_type_ext[file['file type']]
+            path = self._get_path_using_template("capture", file['ext'])
+            self.publish_dict[file]['path'] = path
+        return True
+            
 
     def _save_file_dev_version_up(self):
-        """ (2) dev 파일에 저장하는 메서드 (dev 폴더에 저장할 """
-        """ dev에는 scene파일만 cache들은 저장 안됨 """
+        """ (2) dev 파일에 저장하는 메서드 (dev 폴더에 저장할) """
+        """ dev에는 scene파일만 cache들은 저장 안됨 + 썸네일 저장"""
         self._make_version_up() # scene 파일
         new_path = self._get_path_using_template('dev')
-
-        if self.tool == "maya":
-            MayaAPI.save_file(self, new_path)
-        else:
-            NukeAPI.save_file(self, new_path)
 
     def _apply_ffmpeg(self):
         """ (3) ffmpeg 만드는 메서드"""
@@ -479,9 +499,36 @@ class Publisher(QWidget):
         image_path = self._get_path_using_template("ffmpeg")
         MayaAPI.ffmpeg
         return image_path
+    
+    ############### 샷그리드에 파일 올리는 메서드들은 따로 파일 만들예정 ###############
+
+    def _create_published_file(self):
+        """ (4) 샷그리드 published_file 에 pub 파일들 올리는 메서드 """
+        print (f"PUBLISHED /// {self.publish_dict}")
+        task = self.ui.comboBox_task.currentText()
+        link = self.ui.comboBox_link.currentText()
+        name = self._get_user_info['name']
+        version = self._get_user_info['version']
+        project = self._get_user_info['project']
+        description = self.file_pub_data['description']
+        published_file_type = self.publish_dict['file type']
+        # pub_path = # pub 저장하고 나온 데이터로
+        published_file_data = {'project': project,
+                               'code': "파일 이름",   # 이름 (추후 입력되는 데이터를 받아오는걸로 수정가능)
+                               'sg_status_list': 'ip', # 상태 (추후 수정가능)
+                               'description': description,
+                               'entity': link,
+                               'task': task,
+                               'version': version,
+                               'path': {'local_path': pub_path},
+                               'created_by': name,
+                               'published_file_type' : published_file_type}
+        published_file = self.sg.create('PublishedFile', published_file_data)
+        return published_file
 
     def _create_version(self):
-        """ (4) 샷그리드 versions에 오리는 메서드 """
+        """ (5) 샷그리드 versions에 오리는 메서드 """
+        print (f"REVIEW     /// {self.publish_dict}")
         task = self.ui.comboBox_task.currentText()
         link = self.ui.comboBox_link.currentText()
         name = self._get_user_info['name']
@@ -506,29 +553,6 @@ class Publisher(QWidget):
         version = self.sg.create('Version', version_data)
         self.sg.upload_thumbnail("Version", version['id'], thumbnail_path)
         return version
-
-    def _create_published_file(self):
-        """ (5) 샷그리드 published_file 에 pub 파일들 올리는 메서드 """
-        task = self.ui.comboBox_task.currentText()
-        link = self.ui.comboBox_link.currentText()
-        name = self._get_user_info['name']
-        version = self._get_user_info['version']
-        project = self._get_user_info['project']
-        description = self.file_pub_data['description']
-        published_file_type = self.file_pub_data['file type']
-        # pub_path = # pub 저장하고 나온 데이터로
-        published_file_data = {'project': project,
-                               'code': "파일 이름",   # 이름 (추후 입력되는 데이터를 받아오는걸로 수정가능)
-                               'sg_status_list': 'ip', # 상태 (추후 수정가능)
-                               'description': description,
-                               'entity': link,
-                               'task': task,
-                               'version': version,
-                               'path': {'local_path': pub_path},
-                               'created_by': name,
-                               'published_file_type' : published_file_type}
-        published_file = self.sg.create('PublishedFile', published_file_data)
-        return published_file
     
 if __name__ == "__main__":
     app = QApplication(sys.argv) 
