@@ -4,6 +4,9 @@ import os
 
 import re
 
+import requests
+url = "https://5370-1-11-90-40.ngrok-free.app/webhook"
+
 import pprint
 
 class MakeVersionTest():
@@ -64,22 +67,39 @@ class MakeVersionTest():
         }
 
         version = self.sg.create("Version", new_version_data)
-        print(f"version : {version}")
+        print(f"version : {version}")# POST
 
-        event_data = {
-            'event_type': 'Shotgun_Version_New',
-            'description': f"Version {version['code']} created by script",
-            'entity': {'type': 'Version', 'id': version['id']},
-            'project': self.project,
-            'user' : self.user,
-            'meta': {
-                'new_value': version['code'],
-                'entity_type': 'Version'
-            },
-        }
+        header = {
+            "accept": "application/json",
+            "user-agent": "SG event-pipeline",
+            "content-type": "application/json; charset=utf-8",
+            "x-sg-webhook-id": "9441c2f0-3ed9-45cb-a1e0-9b6a5a5ae3db",
+            "x-sg-event-batch-id": "49652721640407050916129894443709552046784423781841502850",
+            "x-sg-event-batch-size": "1",
+            "x-sg-webhook-site-url": "https://4thacademy.shotgrid.autodesk.com/"
+            }
 
-        event = self.sg.create('EventLogEntry', event_data)
-        print(f"Created Event: {event}")
+        response = requests.post(url, json=version, headers=header)
+        
+        # response = requests.get(url)
+        # print(response) # <Response [200]>
+        # response.json()
+        # print(response)
+
+        # event_data = {
+        #     'event_type': 'Shotgun_Version_New',
+        #     'description': f"Version {version['code']} created by script",
+        #     'entity': {'type': 'Version', 'id': version['id']},
+        #     'project': self.project,
+        #     'user' : self.user,
+        #     'meta': {
+        #         'new_value': version['code'],
+        #         'entity_type': 'Version'
+        #     },
+        # }
+
+        # event = self.sg.create('EventLogEntry', event_data)
+        # print(f"Created Event: {event}")
 
 
         # published_file = {

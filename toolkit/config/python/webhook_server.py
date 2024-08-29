@@ -5,25 +5,35 @@ try :
 except:
      from PySide2.QtCore import Signal, QObject
 
+
+app = Flask(__name__)
+
+global server
+server = None
+
 class WebhookServer(QObject):
     NEW_DATA_OCCUR = Signal(dict)
 
-    APP = Flask(__name__)
-
     def __init__(self):
         super().__init__()
-        # self._open_server()
+        self.open_server()
 
     def open_server(self):
-        self.APP.run(host='0.0.0.0', port=5000)
+        app.run(host='0.0.0.0', port=5000)
 
-    @APP.route('/webhook', methods=['POST'])
-    def webhook():
-        data = request.json
-        print(f"Received data: {data}")
-        # NEW_DATA_OCCUR.emit(data)
-        return 'OK', 200
+    def emit_data(self, data):
+        self.NEW_DATA_OCCUR.emit(data)
 
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    data = request.json
+    print(f"Received data: {data}")
+    return data, 200
+
+@app.route('/webhook', methods=['GET'])
+def get_tasks():
+	return jsonify(webhook)
 
 if __name__ == "__main__":
-    WebhookServer()
+    server = WebhookServer()
