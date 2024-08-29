@@ -18,23 +18,21 @@ class MayaAPI():
         """선택한 오브젝트 리스트 가져오는 메서드"""
         return cmds.ls(sl=True)
 
-    def export_alemibc(self, path):
+    def export_alemibc(self, abc_cache_path, asset):
         """
         알렘빅이 저장될 경로를(디렉토리) 이용
         """
-        assets = self.get_selected_objects()    # 선택된 object 리스트 : ['pSphere1', 'pCube1', 'pCylinder1', 'pCone1']
+         # 선택된 object 리스트 : ['pSphere1', 'pCube1', 'pCylinder1', 'pCone1']
         start_frame = int(cmds.playbackOptions(query=True, min=True))
         last_frame = int(cmds.playbackOptions(query=True, max=True))
 
-        for asset in assets:
-            abc_cache_path = f"/home/rapa/show/{asset}.abc"
-            alembic_args = ["-renderableOnly", "-writeFaceSets", "-uvWrite", "-worldSpace", "-eulerFilter"]
+        alembic_args = ["-renderableOnly", "-writeFaceSets", "-uvWrite", "-worldSpace", "-eulerFilter"]
 
-            alembic_args.append(f"-fr {start_frame} {last_frame}")
-            alembic_args.append(f"-file '{abc_cache_path}'")
-            alembic_args.append(f"-root {asset}")
-            abc_export_cmd = 'AbcExport -j "%s"' % " ".join(alembic_args)
-            mel.eval(abc_export_cmd)
+        alembic_args.append(f"-fr {start_frame} {last_frame}")
+        alembic_args.append(f"-file '{abc_cache_path}'")
+        alembic_args.append(f"-root {asset}")
+        abc_export_cmd = 'AbcExport -j "%s"' % " ".join(alembic_args)
+        mel.eval(abc_export_cmd)
     
     def export_shader(self, export_path):
         """
@@ -75,13 +73,13 @@ class MayaAPI():
         return shader_dictionary
 
     def save_file(self, path):
-        """마야 파일 저장하는 메서드"""
-        file_path, name = os.path.split(path)
-        print (file_path, name)
-        if not os.path.exists(file_path):
-            os.makedirs(file_path)
-        cmds.file(rename=file_path)
-        cmds.file(save=True)
+        
+        # 현재 씬의 이름과 경로를 output_path로 설정
+        cmds.file(rename=path)
+        # Maya Binary 형식으로 씬 저장
+        cmds.file(save=True, type='mayaBinary')
+
+        print(f"Model saved as Maya Binary file to: {path}")
     
     def get_current_path(self):
         return cmds.file(query=True, sceneName=True)
@@ -124,7 +122,7 @@ class MayaAPI():
         
         return start_frame, last_frame
         
-    def ffmpeg(self, start_frame, last_frame, input_path, output_path, project_name):
+    def make_ffmpeg(self, start_frame, last_frame, input_path, output_path, project_name):
         ## 플레이블라스트로 렌더링한 이미지를 FFMPEG 라이브러리를 이용해서 동영상을 인코딩한다.
         first = 1001
         frame_rate = 24 
@@ -134,7 +132,7 @@ class MayaAPI():
         slate_size = 60
         font_path = "/home/rapa/문서/font/waltographUI.ttf"
         font_size = 40
-        frame_count = last_frame - start_frame
+        frame_count = int(last_frame) - int(start_frame)
         text_x_padding = 10
         text_y_padding = 20
 
@@ -149,6 +147,7 @@ class MayaAPI():
         frame_cmd += "%s\:d}' (%s)"  % (first, frame_count+1)
         bot_right = frame_cmd
 
+    
         cmd = '%s -framerate %s -y -start_number %s ' % (ffmpeg, frame_rate, first)
         cmd += '-i %s' % (input_path)
         cmd += ' -vf "drawbox=y=0 :color=black :width=iw: height=%s :t=fill, ' % (slate_size)

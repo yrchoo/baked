@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>921</width>
+    <width>925</width>
     <height>766</height>
    </rect>
   </property>
@@ -148,17 +148,21 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="label_name">
-          <property name="font">
-           <font>
-            <pointsize>12</pointsize>
-           </font>
+        <item row="1" column="1">
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
-          <property name="text">
-           <string>File Information :</string>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
           </property>
-         </widget>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item row="0" column="1">
          <spacer name="horizontalSpacer">
@@ -176,33 +180,17 @@
           </property>
          </spacer>
         </item>
-        <item row="1" column="2">
-         <widget class="QLabel" name="label_info">
+        <item row="0" column="2" rowspan="2">
+         <widget class="QLabel" name="label_name">
           <property name="font">
            <font>
             <pointsize>12</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>Select any files</string>
+           <string>File Information</string>
           </property>
          </widget>
-        </item>
-        <item row="1" column="1">
-         <spacer name="horizontalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </item>
@@ -679,7 +667,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QLabel" name="label_20">
+  <widget class="QLabel" name="label_info_2">
    <property name="geometry">
     <rect>
      <x>330</x>

@@ -10,7 +10,7 @@ except:
 from work_in_maya import MayaAPI
 from work_in_nuke import NukeAPI
 
-class DepartmentTree():
+class DepartmentWork():
     def __init__(self, treewidget, tool):
         self.tree = treewidget
         self.tool = tool
@@ -50,7 +50,6 @@ class DepartmentTree():
             self._make_tree_item("Upload for review", parent)
       
         self.tree.expandAll()
-        publish_dict[file_name] = {'pub':True, 'rev':True, 'description':'', 'file type':'', 'ext':'', 'path':''}
         return publish_dict
 
     def make_data(self):
@@ -106,6 +105,9 @@ class DepartmentTree():
 
     """렌더 확장자는 다양하기 때문에 파이프라인으로 확장자를 정해서 자동으로 렌더되게 구조화함"""
 
+    def save_data(self, publish_dict):
+        pass
+
     def set_render_ext(self):
         """ 턴테이블 확장자 정해주는 메서드 """
         return "mov"
@@ -120,31 +122,33 @@ class DepartmentTree():
     
     def set_scene_ext(self):
         """ 씬 파일 확장자 정해주는 메서드 """
-        return "mb"
+        return ""
     
     def save_scene_file(self, new_path):
         if self.tool == "maya":
             MayaAPI.save_file(self, new_path)
         elif self.tool == "nuke":
             NukeAPI.save_file(self, new_path)
+        print (f"&&&&&&&&&&&&&&&&& {new_path}")
     
-    def save_as_alembic(self, alembic_path):
-        MayaAPI.export_alemibc(self, alembic_path)
+    def save_as_alembic(self, alembic_path, file):
+        MayaAPI.export_alemibc(self, alembic_path, file)
     
-class MOD(DepartmentTree):
+class MOD(DepartmentWork):
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
         pass
     
     def save_data(self, publish_dict):
         """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
+        self.get_ready_for_publish()
         scene_path = publish_dict[self.get_current_file_name()]['path']
         self.save_scene_file(scene_path)
         for file in publish_dict:
-            if file['file type'] == 'Model Cache':
-                self.save_as_alembic(file['path'])
+            if publish_dict[file]['file type'] == 'Model Cache': ### 이거 구려
+                self.save_as_alembic(publish_dict[file]['path'], file)
 
-class Rigging(DepartmentTree):
+class Rigging(DepartmentWork):
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
         pass
@@ -154,7 +158,7 @@ class Rigging(DepartmentTree):
         scene_path = publish_dict[self.get_current_file_name()]['path']
         self.save_scene_file(scene_path)
 
-class Lookdev(DepartmentTree):
+class Lookdev(DepartmentWork):
     """ Publish Data: mb, ma(shader), png(texture) """    
     def make_data(self):
         """ 쉐이더 텍스쳐 데이터 따로 가져오는 메서드 """
@@ -177,12 +181,20 @@ class Lookdev(DepartmentTree):
             if file['file type'] == 'Model Cache':
                 self.save_as_alembic(file['path'])
     
-class Animation(DepartmentTree):
+class Animation(DepartmentWork):
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
+    
+    def save_data(self, publish_dict):
+        scene_path = publish_dict[self.get_current_file_name()]['path']
+        self.save_scene_file(scene_path)
+        for file in publish_dict:
+            if file['file type'] == 'Model Cache' or 'Camera':
+                self.save_as_alembic(file['path'])
 
-class Lighting(DepartmentTree):
+
+class Lighting(DepartmentWork):
     def make_data(self):
         pass
     
@@ -190,7 +202,7 @@ class Lighting(DepartmentTree):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
 
-class Matchmove(DepartmentTree):
+class Matchmove(DepartmentWork):
     def make_data(self):
         pass
     
@@ -198,6 +210,6 @@ class Matchmove(DepartmentTree):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
 
-class FX(DepartmentTree):
+class FX(DepartmentWork):
     def make_data(self):
         pass
