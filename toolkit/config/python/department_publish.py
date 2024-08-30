@@ -105,9 +105,6 @@ class DepartmentWork():
 
     """렌더 확장자는 다양하기 때문에 파이프라인으로 확장자를 정해서 자동으로 렌더되게 구조화함"""
 
-    def save_data(self, publish_dict):
-        pass
-
     def set_render_ext(self):
         """ 턴테이블 확장자 정해주는 메서드 """
         return "mov"
@@ -148,7 +145,7 @@ class MOD(DepartmentWork):
             if publish_dict[file]['file type'] == 'Model Cache': ### 이거 구려
                 self.save_as_alembic(publish_dict[file]['path'], file)
 
-class Rigging(DepartmentWork):
+class RIG(DepartmentWork):
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
         pass
@@ -158,7 +155,7 @@ class Rigging(DepartmentWork):
         scene_path = publish_dict[self.get_current_file_name()]['path']
         self.save_scene_file(scene_path)
 
-class Lookdev(DepartmentWork):
+class LDV(DepartmentWork):
     """ Publish Data: mb, ma(shader), png(texture) """    
     def make_data(self):
         """ 쉐이더 텍스쳐 데이터 따로 가져오는 메서드 """
@@ -181,7 +178,7 @@ class Lookdev(DepartmentWork):
             if file['file type'] == 'Model Cache':
                 self.save_as_alembic(file['path'])
     
-class Animation(DepartmentWork):
+class ANI(DepartmentWork):
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
@@ -194,7 +191,7 @@ class Animation(DepartmentWork):
                 self.save_as_alembic(file['path'])
 
 
-class Lighting(DepartmentWork):
+class LGT(DepartmentWork):
     def make_data(self):
         pass
     
@@ -202,7 +199,7 @@ class Lighting(DepartmentWork):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
 
-class Matchmove(DepartmentWork):
+class MM(DepartmentWork):
     def make_data(self):
         pass
     
@@ -211,5 +208,9 @@ class Matchmove(DepartmentWork):
         return "exr"
 
 class FX(DepartmentWork):
+    def make_data(self):
+        pass
+
+class CMP(DepartmentWork):
     def make_data(self):
         pass

@@ -125,18 +125,21 @@ try:
 except:
     pass
 
-from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
-
-
 import sys
+sys.path.append("/home/rapa/baked/toolkit/config/python/")
+sys.path.append("/home/rapa/baked/toolkit/config/python/shotgrid")
+
+
+from fetch_shotgrid_data import ShotGridDataFetcher
+
 from importlib import reload
+import publisher
 
 sg = ShotGridDataFetcher()
 
 def test_func():
     global win
-    sys.path.append("/home/rapa/baked/toolkit/config/python")
-    import publisher
+    
     reload(publisher)
     win = publisher.Publisher(sg, "maya")
     win.show()
