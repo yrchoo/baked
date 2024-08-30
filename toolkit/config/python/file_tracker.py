@@ -26,6 +26,8 @@ from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
 
 
 class Tracker(QWidget):
+    RELOAD_FILE = Signal(str, str)
+
     def __init__(self, sg : ShotGridDataFetcher = None):
         super().__init__()
         self._set_instance_val(sg)
@@ -217,6 +219,7 @@ class Tracker(QWidget):
     def _load_new_version(self):
         cur_item = self.ui.listWidget_using.currentItem()
         key = cur_item.text()
+        cur_path = self.opened_file_list[key]['path']['local_path']
 
         p = re.compile("[v]\d{3}")
         version = p.search(key).group()
@@ -229,11 +232,12 @@ class Tracker(QWidget):
 
         cur_item.setText(new_v_key)
 
-        path = self.opened_file_list[new_v_key]['path']['local_path']
+        new_path = self.opened_file_list[new_v_key]['path']['local_path']
 
         self._show_selected_item_data(cur_item)
-        cur_item.setBackground(QColor("white"))
-        print(f"Reload {path}")
+        cur_item.setBackground(QColor(None))
+
+        self.RELOAD_FILE.emit(cur_path, new_path)
     
 
 

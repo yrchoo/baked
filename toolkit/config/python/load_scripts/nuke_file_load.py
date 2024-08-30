@@ -8,8 +8,12 @@ import re
 import glob
 
 class LoadNukeFile():
-    def __init__(self, path):
-        self._make_read_node(path)
+    def load_file_with_read_node(self, path):
+        try :
+            read_node = nuke.createNode("Read")
+            self._get_frame_num(read_node, path)
+        except :
+            print("nuke에서 제대로 동작하지 않음")
 
     def _get_frame_num(self, read_node, path):
         _, ext = os.path.splitext(path)
@@ -36,14 +40,16 @@ class LoadNukeFile():
         else:
             read_node.knob("file").setValue(path)
             return
-        
 
-    def _make_read_node(self, path):
-        try :
-            read_node = nuke.createNode("Read")
-            self._get_frame_num(read_node, path)
-        except :
-            print("nuke에서 제대로 동작하지 않음")
+    def reload_nuke_file(self, cur_path, new_path):
+        if '.abc' in cur_path:
+            node_name = 'ReadGeo'
+        else :
+            node_name = 'Read'
 
+        for node in nuke.allNodes(node_name):
+            if node.knob("file").value() == cur_path:
+                node.knob("file").setValue(new_path)
+                node.knob("reload").execute()
 
         

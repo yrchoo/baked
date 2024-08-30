@@ -2,6 +2,7 @@ import os
 import requests
 from shotgun_api3 import Shotgun
 
+from datetime import datetime
 
 
 
@@ -274,6 +275,13 @@ class ShotGridDataFetcher():
         if shot_code:
             link = self.get_shot_from_code(shot_code)
         task = self.fetch_cur_task_by_taskname_linkedentity(task_name, link)
+
+        version = self.sg.find_one("Version", 
+                                   [['project','is',self.project], ['code','is',version],['sg_task','is',task], ['entity','is',link]],
+                                   ['project','code','description','entity','sg_task','created_by','sg_status_list'])
+        
+        if version:
+            return version
         
         new_version_data = {
             "project" : self.project,
@@ -301,11 +309,11 @@ class ShotGridDataFetcher():
             "entity" : version['entity'],
             "version": version,  # 버전과 연결
             "path": {"local_path": file_path},
-            "published_file_type": published_file_type,  
-            "upload_file" : thumbnail_file_path,
+            "published_file_type": published_file_type
         }
 
         publish = self.sg.create("PublishedFile", published_file)
+        self.sg.upload_thumbnail("PublishedFile", publish['id'], thumbnail_file_path)
         print(f"publish : {publish}")
         self.send_data_to_webhook_server(version)
 
@@ -324,6 +332,24 @@ class ShotGridDataFetcher():
 
         response = requests.post(url, json=data, headers=header)
         print(response)
+
+    def add_new_version_to_playlist(self, version):
+        playlist_code = datetime.today().strftime("%Y-%M-%d") # '2024-08-30'
+        playlist = self.sg.find_one('Playlist', [['code', 'is', playlist_code]], ['versions'])
+        if playlist:
+            versions = playlist['versions']
+            versions.append(version)
+        else :
+            playlist_data = {
+                'project' : self.project,
+                'code' : playlist_code,
+            }
+            playlist = self.sg.create("Playlist", playlist_data)
+            versions = [version]
+        
+        self.sg.update('Playlist', playlist, { 'versions': versions })
+
+        
 
 
 if __name__ == "__main__":
