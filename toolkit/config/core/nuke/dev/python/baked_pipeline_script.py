@@ -20,10 +20,16 @@ tracker_win = file_tracker.Tracker(sg)
 def init():
     load_win.OPEN_FILE.connect(open_file)
     save_win.SAVE_FILE.connect(save_file)
-    tracker_win.RELOAD_FILE.connect()
+    tracker_win.RELOAD_FILE.connect(reload_file)
 
 def show_loader():
     load_win.show()
+
+def show_tracker():
+    tracker_win.show()
+
+def show_publisher():
+    pass
 
 @ Slot()
 def open_file(path):
@@ -38,13 +44,11 @@ def reload_file(cur_path, new_path):
 
 def pop_save_file_ui():
     path = nuke.root().knob("name").value()
-    print(path)
     save_win.save_file(path)
 
 @ Slot()
 def save_file(path):
     print("save file method")
-    print(path)
     nuke.scriptSaveAs(path)
 
 
