@@ -11,30 +11,24 @@ import json
 
 
 class LoadMayaFile():
-    def __init__(self, path):
-        self._load_file(path)
-
-    def _load_file(self, path):
+    def load_file(self, path):
         _, file_ext = os.path.splitext(path)
         if file_ext in [".ma"]:
             self._get_shader_file(path)
         elif file_ext in [".mb"]:
-            self._get_maya_binary_by_reference(path)
+            self._get_file_by_reference(path, 'mayaBinary')
         elif file_ext in [".abc"]:
-            self._import_maya_file(path)
+            self._get_file_by_reference(path, 'Alembic')
 
     def _make_group_name(self, path):
         file_name = os.path.basename(path)
-        file_name.split('_')
-        new_name = f"{file_name[0]}_{file_name[1]}_grp" # Asset_TASK_grp
+        name, _ = os.path.splitext(file_name)
+        new_name = f"{name}_grp" # Asset_TASK_grp
         return new_name
 
-    def _get_maya_binary_by_reference(self, path): # .mb
-        file_name, _ = os.path.splitext(os.path.basename(path))
-
+    def _get_file_by_reference(self, path, file_type):
         name_space = self._make_group_name(path)
-        cmds.file(path, reference=True, mergeNamespacesOnClash=False, namespace=name_space)
-
+        cmds.file(path, reference=True, type=file_type, mergeNamespacesOnClash=False, namespace=name_space)
 
     def _get_shader_file(self, path):
         # 뭔가.. 내가 불러온 shader를 자동으로 mod에 매핑해주는 일을 해야됨!!
@@ -62,11 +56,25 @@ class LoadMayaFile():
                 cmds.select(obj, add=True)
             cmds.hyperShade(assign=matching_shader)
             cmds.select(clear=True)
-            
-    def _import_maya_file(self, path):
-        cmds.ABCImport(path, mode="import")
-                
 
+    def reload_maya_file(self, cur_path, new_path):
+        references = cmds.ls(type='reference')
+
+        matching_refs = []
+
+        for ref in references:
+            if ref == 'sharedRefereceNode':
+                # reference 노드 자체는 포함하지 않기 때문에 기본 노드 필터링
+                continue
+
+            ref_path = cmds.referenceQuery(ref, file_name=True)
+            if ref_path == cur_path:
+                matching_refs.append(ref)
+
+        for ref in matching_refs:
+            cmds.file(new_path, loadReference=ref)
+            # Reload
+            cmds.file(ref, loadReference=True)
 
 
 
