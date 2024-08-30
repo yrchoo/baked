@@ -283,10 +283,11 @@ class ShotGridDataFetcher():
             "sg_task": task,
             "created_by" : self.user,
             "sg_status_list" : "rev",
-            "sg_uploaded_movie" : thumbnail_file_path,
         }
 
         version = self.sg.create("Version", new_version_data)
+        self.sg.upload("Version", version['id'], thumbnail_file_path, field_name="sg_uploaded_movie")
+        self.sg.upload_thumbnail("Version", version['id'], thumbnail_file_path)
         return version
 
     def create_new_publish_entity(self, version, file_path, description, thumbnail_file_path, published_file_type):

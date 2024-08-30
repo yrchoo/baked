@@ -15,6 +15,7 @@ except:
 
 from shotgun_api3 import shotgun
 import department_publish 
+import shotgrid.fetch_shotgrid_data
 from importlib import reload
 from capture_module import SubWindow_Open, MakeScreenCapture
 from work_in_maya import MayaAPI
@@ -27,6 +28,7 @@ import glob
 import re
 reload(department_publish)
 reload(work_in_maya)
+reload(shotgrid.fetch_shotgrid_data)
 
 
 from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
@@ -489,8 +491,8 @@ class Publisher(QWidget):
         
         input_path = self.preview_info['input path']
         self._apply_ffmpeg(input_path, self.user_data['project'])
-        self._create_version_data()
-        # self._create_published_file()
+        version = self._create_version_data()
+        self._create_published_file(version)
         self._save_file_dev_version_up()
     
     def _save_file_pub(self):
@@ -580,6 +582,7 @@ class Publisher(QWidget):
     def _create_version_data(self):
         """ (5) 샷그리드 versions에 오리는 메서드 """
         print (f"REVIEW     /// {self.publish_dict}")
+        published_file_dict, review_file_dict = self._separate_pub_review()
 
         # version
         version = self.user_data['version']
@@ -605,74 +608,25 @@ class Publisher(QWidget):
         version = self.sg.create_new_version_entity(version, task, description, preview_path, shot, asset)
         return version
 
-    def create_new_version_entity(self, version, task, link, shot_code, task_name, description, thumbnail_file_path):
-        shot = self.get_shot_from_code(shot_code)
-        task = self.fetch_cur_task_by_taskname_linkedentity(task_name, shot)
-        
-        new_version_data = {
-            "project" : self.project,
-            "code": version,
-            "description": description,
-            "entity" : link,
-            "sg_task": task,
-            "created_by" : self.user,
-            "sg_status_list" : "rev",
-            "upload_file" : thumbnail_file_path,
-        }
-
-        # 여기 버전은 옛날 버전인데..
-        # review_path = mov 저장하고 나온 경로 
-        # pub_path = pub 저장하고 나온 경로
-        # thumbnail_path = 썸네일 만들고 나온 경로
-        version_data = {'preview': "썸네일",
-                        'project': project,
-                        'code': f"v{version}",     # 이름 (추후 입력되는 데이터를 받아오는걸로 수정가능)
-                        'entity': link,
-                        'sg_task': task,
-                        'sg_status_list': 'wip', # 상태 (추후 수정가능)
-                        'user': name,
-                        'sg_upload_movie': preview_path,
-                        'published_files': "pub된 경우",
-                        'description': description,
-                        'published_files' : pub_path,
-                        'image': preview_path}
-        
-        version = self.sg.create('Version', version_data)
-        self.sg.upload_thumbnail("Version", version['id'], thumbnail_path)
-        return version
-
-    def _create_published_file(self):
+    def _create_published_file(self, version):
         """ (4) 샷그리드 published_file 에 pub 파일들 올리는 메서드 """
         print (f"PUBLISHED /// {self.publish_dict}")
         published_file_dict, _ = self._separate_pub_review()
         if not published_file_dict:
             return
-        
-        version = self.user_data['version']
 
-        task = self.ui.comboBox_task.currentText()
-        link = self.ui.comboBox_link.currentText()
-        name = self.user_data['name']
-        project = self.user_data['project']
-        description = self.publish_dict['description']
-        published_file_type = self.publish_dict['file type']
+        # preview path : Lighting 팀은 Pre-Comp 가 끝난 후에 썸네일을 업로드함
+        if 'Lighting' in self.ui.comboBox_task.currentText():
+            preview_path = None 
+        else:
+            preview_path = self.preview_info['output_path']
 
-        # self.sg.create_new_publish_entity()
-        # pub_path = # pub 저장하고 나온 데이터로
-        published_file_data = {'project': project,
-                               'code': "파일 이름",   # 이름 (추후 입력되는 데이터를 받아오는걸로 수정가능)
-                               'sg_status_list': 'ip', # 상태 (추후 수정가능)
-                               'description': description,
-                               'entity': link,
-                               'task': task,
-                               'version': version,
-                               'path': {'local_path': pub_path},
-                               'created_by': name,
-                               'published_file_type' : published_file_type}
-        published_file = self.sg.sg.create('PublishedFile', published_file_data)
-        return published_file
+        for detail in published_file_dict.values():
+            file_path = detail['path']
+            description = description['description']
+            published_file_type = detail['file type']
+            self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
 
-    
     def _task_setting(self):
         if self.user_data['task'].lower() in self.asset_steps_dict:
             self.ui.comboBox_task.setCurrentText(self.asset_steps_dict[self.user_data['task'].lower()])
