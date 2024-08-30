@@ -74,6 +74,7 @@ class ShotGridDataFetcher:
         """
         여기에 나중에 self.user_info dict 출력한 것 붙여두겠습니다
         """
+        self.user = {} # user의 entity를 가져오는 뭔가를 작성해야될듯요
 
     # 프로젝트 id 를 가져와서 지정해준다.
     def _fetch_project_id(self): # ***** 내부에서만 사용되는 메서드는 이름 앞에 _언더바를 붙여서 표시해주시면 좋아요
@@ -124,11 +125,17 @@ class ShotGridDataFetcher:
     ################################################
     # ***** 사실... task의 entity를 구할때에는 링크된 entity가 shot이든 asset이든 구분없이 "entity"필드에 들어가기 때문에...
     # 하나의 메서드를 통해서 두 경우가 모두... 구해질 수 있다는 사실... 대박..이죠?!
-    def fetch_task_from_linked_entity(self, entity): # ***** 재사용성이 좋은.. 코드의 예시입니다.. 하지만 주관적...
+    def fetch_tasks_from_linked_entity(self, entity): # ***** 재사용성이 좋은.. 코드의 예시입니다.. 하지만 주관적...
         filters = [["entity", "is", entity]]
         fields = ["content", "entity"]
         tasks = self.sg.find("Task", filters, fields)
         return tasks
+    
+    def fetch_cur_task_by_taskname_linkedentity(self, task_name, entity):
+        filters = [['entity', 'is', entity], ['content', 'is', task_name]]
+        fields = ['id', 'content', 'entity', 'sg_task']
+        task = self.sg.find_one("Task", filters, fields)
+        return task
     ################################################
 
 
@@ -246,7 +253,45 @@ class ShotGridDataFetcher:
         fields_for_asset = ['id', 'sg_asset_type', 'code']
         assets = self.sg.find("Asset", filters_for_asset, fields_for_asset)
         return assets
+    
+    ##################################################
+    # publish 작업에서 필요한 메서드
+    ##################################################
+    def create_new_version_entity(self, version, shot_code, task_name, description, thumbnail_file_path):
+        shot = self.get_shot_from_code(shot_code)
+        task = self.fetch_cur_task_by_taskname_linkedentity(task_name, shot)
+        
+        new_version_data = {
+            "project" : self.project,
+            "code": version, # 'v001'
+            "description": description,
+            "entity" : shot,
+            "sg_task": self.task,
+            "created_by" : self.user,
+            "sg_status_list" : "rev",
+            "upload_file" : thumbnail_file_path,
+        }
 
+        version = self.sg.create("Version", new_version_data)
+        return version
+
+    def create_new_publish_entity(self, version, shot_code, file_path, description, thumbnail_file_path, published_file_type):
+        file_name = os.path.basename(file_path)
+        version = self.create_new_version_entity(version, shot_code, description, thumbnail_file_path)
+        published_file_type = self.sg.find_one("PublishedFileType", [['code', 'is', published_file_type]], ['id', 'name'])
+        published_file = {
+            "project": self.project,
+            "code": file_name,
+            "description": description,
+            "task": version['sg_task'],
+            "entity" : version['entity'],
+            "version": version,  # 버전과 연결
+            "path": {"local_path": file_path},
+            "published_file_type": published_file_type,  # 필요에 따라 유형 ID를 조정
+        }
+
+        publish = self.sg.create("PublishedFile", published_file)
+        print(f"publish : {publish}")
 
 
 
