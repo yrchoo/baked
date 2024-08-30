@@ -26,6 +26,7 @@ import os
 import yaml
 import glob
 import re
+import subprocess
 reload(department_publish)
 reload(work_in_maya)
 reload(shotgrid.fetch_shotgrid_data)
@@ -52,8 +53,6 @@ class Publisher(QWidget):
 
     def _set_event(self):
         """이벤트 발생 메서드"""
-
-        self.ui.checkBox_check.clicked.connect(self._select_all_items)
 
         self.ui.pushButton_collapse.clicked.connect(self._collapse_tree)
         self.ui.pushButton_expand.clicked.connect(self._expand_tree)
@@ -100,11 +99,10 @@ class Publisher(QWidget):
         """초기 ui 세팅하는 메서드"""
 
         self.tree = self.ui.treeWidget
-        self.publish_dict = department_publish.DepartmentWork(self.tree, 'maya').put_data_in_tree()
+        self.publish_dict = department_publish.DepartmentWork(self.tree, self.tool).put_data_in_tree()
 
         self.show()
         self._get_published_file_category()
-        self.ui.checkBox_check.setChecked(True)
         self.ui.pushButton_load.setIcon(QIcon(f"/home/rapa/baked/toolkit/config/python/icons/reload.png"))
 
         user_data = self.sg.user_info
@@ -129,22 +127,6 @@ class Publisher(QWidget):
         scaled_pixmap = pixmap.scaled(30, 30) 
         self.ui.label.setPixmap(scaled_pixmap)
         self.ui.label_name.setText(text)
-
-    def _select_all_items(self):
-        """ 모든 아이템 체크박스 선택되게/선택 안 되게 하는 메서드 """
-        parent_count = self.tree.topLevelItemCount()
-        for count_parent in range(parent_count): 
-            child_count = self.tree.topLevelItem(count_parent).childCount()
-            for count in range(child_count):
-                object = self.tree.topLevelItem(count_parent).child(count)
-                child_ver = object.child(0)
-                child_pub = object.child(1)
-                if self.ui.checkBox_check.isChecked():
-                    child_ver.setCheckState(1, Qt.Checked)
-                    child_pub.setCheckState(1, Qt.Checked)
-                else:
-                    child_ver.setCheckState(1, Qt.Unchecked)
-                    child_pub.setCheckState(1, Qt.Unchecked)
 
     def _connect_check_state(self, item, column):
         """ publish 체크랑 review 체크 연동시키기 """
@@ -465,6 +447,7 @@ class Publisher(QWidget):
         if self.ui.radioButton_playblast.isChecked():
             ext = self.dep_class.set_playblast_ext()
             image_path = self._get_path_using_template("playblast", ext)
+            print (f"image_path : {image_path}")
             self._check_validate(image_path)
             MayaAPI.make_playblast(self, image_path, ext)
             self._show_thumbnail(self.ui.radioButton_playblast)
@@ -521,11 +504,12 @@ class Publisher(QWidget):
     
     def _get_path_for_selected_files(self):
         """ 선택된 파일 타입에 따라 경로 만들어서 딕셔너리에 넣어주기 """
+        self.ui.label_info_2.clear()
         for file in self.publish_dict:
             if not self.publish_dict[file]['pub']:
                 continue
             if not self.publish_dict[file]['file type'] : ### check empty data
-                self.label_info_2.setText(f"Please select file type")
+                self.ui.label_info_2.setText(f"Please select file type")
                 return False
             self.publish_dict[file]['ext'] = self.file_type_ext[self.publish_dict[file]['file type']]
             self.user_data['group'] = file
@@ -543,6 +527,15 @@ class Publisher(QWidget):
         last_frame = self.preview_info['last frame']
         MayaAPI.make_ffmpeg(self, start_frame, last_frame, input_path, output_path, project_name)
         self.preview_info['output_path'] = output_path
+        self.preview_info['output_path_jpg'] = self._export_slate_image(output_path)
+
+    def _export_slate_image(self,  input_mov):
+        """ffmpeg 이미지로 한장 가져오기"""
+        img_path = self._get_path_using_template("ffmpeg","jpg")
+        frame_number = 24
+        command = ['ffmpeg', '-y', '-i', input_mov, '-vf', f"select='eq(n\,{frame_number})'", '-vsync', 'vfr', '-frames:v', '1', img_path]
+        subprocess.run(command)
+        return img_path
 
     def _save_file_dev_version_up(self):
         """ (2) dev 파일에 저장하는 메서드 (dev 폴더에 저장할) """
@@ -619,11 +612,11 @@ class Publisher(QWidget):
         if 'Lighting' in self.ui.comboBox_task.currentText():
             preview_path = None 
         else:
-            preview_path = self.preview_info['output_path']
+            preview_path = self.preview_info['output_path_jpg']
 
         for detail in published_file_dict.values():
             file_path = detail['path']
-            description = description['description']
+            description = detail['description']
             published_file_type = detail['file type']
             self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
 
