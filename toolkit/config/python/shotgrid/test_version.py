@@ -5,7 +5,7 @@ import os
 import re
 
 import requests
-url = "https://5370-1-11-90-40.ngrok-free.app/webhook"
+url = "https://c95f-1-11-90-40.ngrok-free.app/webhook"
 
 import pprint
 
@@ -15,7 +15,7 @@ class MakeVersionTest():
         self._get_auth()
         self._set_entity_data()
         self._make_new_version_pub_file()
-        self._print_data()
+        # self._print_data()
 
     def _set_init_value(self):
         self.sg = "" # Shotgun()
@@ -80,7 +80,8 @@ class MakeVersionTest():
             }
 
         response = requests.post(url, json=version, headers=header)
-        
+        print(response)
+
         # response = requests.get(url)
         # print(response) # <Response [200]>
         # response.json()

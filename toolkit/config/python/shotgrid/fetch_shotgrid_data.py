@@ -1,12 +1,20 @@
 import os
+import requests
 from shotgun_api3 import Shotgun
+
+
+
 
 try :
     from get_user_data import Get_User_Data
     from make_project_dir import FolderStructureCreator
+    from new_version_occur_watchdog import VersionUpdateHandler
+    from webhook_server import WebhookServer
 except :
     from shotgrid.get_user_data import Get_User_Data
     from shotgrid.make_project_dir import FolderStructureCreator
+    from shotgrid.new_version_occur_watchdog import VersionUpdateObserver
+    from shotgrid.webhook_server import WebhookServer
 
 
 """
@@ -24,7 +32,7 @@ shotgrid 데이터 서버에 존재하는 정보들을 가져오는 메서드를
 각 메서드가 어떤 기능인지 현재 작성되는 주석과 같은 방식으로 달아주세요!
 """
 
-class ShotGridDataFetcher:
+class ShotGridDataFetcher(): 
     def __init__(self): # ***** 바꿈
         self._set_instance_val()
         self.sg = self._get_auth()
@@ -32,6 +40,8 @@ class ShotGridDataFetcher:
         if self.connected:
             self._fetch_project_id()
             FolderStructureCreator(self, "/home/rapa/baked/show/baked/") # 이건 나중에 yaml에 저장된 경로로 바꿔주세요!
+            WebhookServer()
+            self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_json_data/")
 
     def _set_instance_val(self):
         """
@@ -275,9 +285,8 @@ class ShotGridDataFetcher:
         version = self.sg.create("Version", new_version_data)
         return version
 
-    def create_new_publish_entity(self, version, shot_code, file_path, description, thumbnail_file_path, published_file_type):
+    def create_new_publish_entity(self, version, file_path, description, thumbnail_file_path, published_file_type):
         file_name = os.path.basename(file_path)
-        version = self.create_new_version_entity(version, shot_code, description, thumbnail_file_path)
         published_file_type = self.sg.find_one("PublishedFileType", [['code', 'is', published_file_type]], ['id', 'name'])
         published_file = {
             "project": self.project,
@@ -292,7 +301,23 @@ class ShotGridDataFetcher:
 
         publish = self.sg.create("PublishedFile", published_file)
         print(f"publish : {publish}")
+        self.send_data_to_webhook_server(version)
 
+    def send_data_to_webhook_server(self, data:dict):
+        url = ""
+
+        header = {
+            "accept": "application/json",
+            "user-agent": "SG event-pipeline",
+            "content-type": "application/json; charset=utf-8",
+            "x-sg-webhook-id": "9441c2f0-3ed9-45cb-a1e0-9b6a5a5ae3db",
+            "x-sg-event-batch-id": "49652721640407050916129894443709552046784423781841502850",
+            "x-sg-event-batch-size": "1",
+            "x-sg-webhook-site-url": "https://4thacademy.shotgrid.autodesk.com/"
+            }
+
+        response = requests.post(url, json=data, headers=header)
+        print(response)
 
 
 if __name__ == "__main__":
