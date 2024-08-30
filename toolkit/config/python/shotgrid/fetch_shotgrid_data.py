@@ -329,9 +329,11 @@ class ShotGridDataFetcher():
             "x-sg-event-batch-size": "1",
             "x-sg-webhook-site-url": "https://4thacademy.shotgrid.autodesk.com/"
             }
+        try:
+            response = requests.post(url, json=data, headers=header)
+        except:
+            print("Webhook Server Data sending failed")
 
-        response = requests.post(url, json=data, headers=header)
-        print(response)
 
     def add_new_version_to_playlist(self, version):
         playlist_code = datetime.today().strftime("%Y-%M-%d") # '2024-08-30'

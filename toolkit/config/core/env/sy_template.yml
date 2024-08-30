@@ -68,7 +68,7 @@ paths:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/scenes/{shot}_{task}_v{version}_{tag}.maya_extension'
   # The location of published maya abc files
   maya_sequence_pub_abc:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/cache/alembic/{shot}_{group}_{task}_v{version}.abc'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/cache/alembic/{shot}_{task}_{group}_v{version}.abc'
   
   # Rendered output
   maya_sequence_render_mov:
@@ -90,6 +90,8 @@ paths:
   # Ffmpeg_output
   maya_sequence_ffmpeg:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/{shot}_{task}_v{version}_slate.mov'
+  maya_sequence_ffmpeg_jpg:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/{shot}_{task}_v{version}_slate.jpg'
 
   
 
@@ -124,6 +126,8 @@ paths:
   # Ffmpeg output
   nuke_sequence_ffmpeg:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/ffmpeg/{shot}_{task}_v{version}_slate.mov'
+  nuke_sequence_ffmpeg_jpg:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/ffmpeg/{shot}_{task}_v{version}_slate.jpg'
 
   # Capture output
   nuke_sequence_capture:
@@ -153,7 +157,7 @@ paths:
     definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/{asset}_{task}_v{version}_{tag}.{maya_extension}'
   # The location of published maya abc files 
   maya_asset_pub_abc:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/cache/alembic/{asset}_{group}_{task}_v{version}.abc'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/cache/alembic/{asset}_{task}_{group}_v{version}.abc'
   
   # Rendered output
   maya_asset_render_mov:
@@ -167,10 +171,10 @@ paths:
   
   # The location of published shader ma files
   maya_asset_shader:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/shader/{asset}_{group}_{task}_v{version}.ma'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/shader/{asset}_{task}_{group}_v{version}.ma'
   # The location of published texture tiff files
   maya_asset_texture:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/sourceimages/texture/{asset}_{group}_{task}_v{version}.tiff'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/sourceimages/texture/{asset}_{task}_{group}_v{version}.tiff'
 
   # Capture output
   maya_asset_capture_jpg:
@@ -183,3 +187,5 @@ paths:
   # Ffmpeg_output
   maya_asset_ffmpeg:
       definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/movies/ffmpeg/{asset}_{task}_v{version}_slate.mov'
+  maya_asset_ffmpeg_jpg:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/movies/ffmpeg/{asset}_{task}_v{version}_slate.jpg'

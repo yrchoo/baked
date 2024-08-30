@@ -149,6 +149,7 @@ class MayaAPI():
 
     
         cmd = '%s -framerate %s -y -start_number %s ' % (ffmpeg, frame_rate, first)
+        cmd += '-y'
         cmd += '-i %s' % (input_path)
         cmd += ' -vf "drawbox=y=0 :color=black :width=iw: height=%s :t=fill, ' % (slate_size)
         cmd += 'drawbox=y=ih-%s :color=black :width=iw: height=%s :t=fill, ' % (slate_size, slate_size)
