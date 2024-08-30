@@ -266,7 +266,7 @@ class ShotGridDataFetcher:
             "code": version, # 'v001'
             "description": description,
             "entity" : shot,
-            "sg_task": self.task,
+            "sg_task": task,
             "created_by" : self.user,
             "sg_status_list" : "rev",
             "upload_file" : thumbnail_file_path,

@@ -25,15 +25,25 @@ import os
 import yaml
 import glob
 import re
+reload(department_publish)
+reload(work_in_maya)
 
+
+from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
 class Publisher(QWidget):
-    def __init__(self):
+    def __init__(self, sg : ShotGridDataFetcher, tool :str = None):
+
         super().__init__()
+        self._set_initial_val(sg, tool)
         self._set_ui()
         self.initial_setting()
         self._get_task_type()
         self._set_event()
         self.test_setting()
+
+    def _set_initial_val(self, sg, tool):
+        self.sg : ShotGridDataFetcher = sg # login 시에 지정된 userdata를 가지고 Shotgrid에서 정보를 가져오는 Shotgrid_Data() 클래스
+        self.tool = tool
 
     def _set_event(self):
         """이벤트 발생 메서드"""
@@ -53,10 +63,10 @@ class Publisher(QWidget):
 
         self.ui.treeWidget.itemChanged.connect(self._connect_check_state)
         self.ui.treeWidget.itemChanged.connect(self._check_pub_or_version)
-
         self.ui.treeWidget.itemClicked.connect(self._show_file_detail)
         self.ui.treeWidget.itemClicked.connect(self._connect_item_and_type)
         self.ui.treeWidget.itemClicked.connect(self._show_description)
+
         self.ui.plainTextEdit_description.textChanged.connect(self._write_description)
 
         self.button_group = QButtonGroup()
@@ -78,10 +88,6 @@ class Publisher(QWidget):
         """초기 ui 세팅하는 메서드"""
 
         self.tree = self.ui.treeWidget
-        self.tool = "maya" #### 일단 보류
-
-        reload(department_publish)
-        reload(work_in_maya)
         self.publish_dict = department_publish.DepartmentWork(self.tree, 'maya').put_data_in_tree()
         print("*****", self.publish_dict, '*****')
 
@@ -90,7 +96,14 @@ class Publisher(QWidget):
         self.ui.checkBox_check.setChecked(True)
         self.ui.pushButton_load.setIcon(QIcon(f"/home/rapa/baked/toolkit/config/python/icons/reload.png"))
         self.user_file_info = self._get_user_info()
-        
+
+        user_data = self.sg.user_info
+        self._get_user_info(user_data)
+    
+        self._set_data_publisher()
+    
+    def _set_data_publisher(self):
+        pass
 
     def _show_file_detail(self, item, _):
         """ 선택한 treewidget 아이템 정보 크게 보여주는 메서드 """
@@ -98,23 +111,13 @@ class Publisher(QWidget):
         if text in ["Publish to Flow", "Upload for review"]:
             text = item.parent().text(0)
         if not item.parent():
-            pixmap = QPixmap("/home/rapa/baked/toolkit/config/python/scene.png")         
+            pixmap = QPixmap("/home/rapa/baked/toolkit/config/python/icons/scene.png")         
         else:
-            pixmap = QPixmap("/home/rapa/baked/toolkit/config/python/object.png") 
-        scaled_pixmap = pixmap.scaled(50, 50) 
+            pixmap = QPixmap("/home/rapa/baked/toolkit/config/python/icons/object.png") 
+        scaled_pixmap = pixmap.scaled(30, 30) 
         self.ui.label.setPixmap(scaled_pixmap)
         self.ui.label_name.setText(text)
-        self.ui.label_name.setAlignment(Qt.AlignLeft)
 
-        # 선택되는 파일에 따라 이미지 변경해주기
-        # label_image = self.ui.label
-        # data_type = 'grp'
-        # pixmap = QPixmap(f"/home/rapa/baked/toolkit/config/python/{data_type}.png") 
-        # scaled_pixmap = pixmap.scaled(50, 50) 
-        # icon = self.publish_dict[text]['ext']
-        # icon = 'mb'
-        # self.ui.label_image.setIcon(QIcon(f"/home/rapa/baked/toolkit/config/python/icons/{icon}.png"))
-    
     def _select_all_items(self):
         """ 모든 아이템 체크박스 선택되게/선택 안 되게 하는 메서드 """
         parent_count = self.tree.topLevelItemCount()
@@ -145,7 +148,7 @@ class Publisher(QWidget):
     def _get_path_using_template(self, work, ext=""):
         """ yaml 템플릿을 이용해서 저장할 경로, 파일 이름 만드는 메서드 """
 
-        yaml_path = self._import_yaml_template()
+        yaml_path, _ = self._import_yaml_template()
         file_info_dict = self.user_file_info
         tool = file_info_dict["tool"]
         level = file_info_dict["seq/asset"]
@@ -163,25 +166,43 @@ class Publisher(QWidget):
             self._check_validate(new_path)
         return new_path
 
-    def _get_user_info(self):
+    def _get_user_info(self, user_data):
         """ 유저에 대한 정보 가저오는 메서드 """ # 임시 설정 
         """ 유저 커스텀 버튼 있으면 좋을듯 """
+        
+        if self.tool == 'maya':
+            _, yaml_key = self._import_yaml_template()
+            user_data['maya_extension'] = yaml_key['maya extension']['default']
 
-        user_file_info = {
-                    "name":"Seoyeon Yoon",
-                    "project":"baked",
-                    "seq/asset":"asset",
-                    "shot": "",
-                    "asset_type": "Character",
-                    "asset":"Apple",
-                    "task":"MOD",
-                    "dev/pub":"dev",
-                    "tool":"maya",
-                    "version":"001",
-                    "filename":"desk_MOD_v001",
-                    "maya_extension":"mb"
-                    }
-        return user_file_info
+        # user_file_info = {
+        #             "name":"Seoyeon Yoon",
+        #             "project":"baked",
+        #             "task":"MOD",
+        #             "asset_type": "Character",
+        #             "asset":"Apple",
+        #             "shot": "",
+        #             "version":"001",
+        #             "seq/asset":"asset",
+        #             }
+        
+        current_file_name = department_publish.DepartmentWork(self.tree, self.tool).get_current_file_name()
+        version = self._get_version_from_current_file(current_file_name)
+        user_data['version'] = version
+        if user_data["asset"]:
+            user_data["seq/asset"] = "asset"
+        else:
+            user_data["seq/asset"] = "sequence"
+            
+        return user_data
+    
+    def _get_version_from_current_file(self, file):
+
+        p = re.compile("[v]\d{3}")      
+        p_version = p.search(file)  
+
+        if p_version:
+            version = p_version.group()[1:]
+            return version   
     
     def _connect_department(self):
         """나중에는 ui에서 가져오는 거롤"""
@@ -204,7 +225,8 @@ class Publisher(QWidget):
         with open('/home/rapa/baked/toolkit/config/core/env/sy_template.yml') as f:
             yaml_data = yaml.load(f, Loader=yaml.FullLoader)
             yaml_path = yaml_data["paths"]
-        return yaml_path
+            yaml_key = yaml_key['keys']
+        return yaml_path, yaml_key
     
     def _check_validate(self, new_path):
         """저장할 파일 경로가 유효한지 확인하는 메서드 (폴더가 존재하지 않으면 생성해주기)"""
@@ -379,6 +401,8 @@ class Publisher(QWidget):
                 self.ui.textEdit.append('- Upload for review')
             elif value['pub'] == False and value['rev'] == True:
                 self.ui.textEdit.append('- Upload for review')
+            elif value['pub'] == True and value['rev'] == False:
+                self.ui.textEdit.append('- Publish to Flow')
             self.ui.textEdit.append(f"- File type: {value['file type']}")
             self.ui.textEdit.append(f"- Description: {value['description']}")
             self.ui.textEdit.append("")
@@ -565,6 +589,7 @@ class Publisher(QWidget):
         project = self.user_file_info['project']
         description = self.file_pub_data['description']
         published_file_type = self.publish_dict['file type']
+        self.sg.create_new_publish_entity()
         # pub_path = # pub 저장하고 나온 데이터로
         published_file_data = {'project': project,
                                'code': "파일 이름",   # 이름 (추후 입력되는 데이터를 받아오는걸로 수정가능)

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>925</width>
+    <width>984</width>
     <height>766</height>
    </rect>
   </property>
@@ -42,7 +42,7 @@
     <rect>
      <x>7</x>
      <y>10</y>
-     <width>903</width>
+     <width>961</width>
      <height>721</height>
     </rect>
    </property>
@@ -61,6 +61,120 @@
       <property name="spacing">
        <number>0</number>
       </property>
+      <item row="13" column="0" colspan="10">
+       <layout class="QGridLayout" name="gridLayout_8">
+        <item row="1" column="2">
+         <widget class="QPushButton" name="pushButton_load">
+          <property name="minimumSize">
+           <size>
+            <width>10</width>
+            <height>10</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Publish Summary</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="0" colspan="4">
+         <widget class="QLabel" name="label_19">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="4">
+         <widget class="QTextEdit" name="textEdit">
+          <property name="cursor" stdset="0">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="1" colspan="9">
+       <widget class="QComboBox" name="comboBox_link"/>
+      </item>
+      <item row="0" column="0" colspan="8">
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0" rowspan="2">
+         <widget class="QLabel" name="label">
+          <property name="maximumSize">
+           <size>
+            <width>70</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" rowspan="2" colspan="2">
+         <widget class="QLabel" name="label_name">
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="9">
+       <widget class="QPushButton" name="pushButton">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Auto set</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="9">
+       <widget class="QComboBox" name="comboBox_task"/>
+      </item>
       <item row="5" column="0">
        <widget class="QLabel" name="label_22">
         <property name="maximumSize">
@@ -84,31 +198,21 @@
         </property>
        </widget>
       </item>
-      <item row="9" column="0" colspan="3">
-       <widget class="QLabel" name="label_26">
-        <property name="text">
-         <string>Description for review</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-        </property>
-       </widget>
+      <item row="5" column="1" colspan="9">
+       <widget class="QComboBox" name="comboBox_type"/>
       </item>
-      <item row="8" column="3">
-       <spacer name="horizontalSpacer_4">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
+      <item row="6" column="0" colspan="10">
+       <widget class="QLabel" name="label_17">
+        <property name="maximumSize">
          <size>
-          <width>40</width>
-          <height>20</height>
+          <width>16777215</width>
+          <height>30</height>
          </size>
         </property>
-       </spacer>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
       </item>
       <item row="10" column="0" colspan="3">
        <widget class="QPlainTextEdit" name="plainTextEdit_description_review">
@@ -117,134 +221,6 @@
           <width>288</width>
           <height>80</height>
          </size>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0" colspan="3">
-       <widget class="QPlainTextEdit" name="plainTextEdit_description">
-        <property name="maximumSize">
-         <size>
-          <width>288</width>
-          <height>60</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1" colspan="8">
-       <widget class="QComboBox" name="comboBox_type"/>
-      </item>
-      <item row="0" column="0" colspan="8">
-       <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="0" rowspan="2">
-         <widget class="QLabel" name="label">
-          <property name="maximumSize">
-           <size>
-            <width>50</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <spacer name="horizontalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="0" column="1">
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="0" column="2" rowspan="2">
-         <widget class="QLabel" name="label_name">
-          <property name="font">
-           <font>
-            <pointsize>12</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>File Information</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="8" column="6">
-       <spacer name="horizontalSpacer_5">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="7" column="0" colspan="3">
-       <widget class="QLabel" name="label_23">
-        <property name="text">
-         <string>Description for publish</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="7" rowspan="3" colspan="2">
-       <widget class="QLabel" name="label_thumbnail">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>288</width>
-          <height>162</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>288</width>
-          <height>162</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>No Thumbnail Found</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -321,117 +297,29 @@
         </item>
        </layout>
       </item>
-      <item row="4" column="2">
-       <spacer name="verticalSpacer_3">
+      <item row="8" column="3">
+       <spacer name="horizontalSpacer_4">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeType">
          <enum>QSizePolicy::Fixed</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>0</width>
+          <width>40</width>
           <height>20</height>
          </size>
         </property>
        </spacer>
       </item>
-      <item row="13" column="0" colspan="9">
-       <layout class="QGridLayout" name="gridLayout_8">
-        <item row="1" column="2">
-         <widget class="QPushButton" name="pushButton_load">
-          <property name="minimumSize">
-           <size>
-            <width>10</width>
-            <height>10</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0" colspan="2">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>Publish Summary</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="0" column="0" colspan="4">
-         <widget class="QLabel" name="label_19">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0" colspan="4">
-         <widget class="QTextEdit" name="textEdit">
-          <property name="cursor" stdset="0">
-           <cursorShape>PointingHandCursor</cursorShape>
-          </property>
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="1" colspan="8">
-       <widget class="QComboBox" name="comboBox_task"/>
-      </item>
-      <item row="1" column="0" colspan="9">
-       <spacer name="verticalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>0</width>
-          <height>50</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="6" column="0" colspan="9">
-       <widget class="QLabel" name="label_17">
+      <item row="8" column="0" colspan="3">
+       <widget class="QPlainTextEdit" name="plainTextEdit_description">
         <property name="maximumSize">
          <size>
-          <width>16777215</width>
-          <height>30</height>
+          <width>288</width>
+          <height>60</height>
          </size>
-        </property>
-        <property name="text">
-         <string/>
         </property>
        </widget>
       </item>
@@ -461,21 +349,117 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1" colspan="8">
-       <widget class="QComboBox" name="comboBox_link"/>
-      </item>
-      <item row="0" column="8">
-       <widget class="QPushButton" name="pushButton">
+      <item row="8" column="7" rowspan="3" colspan="3">
+       <widget class="QLabel" name="label_thumbnail">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>288</width>
+          <height>162</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>100</width>
-          <height>16777215</height>
+          <width>288</width>
+          <height>162</height>
          </size>
         </property>
         <property name="text">
-         <string>Auto set</string>
+         <string>No Thumbnail Found</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
+      </item>
+      <item row="4" column="2">
+       <spacer name="verticalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>0</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="9" column="0" colspan="3">
+       <widget class="QLabel" name="label_26">
+        <property name="text">
+         <string>Description for review</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="6">
+       <spacer name="horizontalSpacer_5">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="7" column="0" colspan="3">
+       <widget class="QLabel" name="label_23">
+        <property name="text">
+         <string>Description for publish</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="10">
+       <spacer name="verticalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>0</width>
+          <height>50</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="8">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>50</width>
+          <height>50</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </item>
