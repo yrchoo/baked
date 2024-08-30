@@ -8,13 +8,13 @@ from shotgun_api3 import Shotgun
 try :
     from get_user_data import Get_User_Data
     from make_project_dir import FolderStructureCreator
-    from new_version_occur_watchdog import VersionUpdateHandler
-    from webhook_server import WebhookServer
+    from new_version_occur_watchdog import VersionUpdateObserver
+    # from webhook_server import WebhookServer
 except :
     from shotgrid.get_user_data import Get_User_Data
     from shotgrid.make_project_dir import FolderStructureCreator
     from shotgrid.new_version_occur_watchdog import VersionUpdateObserver
-    from shotgrid.webhook_server import WebhookServer
+    # from shotgrid.webhook_server import WebhookServer
 
 
 """
@@ -36,12 +36,12 @@ class ShotGridDataFetcher():
     def __init__(self): # ***** 바꿈
         self._set_instance_val()
         self.sg = self._get_auth()
-        self._get_current_user_data()
         if self.connected:
             self._fetch_project_id()
             FolderStructureCreator(self, "/home/rapa/baked/show/baked/") # 이건 나중에 yaml에 저장된 경로로 바꿔주세요!
-            WebhookServer()
-            self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_json_data/")
+            # WebhookServer()
+            self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/")
+        self._get_current_user_data()
 
     def _set_instance_val(self):
         """
@@ -84,7 +84,8 @@ class ShotGridDataFetcher():
         """
         여기에 나중에 self.user_info dict 출력한 것 붙여두겠습니다
         """
-        self.user = {} # user의 entity를 가져오는 뭔가를 작성해야될듯요
+        if self.connected:
+            self.user = self.sg.find_one("HumanUser", [['name','is',self.user_info['name']], ['projects','is',self.project]], ['name', 'id']) # user의 entity를 가져오는 뭔가를 작성해야될듯요
 
     # 프로젝트 id 를 가져와서 지정해준다.
     def _fetch_project_id(self): # ***** 내부에서만 사용되는 메서드는 이름 앞에 _언더바를 붙여서 표시해주시면 좋아요
@@ -267,19 +268,22 @@ class ShotGridDataFetcher():
     ##################################################
     # publish 작업에서 필요한 메서드
     ##################################################
-    def create_new_version_entity(self, version, shot_code, task_name, description, thumbnail_file_path):
-        shot = self.get_shot_from_code(shot_code)
-        task = self.fetch_cur_task_by_taskname_linkedentity(task_name, shot)
+    def create_new_version_entity(self, version, task_name, description, thumbnail_file_path, shot_code=None, asset =None):
+        if asset:
+            link = self.get_asset_entity(asset)
+        if shot_code:
+            link = self.get_shot_from_code(shot_code)
+        task = self.fetch_cur_task_by_taskname_linkedentity(task_name, link)
         
         new_version_data = {
             "project" : self.project,
             "code": version, # 'v001'
             "description": description,
-            "entity" : shot,
+            "entity" : link,
             "sg_task": task,
             "created_by" : self.user,
             "sg_status_list" : "rev",
-            "upload_file" : thumbnail_file_path,
+            "sg_uploaded_movie" : thumbnail_file_path,
         }
 
         version = self.sg.create("Version", new_version_data)
@@ -296,7 +300,8 @@ class ShotGridDataFetcher():
             "entity" : version['entity'],
             "version": version,  # 버전과 연결
             "path": {"local_path": file_path},
-            "published_file_type": published_file_type,  # 필요에 따라 유형 ID를 조정
+            "published_file_type": published_file_type,  
+            "upload_file" : thumbnail_file_path,
         }
 
         publish = self.sg.create("PublishedFile", published_file)

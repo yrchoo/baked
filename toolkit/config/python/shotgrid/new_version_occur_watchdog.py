@@ -4,7 +4,10 @@ import json
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-from PySide6.QtCore import Signal, QObject
+try:
+    from PySide6.QtCore import Signal, QObject
+except:
+    from PySide2.QtCore import Signal, QObject
 
 class VersionUpdateHandler(FileSystemEventHandler):
     def __init__(self, observer):

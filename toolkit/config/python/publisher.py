@@ -36,10 +36,13 @@ class Publisher(QWidget):
         super().__init__()
         self._set_initial_val(sg, tool)
         self._set_ui()
-        self.initial_setting()
+        self._initial_ui_setting()
         self._get_task_type()
+        self._show_link_entity()
+        self._task_setting()
+        self._link_setting()
+        self._connect_department()
         self._set_event()
-        self.test_setting()
 
     def _set_initial_val(self, sg, tool):
         self.sg : ShotGridDataFetcher = sg # login 시에 지정된 userdata를 가지고 Shotgrid에서 정보를 가져오는 Shotgrid_Data() 클래스
@@ -75,8 +78,15 @@ class Publisher(QWidget):
             self.button_group.addButton(button)
         self.button_group.buttonClicked.connect(self._show_thumbnail)
 
+    def _link_setting(self):
+        if self.user_data['task'].lower() in self.asset_steps_dict:
+            self.ui.comboBox_link.setCurrentText(self.user_data['asset'])
+        else:
+            self.ui.comboBox_link.setCurrentText(self.user_data['shot'])
+
     def _set_ui(self):
         """ui 셋업해주는 메서드"""
+
         ui_file_path = '/home/rapa/baked/toolkit/config/python/publisher_final.ui' 
         ui_file = QFile(ui_file_path)
 
@@ -84,32 +94,32 @@ class Publisher(QWidget):
         self.ui = loader.load(ui_file, self)  
         ui_file.close()
 
-    def initial_setting(self):
+    def _initial_ui_setting(self):
         """초기 ui 세팅하는 메서드"""
 
         self.tree = self.ui.treeWidget
         self.publish_dict = department_publish.DepartmentWork(self.tree, 'maya').put_data_in_tree()
-        print("*****", self.publish_dict, '*****')
 
         self.show()
         self._get_published_file_category()
         self.ui.checkBox_check.setChecked(True)
         self.ui.pushButton_load.setIcon(QIcon(f"/home/rapa/baked/toolkit/config/python/icons/reload.png"))
-        self.user_file_info = self._get_user_info()
 
         user_data = self.sg.user_info
-        self._get_user_info(user_data)
-    
-        self._set_data_publisher()
-    
-    def _set_data_publisher(self):
-        pass
+        self.user_data = self._get_user_info(user_data) ## 현재 유저 정보, 작업 파일 딕셔너리로 저장
+
+        if self.user_data['shot'] != "":
+            self.ui.comboBox_link.setCurrentText(self.user_data['shot'])
+        else:
+            self.ui.comboBox_link.setCurrentText(self.user_data['asset'])
 
     def _show_file_detail(self, item, _):
         """ 선택한 treewidget 아이템 정보 크게 보여주는 메서드 """
+
         text = item.text(0)
         if text in ["Publish to Flow", "Upload for review"]:
             text = item.parent().text(0)
+            item = item.parent()
         if not item.parent():
             pixmap = QPixmap("/home/rapa/baked/toolkit/config/python/icons/scene.png")         
         else:
@@ -136,20 +146,21 @@ class Publisher(QWidget):
 
     def _connect_check_state(self, item, column):
         """ publish 체크랑 review 체크 연동시키기 """
-
-        if item.text(0) == "Upload for review" or not item.parent().parent():
-            return
-        elif item.checkState(column) == Qt.Checked:
-            parent = item.parent()
-            parent.child(1).setCheckState(1, Qt.Checked)
-
+        try:
+            if item.text(0) == "Upload for review" or not item.parent().parent():
+                return
+            elif item.checkState(column) == Qt.Checked:
+                parent = item.parent()
+                parent.child(1).setCheckState(1, Qt.Checked)
+        except:
+            pass
     ########################## 저장하고 버전 관리 #############################
 
     def _get_path_using_template(self, work, ext=""):
         """ yaml 템플릿을 이용해서 저장할 경로, 파일 이름 만드는 메서드 """
 
         yaml_path, _ = self._import_yaml_template()
-        file_info_dict = self.user_file_info
+        file_info_dict = self.user_data
         tool = file_info_dict["tool"]
         level = file_info_dict["seq/asset"]
         current = f"{tool}_{level}_{work}"
@@ -172,19 +183,9 @@ class Publisher(QWidget):
         
         if self.tool == 'maya':
             _, yaml_key = self._import_yaml_template()
-            user_data['maya_extension'] = yaml_key['maya extension']['default']
-
-        # user_file_info = {
-        #             "name":"Seoyeon Yoon",
-        #             "project":"baked",
-        #             "task":"MOD",
-        #             "asset_type": "Character",
-        #             "asset":"Apple",
-        #             "shot": "",
-        #             "version":"001",
-        #             "seq/asset":"asset",
-        #             }
-        
+            user_data['maya_extension'] = yaml_key['maya_extension']['default']
+            
+        user_data['tool'] = self.tool
         current_file_name = department_publish.DepartmentWork(self.tree, self.tool).get_current_file_name()
         version = self._get_version_from_current_file(current_file_name)
         user_data['version'] = version
@@ -196,36 +197,27 @@ class Publisher(QWidget):
         return user_data
     
     def _get_version_from_current_file(self, file):
+        """ 현재 작업하는 파일 버전 가져오는 메서드 """
 
         p = re.compile("[v]\d{3}")      
         p_version = p.search(file)  
-
         if p_version:
             version = p_version.group()[1:]
             return version   
     
     def _connect_department(self):
         """나중에는 ui에서 가져오는 거롤"""
-        self.department = "MOD"
+        reversed_task_dict = dict(map(reversed, self.task_dict.items()))
+        task = self.ui.comboBox_task.currentText()
+        self.department = reversed_task_dict[task].upper()
         self.dep_class = getattr(department_publish, self.department)(self.tree,'maya')
-
-    def _make_version_up(self):
-        """버전 업해주는 메서드"""
-        user_info = self._get_user_info()
-        file_path = self._get_path_using_template('dev')
-        if os.path.exists(file_path):
-            version = int(user_info["version"])
-            version += 1
-            str_version = str(version)
-            new_version = f"{str_version.zfill(3)}" 
-        return new_version
     
     def _import_yaml_template(self):
         """template.yml import 하는 메서드"""
         with open('/home/rapa/baked/toolkit/config/core/env/sy_template.yml') as f:
             yaml_data = yaml.load(f, Loader=yaml.FullLoader)
             yaml_path = yaml_data["paths"]
-            yaml_key = yaml_key['keys']
+            yaml_key = yaml_data["keys"]
         return yaml_path, yaml_key
     
     def _check_validate(self, new_path):
@@ -281,23 +273,12 @@ class Publisher(QWidget):
             self.publish_dict[file]['description'] = self.ui.plainTextEdit_description.toPlainText()
         
     ################################### get shotgrid data ##########################################
-    
-    def _connect_sg(self):
-        """샷그리드 연결시키는 메서드"""
-        URL = "https://4thacademy.shotgrid.autodesk.com"
-        SCRIPT_NAME = "pipeline key"
-        API_KEY = "^axlq0daadimnwnatxrdoYfsm"
-        sg = shotgun.Shotgun(URL,
-                         SCRIPT_NAME,
-                         API_KEY)
-        return sg
 
     def _get_published_file_category(self):
         """published file type 콤보박스에 넣어주는 메서드"""
-        sg = self._connect_sg()
         published_file_type = ['']
         self.file_type_ext = {}
-        published_file_type_sg = sg.find("PublishedFileType", [["sg_level", "is_not", None]], fields=["code", "sg_ext"])
+        published_file_type_sg = self.sg.sg.find("PublishedFileType", [["sg_level", "is_not", None]], fields=["code", "sg_ext"])
         for info in published_file_type_sg:
             published_file_type.append(info['code'])
             self.file_type_ext[info['code']] = info['sg_ext']
@@ -305,34 +286,45 @@ class Publisher(QWidget):
         
     def _get_task_type(self):
         """shotgrid에서 task 종류 가져오는 메서드"""
-        sg = self._connect_sg()
-        asset_steps_list = ['-----------select------------']
+        asset_steps_list = []
         shot_steps_list = []
-        asset_steps = sg.find("Step", [['entity_type', 'is', 'Asset']], fields=["description"])
-        shot_steps = sg.find("Step", [['entity_type', 'is', 'Shot']], fields=["description"])
-
+        self.asset_steps_dict = {}
+        self.shot_steps_dict = {}
+        asset_steps = self.sg.sg.find("Step", [['entity_type', 'is', 'Asset']], fields=["description", "code"])
+        shot_steps = self.sg.sg.find("Step", [['entity_type', 'is', 'Shot']], fields=["description", "code"])
         for asset in asset_steps:
+            self.asset_steps_dict[asset['code']] = f"[Asset]  {asset['description']}"
             asset_steps_list.append(f"[Asset]  {asset['description']}")
+
         for shot in shot_steps:
+            self.shot_steps_dict[shot['code']] = f"[Shot]   {shot['description']}"
             shot_steps_list.append(f"[Shot]   {shot['description']}")
-            
+
         self.ui.comboBox_task.addItems(asset_steps_list)
         self.ui.comboBox_task.addItems(shot_steps_list)
-        return asset_steps_list, shot_steps_list
+        
+        self.task_dict = {} # mod:[Asset]  Modeling
+        self.task_dict.update(self.asset_steps_dict)
+        self.task_dict.update(self.shot_steps_dict)
 
     def _show_link_entity(self):
         """shotgrid 에서 task 와 링크된 entity 가져오는 메서드"""
+
         self.ui.comboBox_link.clear()
         task = self.ui.comboBox_task.currentText()[9:]
-        sg = self._connect_sg()
-        link_list = ['']
-        step = sg.find("Step", [['description', 'is', task]], fields=["code"])[0]['code']
-        link = sg.find("Task", [['step.Step.code', 'is', step], ['project.Project.name', 'is', 'baked']], fields=["entity"])
+        link_list = []
+        step = self.sg.sg.find("Step", [['description', 'is', task]], fields=["code"])[0]['code']
+        link = self.sg.sg.find("Task", [['step.Step.code', 'is', step], ['project.Project.name', 'is', 'baked']], fields=["entity"])
         for item in link:
             link_list.append(item['entity'].get('name'))
-        if task == "":
-            self.ui.comboBox_link.setCurrentIndex(0)
         self.ui.comboBox_link.addItems(link_list)
+
+        # task = self.ui.comboBox_task.currentText()
+        # reversed_task_dict = dict(map(reversed, self.task_dict.items()))
+        # if reversed_task_dict[task] == self.user_data["task"].lower():
+        #     return
+
+        
 
     def _check_pub_or_version(self, item, column):
         """treewidget 아이템별로 publish/review 구분하는 메서드"""
@@ -342,7 +334,7 @@ class Publisher(QWidget):
         key = item.parent().text(0)
         val = item.checkState(1)
         value = self._is_checked(item) # checkState는 True/False 로 찍히지 않는다..    
-        print(key, value, "????")
+
         if "Publish to Flow" in item.text(0):
             option = "pub"
             parent_item = item.parent()
@@ -361,7 +353,15 @@ class Publisher(QWidget):
         self.publish_dict[key][option] = value
         self._connect_check_color(item, child)
     
+    def _is_checked(self, item):
+        """ checkbox checked 일때 True 리턴하는 메서드 """
+        if item.checkState(1) == Qt.Checked:
+            return True
+        else:
+            return False
+        
     def _connect_check_color(self, item1, item2):
+        """ 체크박스 유무에 따라 색깔 변경해주는 메서드 """
         if item1.checkState(1) == Qt.Checked:
             item1.setForeground(0, QBrush(QColor("white")))
         else:
@@ -370,16 +370,9 @@ class Publisher(QWidget):
             item2.setForeground(0, QBrush(QColor("white")))
         else:
             item2.setForeground(0, QBrush(QColor("gray")))
-
-    def _is_checked(self, item):
-        """checkbox checked 일때 True 리턴하는 메서드"""
-        if item.checkState(1) == Qt.Checked:
-            return True
-        else:
-            return False
     
     def _put_publish_type_info_dict(self, index):
-        """treewidget 아이템 별로 published type 기록하는 메서드"""
+        """ treewidget 아이템 별로 published type 기록하는 메서드 """
         item = self.tree.currentItem()
         file = item.text(0)
         if file in ['Publish to Flow', 'Upload for review'] or index == 0:
@@ -389,12 +382,13 @@ class Publisher(QWidget):
         item.setForeground(1, QBrush(QColor("light pink")))
     
     def _load_publish_summary(self):
-        """퍼블리쉬할 데이터 보여주는 메서드"""
+        """ 퍼블리쉬할 데이터 보여주는 메서드 """
+
         self.ui.textEdit.clear()
-        print (self.publish_dict)
         for file, value in self.publish_dict.items(): 
             if value['pub'] == False and value['rev'] == False:
                 continue
+
             self.ui.textEdit.append(f'<b>{file}</b>') 
             if value['pub'] == True and value['rev'] == True:
                 self.ui.textEdit.append('- Publish to Flow')
@@ -406,17 +400,15 @@ class Publisher(QWidget):
             self.ui.textEdit.append(f"- File type: {value['file type']}")
             self.ui.textEdit.append(f"- Description: {value['description']}")
             self.ui.textEdit.append("")
+
         self.ui.textEdit.moveCursor(QTextCursor.Start)
         print ("------------", self.publish_dict, '------------')
 
     ############################# Flow: publish/versions에 올리기 ########################################
-
-    # def _make_root_path(self):
-        """maya까지 root path 가져오기"""
-        return self._get_path_using_template('root')
     
     def _show_thumbnail(self, button):
         """썸네일 보여주는 메서드"""
+
         image_path = ""
         if button.text() == "PlayBlast":
             ext = self.dep_class.set_playblast_ext()
@@ -430,7 +422,6 @@ class Publisher(QWidget):
 
         path = self._check_validate(image_path)    
         files = glob.glob(f"{path}/*")
-
         if not files:
             self.ui.label_thumbnail.setText("No Thumbnail Found")
             self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
@@ -440,14 +431,15 @@ class Publisher(QWidget):
         pixmap = QPixmap(recent_image_file) 
         scaled_pixmap = pixmap.scaled(288, 162) 
         self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
-        start_frame, last_frame = self._get_frame_number(files)
+
+        start_frame, last_frame = self._get_frame_number(files) # 프레임 넘버, 경로 정보 저장하기
         self.preview_info = {'input path' : image_path, 
                              'start frame' : int(start_frame),
                              'last frame' : int(last_frame)}
         print (f"420:: self.preview_info {self.preview_info}")
 
     def _get_frame_number(self, files):
-        """플레이블라스트, 렌더, 캡처를 통해 받은 파일 경로로 프레임 넘버 가져오기"""
+        """ 플레이블라스트, 렌더, 캡처를 통해 받은 파일 경로로 프레임 넘버 가져오기 """
         
         if len(files) == 1:
             return 1, None
@@ -465,9 +457,8 @@ class Publisher(QWidget):
         return start_frame, last_frame
         
     def _make_thumbnail(self): 
-        """썸네일 만들어주는 메서드"""
+        """ 썸네일 새로 만들어주는 메서드 """
         # Lighting, Comp 팀은 지원해주지 않기
-        # 만약 존재하면 그거 보여주도록
 
         if self.ui.radioButton_playblast.isChecked():
             ext = self.dep_class.set_playblast_ext()
@@ -495,17 +486,18 @@ class Publisher(QWidget):
         """publish 눌렀을 때 발생하는 이벤트"""
         if self._save_file_pub() == False :
             return
-        print(self.preview_info)
+        
         input_path = self.preview_info['input path']
-        self._apply_ffmpeg(input_path, self.user_file_info['project'])
-        self._save_file_dev_version_up()
+        self._apply_ffmpeg(input_path, self.user_data['project'])
+        self._create_version_data()
         # self._create_published_file()
-        # self._create_version()
+        self._save_file_dev_version_up()
     
     def _save_file_pub(self):
         """ (1) pub 파일에 저장하는 메서드 (scene파일, cache만) (version 작업 파일 그대로) """
         """ 펍할때는 무조건 scene파일 올리는거니까 scene파일 선택되어있지 않으면 versions로만 올린다는 이야기 """
         """ 펍한다고 하면 펍한다고 체크한 데이터들로만 진행 """
+
         print ("----------", list(self.publish_dict.keys()))
         scene_file = list(self.publish_dict.keys())[0]
         print (f"--------451 scene_file {scene_file}---------")
@@ -521,13 +513,12 @@ class Publisher(QWidget):
                 ext = ''
             self._get_path_using_template('pub', ext)
 
-        print (type(self.dep_class), self.dep_class, "nnnn")
         self.dep_class.save_data(self.publish_dict)
         print (f"476: save_file_pub: {self.publish_dict}")
         return True
     
     def _get_path_for_selected_files(self):
-        """선택된 파일 타입에 따라 경로 만들어서 딕셔너리에 넣어주기 """
+        """ 선택된 파일 타입에 따라 경로 만들어서 딕셔너리에 넣어주기 """
         for file in self.publish_dict:
             if not self.publish_dict[file]['pub']:
                 continue
@@ -535,7 +526,7 @@ class Publisher(QWidget):
                 self.label_info_2.setText(f"Please select file type")
                 return False
             self.publish_dict[file]['ext'] = self.file_type_ext[self.publish_dict[file]['file type']]
-            self.user_file_info['group'] = file
+            self.user_data['group'] = file
             path = self._get_path_using_template("pub", self.publish_dict[file]['ext'])
             self.publish_dict[file]['path'] = path
             print ("..........", file, ".........")
@@ -554,9 +545,20 @@ class Publisher(QWidget):
     def _save_file_dev_version_up(self):
         """ (2) dev 파일에 저장하는 메서드 (dev 폴더에 저장할) """
         """ dev에는 scene파일만 cache들은 저장 안됨 + 썸네일 저장 """
-        self.user_file_info['version'] = self._make_version_up() # scene 파일
+        self.user_data['version'] = self._make_version_up() # scene 파일
         new_path = self._get_path_using_template('dev')
         department_publish.DepartmentWork(self.tree, self.tool).save_scene_file(new_path)
+    
+    def _make_version_up(self):
+        """버전 업해주는 메서드"""
+        user_info = self.user_data
+        file_path = self._get_path_using_template('dev')
+        if os.path.exists(file_path):
+            version = int(user_info["version"])
+            version += 1
+            str_version = str(version)
+            new_version = f"{str_version.zfill(3)}" 
+        return new_version
     
     ############### 샷그리드에 파일 올리는 메서드들은 따로 파일 만들예정 ###############
 
@@ -574,50 +576,49 @@ class Publisher(QWidget):
                 review_file_dict[file] = info
         
         return published_file_dict, review_file_dict
-
-    def _create_published_file(self):
-        """ (4) 샷그리드 published_file 에 pub 파일들 올리는 메서드 """
-        print (f"PUBLISHED /// {self.publish_dict}")
-        published_file_dict, _ = self._separate_pub_review()
-        if not published_file_dict:
-            return
-        
-        task = self.ui.comboBox_task.currentText()
-        link = self.ui.comboBox_link.currentText()
-        name = self.user_file_info['name']
-        version = self.user_file_info['version']
-        project = self.user_file_info['project']
-        description = self.file_pub_data['description']
-        published_file_type = self.publish_dict['file type']
-        self.sg.create_new_publish_entity()
-        # pub_path = # pub 저장하고 나온 데이터로
-        published_file_data = {'project': project,
-                               'code': "파일 이름",   # 이름 (추후 입력되는 데이터를 받아오는걸로 수정가능)
-                               'sg_status_list': 'ip', # 상태 (추후 수정가능)
-                               'description': description,
-                               'entity': link,
-                               'task': task,
-                               'version': version,
-                               'path': {'local_path': pub_path},
-                               'created_by': name,
-                               'published_file_type' : published_file_type}
-        published_file = self.sg.create('PublishedFile', published_file_data)
-        return published_file
-
-    def _create_version(self):
+    
+    def _create_version_data(self):
         """ (5) 샷그리드 versions에 오리는 메서드 """
         print (f"REVIEW     /// {self.publish_dict}")
-        published_file_dict, review_file_dict = self._separate_pub_review()
-        if not review_file_dict:
-            return
-        
+
+        # version
+        version = self.user_data['version']
+        version = f'v{version}'
+        # task
+        reversed_task_dict = dict(map(reversed, self.task_dict.items()))
         task = self.ui.comboBox_task.currentText()
-        link = self.ui.comboBox_link.currentText()
-        name = self.user_file_info['name']
-        description = self.publish_dict['description']
-        version = self.user_file_info['version']
-        project = self.user_file_info['project']
+        task = reversed_task_dict[task]
+        # description for review
+        description = self.ui.plainTextEdit_description_review.toPlainText()   
+        # preview path
         preview_path = self.preview_info['output_path']
+        # link
+        asset = ""
+        shot = ""
+        if "Asset" in self.ui.comboBox_task.currentText():
+            asset = self.ui.comboBox_link.currentText()
+            shot = None
+        else:
+            shot = self.ui.comboBox_link.currentText()
+            asset = None
+        
+        version = self.sg.create_new_version_entity(version, task, description, preview_path, shot, asset)
+        return version
+
+    def create_new_version_entity(self, version, task, link, shot_code, task_name, description, thumbnail_file_path):
+        shot = self.get_shot_from_code(shot_code)
+        task = self.fetch_cur_task_by_taskname_linkedentity(task_name, shot)
+        
+        new_version_data = {
+            "project" : self.project,
+            "code": version,
+            "description": description,
+            "entity" : link,
+            "sg_task": task,
+            "created_by" : self.user,
+            "sg_status_list" : "rev",
+            "upload_file" : thumbnail_file_path,
+        }
 
         # 여기 버전은 옛날 버전인데..
         # review_path = mov 저장하고 나온 경로 
@@ -639,11 +640,45 @@ class Publisher(QWidget):
         version = self.sg.create('Version', version_data)
         self.sg.upload_thumbnail("Version", version['id'], thumbnail_path)
         return version
+
+    def _create_published_file(self):
+        """ (4) 샷그리드 published_file 에 pub 파일들 올리는 메서드 """
+        print (f"PUBLISHED /// {self.publish_dict}")
+        published_file_dict, _ = self._separate_pub_review()
+        if not published_file_dict:
+            return
+        
+        version = self.user_data['version']
+
+        task = self.ui.comboBox_task.currentText()
+        link = self.ui.comboBox_link.currentText()
+        name = self.user_data['name']
+        project = self.user_data['project']
+        description = self.publish_dict['description']
+        published_file_type = self.publish_dict['file type']
+
+        # self.sg.create_new_publish_entity()
+        # pub_path = # pub 저장하고 나온 데이터로
+        published_file_data = {'project': project,
+                               'code': "파일 이름",   # 이름 (추후 입력되는 데이터를 받아오는걸로 수정가능)
+                               'sg_status_list': 'ip', # 상태 (추후 수정가능)
+                               'description': description,
+                               'entity': link,
+                               'task': task,
+                               'version': version,
+                               'path': {'local_path': pub_path},
+                               'created_by': name,
+                               'published_file_type' : published_file_type}
+        published_file = self.sg.sg.create('PublishedFile', published_file_data)
+        return published_file
+
     
-    def test_setting(self):
-        self.ui.comboBox_task.setCurrentText("[Asset]  Modeling")
-        self.ui.comboBox_link.setCurrentText("Apple")
-        self.ui.radioButton_playblast.toggle()
+    def _task_setting(self):
+        if self.user_data['task'].lower() in self.asset_steps_dict:
+            self.ui.comboBox_task.setCurrentText(self.asset_steps_dict[self.user_data['task'].lower()])
+        else:
+            self.ui.comboBox_task.setCurrentText(self.shot_steps_dict[self.user_data['task'].lower()])
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv) 
