@@ -19,14 +19,11 @@ import re
 import threading
 from pprint import pprint
 
-from webhook_server import WebhookServer # 서버를 시작하기
-
 ## 마야나 누크가 열릴 때 tracker 코드가 작동되게 하며 메뉴바를 통해서 유아이를 열게 한다
 
-try :
-    from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
-except:
-    pass
+
+from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
+
 
 class Tracker(QWidget):
     def __init__(self, sg : ShotGridDataFetcher = None):
@@ -49,21 +46,12 @@ class Tracker(QWidget):
         self.py_file_path = os.path.dirname(__file__)
         if not sg :
             self.sg = ShotGridDataFetcher()
-        else : self.sg = sg
+            # 샷그리드 데이터가 연결되지 않으니 tracker를 사용할 수 없다고 pop하기!
+        else : 
+            self.sg = sg
+            self.sg.observer.NEW_FILE_OCCUR.connect(self._check_new_data_type)
 
         self.lastest_file_dict = {}
-
-        self.server = WebhookServer() # flask server open
-        self.server.NEW_DATA_OCCUR.connect(self._check_new_data_type)
-
-    def _open_flask_server_for_webhook(self):
-        threads = []
-        server_t = threading.Thread(target=self.server.open_server)
-        
-        threads.append(server_t)
-
-        # for t in threads:
-            # t.start()
 
 
     def _set_ui(self):
@@ -211,6 +199,7 @@ class Tracker(QWidget):
         flask 서버에서 받아온 data로 원하는 entity 값을 뽑아내서
         last version에 넣고 리스트의 정보를 업데이트 해준다
         """
+        print(data)
         key = data['code']
         p = re.compile("[v]\d{3}")
         version = p.search(key).group()
