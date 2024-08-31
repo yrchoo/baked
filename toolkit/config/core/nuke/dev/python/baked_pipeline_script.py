@@ -12,20 +12,18 @@ import save
 import file_tracker
 from load_scripts.nuke_file_load import LoadNukeFile
 
-sg = ShotGridDataFetcher()
-load_win = loader.Loader(sg, "nuke")
-save_win = save.SaveFile()
-tracker_win = file_tracker.Tracker(sg)
 
 def init():
     load_win.OPEN_FILE.connect(open_file)
     save_win.SAVE_FILE.connect(save_file)
     tracker_win.RELOAD_FILE.connect(reload_file)
+    tracker_win.LOAD_FILE.connect(LoadNukeFile().load_file_with_read_node)
 
 def show_loader():
     load_win.show()
 
 def show_tracker():
+    # tracker에 존재하는 리스트를 갱신해줘야함
     tracker_win.show()
 
 def show_publisher():
@@ -35,8 +33,11 @@ def show_publisher():
 def open_file(path):
     if nuke.root().knob("name").value():
         LoadNukeFile().load_file_with_read_node(path)
+        tracker_win.opened_file_path_list.append(path)
+        tracker_win.get_opened_file_list()
     else : 
         nuke.scriptOpen(path)
+    # tracker에 존재하는 리스트를 갱신해줘야함
 
 @ Slot()
 def reload_file(cur_path, new_path):
@@ -50,6 +51,18 @@ def pop_save_file_ui():
 def save_file(path):
     print("save file method")
     nuke.scriptSaveAs(path)
+
+def read_node_file_list():
+    open_file_list = []
+    open_file_list.extend(nuke.allNodes("Read"))
+    open_file_list.extend(nuke.allNodes("ReadGeo"))
+
+    return open_file_list
+
+sg = ShotGridDataFetcher()
+load_win = loader.Loader(sg, "nuke")
+save_win = save.SaveFile()
+tracker_win = file_tracker.Tracker(sg)
 
 
 init()

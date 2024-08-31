@@ -16,33 +16,31 @@ except:
 
 import os
 import re
-import threading
 from pprint import pprint
 
-## 마야나 누크가 열릴 때 tracker 코드가 작동되게 하며 메뉴바를 통해서 유아이를 열게 한다
-
+from functools import partial
 
 from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
 
 
 class Tracker(QWidget):
     RELOAD_FILE = Signal(str, str)
+    LOAD_FILE = Signal(str)
 
-    def __init__(self, sg : ShotGridDataFetcher = None):
+    def __init__(self, sg : ShotGridDataFetcher = None, open_file_data = None):
         super().__init__()
-        self._set_instance_val(sg)
+        self._set_instance_val(sg, open_file_data)
         self._set_ui()
         self._set_event()
 
         self._test_exec()
 
     def _test_exec(self):
-        self._get_opened_file_list()
         self._get_file_list_related_to_my_work()
-        self._get_lastest_file_data()
-        self._check_version()
+        self.get_opened_file_list()
 
-    def _set_instance_val(self, sg):
+
+    def _set_instance_val(self, sg, open_file_data):
         self.py_file_path = os.path.dirname(__file__)
         if not sg :
             self.sg = ShotGridDataFetcher()
@@ -52,7 +50,9 @@ class Tracker(QWidget):
             self.sg.observer.NEW_FILE_OCCUR.connect(self._check_new_data_type)
 
         self.lastest_file_dict = {}
-
+        self.pub_file_fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"]
+        self.opened_file_path_list = open_file_data
+        self.opened_file_dict = {}
 
     def _set_ui(self):
         ui_file_path = f"{self.py_file_path}/ui_files/tracker.ui"
@@ -66,132 +66,145 @@ class Tracker(QWidget):
         ui_file.close()
 
     def _set_event(self):
-        self.ui.listWidget_using.itemClicked.connect(self._show_selected_item_data)
+        self.ui.listWidget_using.itemClicked.connect(partial(self._show_selected_item_data, "not"))
+        self.ui.listWidget_not.itemClicked.connect(partial(self._show_selected_item_data, "using"))
         self.ui.pushButton_load.clicked.connect(self._load_new_version)
+        # self.ui.label_thumbnail.doubleClicked.connect(self.open_mov)
 
-    def _get_opened_file_list(self):
+    def get_opened_file_list(self):
         ## 현재 내가 작업중인 파일에 열려있는 모든 파일 리스트를 가져온다
         ## nuke : 현재 존재하는 모든 write node에 knob("file")을 읽어오기
         ## maya : 선생님이 알려주신.... 뭔가의 캐시 파일 경로와 버전을 저장하는 방식을 사용하기
-        self.opened_file_list = {
-            # "ABC_0010_CMP_v001.nknc" : {},
-            "ABC_0010_LGT_v001.####.exr" : {},
-        }
+        if self.opened_file_path_list :
+            for data in self.opened_file_path_list:
+                file_name = os.path.basename(data)
+                if self.opened_file_dict[file_name] :
+                    continue
+                filters = [
+                    ["project", "is", self.sg.project],
+                    ["code", "contains", file_name]
+                ]
 
-        for data in self.opened_file_list.keys():
-            filters = [
-                ["project", "is", self.sg.project],
-                ["code", "contains", data]
-            ]
-            fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"]
+                cur_file_data = self.sg.sg.find_one("PublishedFile", filters, self.pub_file_fields, order=[{'field_name': 'created_at', 'direction': 'asc'}])
 
-            cur_file_data = self.sg.sg.find_one("PublishedFile", filters, fields, order=[{'field_name': 'created_at', 'direction': 'asc'}])
-            pprint(cur_file_data)
+                if not cur_file_data:
+                    continue
 
-            if not cur_file_data:
-                continue
+                self.opened_file_dict[file_name] = cur_file_data 
 
-            self.opened_file_list.update(
-                { data : cur_file_data }
-            )
+        self._set_list_data()
+        
 
+    def _set_list_data(self):
         self.ui.listWidget_using.clear()
-        self.ui.listWidget_using.addItems(self.opened_file_list.keys())
+        self.ui.listWidget_not.clear()
+        if not self.opened_file_dict:
+            self.ui.listWidget_not.addItems(self.lastest_file_dict.keys())
+        else:
+            for file in self.lastest_file_dict.keys():
+                p = re.compile("[v]\d{3}")
+                version = p.search(file).group()
+                mat = file.split(version)[0]
+                for key in self.opened_file_dict.keys():
+                    if mat in key:
+                        item = self.ui.listWidget_using.addItem(file)
+                        if file != key :
+                            item.setBackground(QColor("yellow"))
+                    else:
+                        self.ui.listWidget_not.addItem(file)
+
     
     def _get_file_list_related_to_my_work(self):
-        # 현재 내 작업과 링크되어있는 모든 태스크를 읽어와서 리스트로 저장한다
-        asset_list = self.sg.get_assets_used_at_shot()
-        task_list = self.sg.get_task_from_ent(self.sg.get_shot_from_code())
+        my_task = self.sg.user_info["task"]
+        """
+        현재 내 작업에서 필요한 선행 작업의 최신 version에 링크된 publishedFiles 값을 가져오는 메서드
+        """
+        task_level = {
+            # 각 task에서 필요한 선행 TASK들을 저장해둔 것
+            "MOD" : [],
+            "RIG" : ['MOD'],
+            "LKD" : ['MOD'],
+            "ANI" : ['RIG', 'MM'],
+            "LGT" : ['ANI', 'LKD', 'MM'],
+            "CMP" : ['LGT', 'MM'],
+        }
+        pub_files = {}
+        for task_content in task_level[my_task]:
+            entity = self.sg.get_asset_entity(self.sg.user_info['asset'])
+            if not entity:
+                entity = self.sg.get_shot_from_code(self.sg.user_info['shot'])
+            task = self.sg.fetch_cur_task_by_taskname_linkedentity(task_content, entity)
 
-        self.my_content_list = []
-                
-        for asset in asset_list:
-            self.my_content_list.append(asset['code'])
-
-        for task in task_list:
-            self.my_content_list.append(f"{self.sg.user_info['shot']}_{task['content']}")
-
-
-    def _get_lastest_file_data(self):
-        ## my_content_list에 들어있는 데이터들이 모두 최신의 것이어야 함
-        ## 현재 내가 열어놓은 파일과 버전이 다르면 list에 출력할 때 색상을 변경하도록 하자
-
-        for data in self.my_content_list:
-            filters = [
-                ["project", "is", self.sg.project],
-                ["code", "contains", data]
-            ]
-            fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"]
-
-            last_file_data = self.sg.sg.find_one("PublishedFile", filters, fields, order=[{'field_name': 'created_at', 'direction': 'desc'}])
-            pprint(last_file_data)
-
-            if not last_file_data:
+            version = self.sg.sg.find_one("Version", 
+                                          [['entity','is',entity],['sg_task','is',task]], 
+                                          ['published_files'],
+                                          order=[{'field_name': 'created_at', 'direction': 'asc'}])
+            if not version:
                 continue
 
-            self.lastest_file_dict.update(
-                { last_file_data['code'] : last_file_data }
-            )
+            for file in version['published_files']:
+                file = self.sg.sg.find_one("PublishedFile", 
+                                           [['id','is',file['id']]], 
+                                           self.pub_file_fields)
+                pub_files[file['code']] = file
 
-        """
-        {
-        'code': 'ABC_0010_LGT_v001.####.exr',
-        'created_by': {'id': 99, 'name': 'baked 1.0', 'type': 'ApiUser'},
-        'description': 'Description of the published file',
-        'id': 338,
-        'path': {'content_type': 'image/exr',
-                'id': 1155,
-                'link_type': 'local',
-                'local_path': '/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr',
-                'local_path_linux': '/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr',
-                'local_path_mac': None,
-                'local_path_windows': 'D:\\show\\baked\\show\\baked\\SEQ\\ABC\\ABC_0010\\LGT\\pub\\nuke\\images\\ABC_0010_LGT_v001\\ABC_0010_LGT_v001.####.exr',
-                'local_storage': {'id': 3, 'name': 'show', 'type': 'LocalStorage'},
-                'name': 'ABC_0010_LGT_v001.####.exr',
-                'type': 'Attachment',
-                'url': 'file:///home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr'},
-        'published_file_type': {'id': 185,
-                                'name': 'EXR Image',
-                                'type': 'PublishedFileType'},
-        'task': {'id': 6128, 'name': 'LGT', 'type': 'Task'},
-        'type': 'PublishedFile',
-        'version': {'id': 7840, 'name': 'v002', 'type': 'Version'}
-        }
-        """
+            self.lastest_file_dict = pub_files
+        
+        pprint(pub_files)
 
-    def _check_version(self):
-        for key in self.opened_file_list:
-            p = re.compile("[v]\d{3}")
-            version = p.search(key).group()
-            mat = key.split(version)[0]
 
-            for last_key in self.lastest_file_dict.keys():
-                if mat in last_key:
-                    if version == self.lastest_file_dict[last_key]['version']:
-                        break
-                    item = self.ui.listWidget_using.findItems(key, Qt.MatchFlag.MatchExactly)[0]
-                    item.setBackground(QColor("yellow"))
-                    break
+    # def _check_version(self):
+    #     for key in self.opened_file_dict:
+    #         p = re.compile("[v]\d{3}")
+    #         version = p.search(key).group()
+    #         mat = key.split(version)[0]
+
+    #         for last_key in self.lastest_file_dict.keys():
+    #             if mat in last_key:
+    #                 if version == self.lastest_file_dict[last_key]['version']:
+    #                     break
+    #                 item = self.ui.listWidget_using.findItems(key, Qt.MatchFlag.MatchExactly)[0]
+    #                 item.setBackground(QColor("yellow"))
+    #                 break
     
-    def _show_selected_item_data(self, item):
+    def _show_selected_item_data(self, list_name, item):
+        not_using_list = getattr(self.ui, f"listWidget_{list_name}")
+        not_using_list.setCurrentRow(-1)
+        
         key = item.text()
-        file_data = self.opened_file_list[key]
+        try :
+            file_data = self.opened_file_dict[key]
+        except :
+            file_data = self.lastest_file_dict[key]
 
         self.ui.label_file.setText(key)
         # self.ui.label_path.setText(file_data['path']['local_path'])
         self.ui.label_user.setText(file_data['created_by']['name'])
         self.ui.label_task.setText(file_data['task']['name'])
         self.ui.label_type.setText(file_data['published_file_type']['name'])
-
         self.ui.plainTextEdit_comment.clear()
         self.ui.plainTextEdit_comment.insertPlainText(file_data['description'])
 
-        if self.opened_file_list[key]['version']['name'] != self.lastest_file_dict[key]['version']['name']:
-            self.ui.label_version.setText("You have a new version for this file")
+        path = file_data['path']['local_path']
+        thumbnail_dir = os.path.dirname(path).replace("/scenes/", "/movies/ffmpeg/")
+        file, _ = os.path.splitext(os.path.basename(path))
+        thumbnail_path = f"{thumbnail_dir}{file}_slate.jpg"
+        movie_path = f"{thumbnail_dir}{file}_slate.mov"
+        if os.path.exists(thumbnail_path):
+            pixmap = QPixmap(thumbnail_path)
+            self.ui.label_thumbnail.setPixmap(pixmap)
+            self.ui.label_thumbnail.setScaledContents(True)
+
+        if list_name == 'not':
+            if item.background().color() == QColor('yellow'):
+                self.ui.label_version.setText("You have a new version for this file")
+                self.ui.pushButton_load.setEnabled(True)
+            else:
+                self.ui.label_version.setText("")
+                self.ui.pushButton_load.setEnabled(False)
+        elif list_name == 'using':
+            self.ui.label_version.setText("You didn't open this file yet")
             self.ui.pushButton_load.setEnabled(True)
-        else:
-            self.ui.label_version.setText("")
-            self.ui.pushButton_load.setEnabled(False)
 
 
     def _check_new_data_type(self, data : dict):
@@ -211,31 +224,44 @@ class Tracker(QWidget):
                 self.lastest_file_dict[key] = data
                 break
 
-        self._check_version()
+        self._set_list_data()
         self._show_selected_item_data()
 
     def _load_new_version(self):
-        cur_item = self.ui.listWidget_using.currentItem()
-        key = cur_item.text()
-        cur_path = self.opened_file_list[key]['path']['local_path']
+        reload_item = self.ui.listWidget_using.currentItem()
+        load_item = self.ui.listWidget_not.currentItem()
 
-        p = re.compile("[v]\d{3}")
-        version = p.search(key).group()
-        mat = key.split(version)[0]
+        if reload_item:
+            key = reload_item.text()
+            cur_path = self.opened_file_dict[key]['path']['local_path']
 
-        new_v_key = next((n for n in self.lastest_file_dict.keys() if mat in n), None)
+            p = re.compile("[v]\d{3}")
+            version = p.search(key).group()
+            mat = key.split(version)[0]
 
-        self.opened_file_list.pop(key)
-        self.opened_file_list[new_v_key] = self.lastest_file_dict[new_v_key]
+            new_v_key = next((n for n in self.lastest_file_dict.keys() if mat in n), None)
 
-        cur_item.setText(new_v_key)
+            self.opened_file_dict.pop(key)
+            self.opened_file_dict[new_v_key] = self.lastest_file_dict[new_v_key]
 
-        new_path = self.opened_file_list[new_v_key]['path']['local_path']
+            reload_item.setText(new_v_key)
 
-        self._show_selected_item_data(cur_item)
-        cur_item.setBackground(QColor(None))
+            new_path = self.opened_file_dict[new_v_key]['path']['local_path']
 
-        self.RELOAD_FILE.emit(cur_path, new_path)
+            self._show_selected_item_data(reload_item)
+            reload_item.setBackground(QColor(None))
+
+            self.RELOAD_FILE.emit(cur_path, new_path)
+
+        elif load_item:
+            key = load_item.text()
+            file_path = self.opened_file_dict[key]['path']['local_path']
+
+            self.opened_file_dict[key] = self.lastest_file_dict[key]
+            self._set_list_data()
+
+            self.LOAD_FILE.emit(file_path)
+            
     
 
 

@@ -1,7 +1,7 @@
 import os
 
 class Get_User_Data():
-    def __init__(self, name="추예린", project="baked", seq="ABC", shot="ABC_0010", asset="", task="CMP", asset_type=""):
+    def __init__(self, name="추예린", project="baked", seq="", shot="", asset="Apple", task="RIG", asset_type="Character"):
         self.user_data = {}
         self.user_data["name"] = os.getenv("NAME")
         self.user_data["project"] = os.getenv("PROJECT")

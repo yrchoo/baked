@@ -57,6 +57,7 @@ class ShotGridDataFetcher():
         # instance 변수에 저장해두는 것이 좋을 것 같습니다
         self.project = None # 현재 진행하고 있는 프로젝트의 기본적인 entity가 저장되는 곳
         self.user = None # 현재 작업을 하고 있는 HumanUser entity
+        self.work = None # 현재 작업 shot, asset의 entity가 들어가는 곳
 
 
     def _get_auth(self):
