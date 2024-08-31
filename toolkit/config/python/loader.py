@@ -630,6 +630,8 @@ class Loader(QWidget):
         if current_treeWidget.objectName() == "treeWidget_content":
             path = self.content_files_data[item_text]['path']['local_path']
             self.OPEN_FILE.emit(path)
+            print(path)
+            self.close()
             return
 
         if not cur_item:

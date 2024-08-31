@@ -42,8 +42,6 @@ class Tracker(QWidget):
         self._get_lastest_file_data()
         self._check_version()
 
-        self._open_flask_server_for_webhook()
-
     def _set_instance_val(self, sg):
         self.py_file_path = os.path.dirname(__file__)
         if not sg :
