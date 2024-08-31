@@ -83,7 +83,7 @@ def add_custom_menu():
 
 def _check_dir(external_path):
     # 외부 경로 안에 'maya' 폴더를 추가
-    maya_project_dir = os.path.join(os.path.dirname(external_path), "maya")
+    maya_project_dir = os.path.dirname(external_path)
 
     # 파일 시스템에서 경로의 존재 여부를 확인
     if not os.path.exists(maya_project_dir):
