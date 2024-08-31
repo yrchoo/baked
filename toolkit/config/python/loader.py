@@ -444,7 +444,7 @@ class Loader(QWidget):
             item = item.parent()
         
         new_path = f"{root_path}/{path}"
-        print(f"_get_current_item_path : {new_path}")
+        # print(f"_get_current_item_path : {new_path}")
         return new_path
 
 ############################################################################################################
@@ -630,7 +630,7 @@ class Loader(QWidget):
         if current_treeWidget.objectName() == "treeWidget_content":
             path = self.content_files_data[item_text]['path']['local_path']
             self.OPEN_FILE.emit(path)
-            print(path)
+            # print(path)
             self.close()
             return
 
@@ -791,13 +791,19 @@ class Loader(QWidget):
         layout.setAlignment(Qt.AlignCenter)
 
         dir_path = self._get_current_item_path("asset")
+        thumbnail_dir_path = dir_path.replace("/scenes/", "/movies/")
+
         name, ext = os.path.splitext(file_name)
-        path = f"{dir_path}/.thumbnail/{name}.png"
-        if not os.path.exists(path) :
-            path = f"{os.path.dirname(__file__)}/icons/{ext.split('.')[-1]}.png"
+        thumbnail_path = f"{thumbnail_dir_path}{name}_slate.jpg"
 
-        img_label = self._make_icon(path, 100, 100)
-
+        if os.path.exists(thumbnail_path) :
+            print(thumbnail_path)
+            img_label = self._make_icon(thumbnail_path)
+        else :
+            icon_path = f"{os.path.dirname(__file__)}/icons/{ext.split('.')[-1]}.png"
+            print(icon_path)
+            img_label = self._make_icon(icon_path, 100, 100)
+            
         name_label = QLabel()
         name_label.setObjectName("name_label")
 
