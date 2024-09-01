@@ -8,16 +8,43 @@ class FolderStructureCreator:
         self.fetcher = fetcher
         self.project_id = self.fetcher.project['id'] # ***** 수정했습니다
 
-        self.create_asset_folder()
-        self.create_seq_folders()
+        # self.create_asset_folder()
+        # self.create_seq_folders()
+
+    def check_folder_exists_or_create(self, path):
+        """폴더가 존재하는지 확인하고 존재여부에 따라 폴더를 생성합니다."""
+        if not os.path.exists(path):
+            os.makedirs(path)
+            print (f"Folder Created: {path}")
+        else:
+            print (f"Folder Already Exists: {path}")    
+
+    def create_subfolders(self, base_path, subfolders):
+        """dev, pub과 같은 하위 폴더들을 생성하는 메서드입니다."""
+        for subfolder in subfolders:
+            subfolder_path = os.path.join(base_path, subfolder)
+            print (subfolder_path)
+            self.check_folder_exists_or_create(subfolder_path)
+
+
+    def asset_folder_making_tool(self, asset_path):
+        """에셋 폴더를 생성하는 작업을 하는 메서드입니다."""
+        self.check_folder_exists_or_create(asset_path)
+        self.create_subfolders(asset_path, ['dev', 'pub'])
+
+    
+    def sequence_folder_making_tool(self, sequence_path):
+        """시퀀스 폴더를 생성하는 작업을 하는 메서드입니다."""
+        self.check_folder_exists_or_create(sequence_path)    
+        self.create_subfolders(sequence_path, ['dev', 'pub'])    
 
     # ***** 프로젝트 이름으로 된 폴더부터 만들어야됩니다! 수정 부탁드려욥
     # 폴더가 존재하는 지를 확인하고 파일을 만드는 과정이 각 메서드에서 반복되는데 
     # 이 부분을 또 하나의 메서드로 빼두면 나중에 폴더 안만들고 테스트만 해보거나 할 때 유용할 것 같아요
 
     # 에셋 폴더를 만드는 툴
-    def asset_folder_making_tool(self, asset_type, asset_code, asset_task_content):
-        path = os.path.join(self.base_path, "AST", asset_type, asset_code, asset_task_content)
+    # def asset_folder_making_tool(self, asset_type, asset_code, asset_task_content):
+    #     path = os.path.join(self.base_path, "AST", asset_type, asset_code, asset_task_content)
         # print(path)
         # if not os.path.exists(path):
         #     os.makedirs(path)
@@ -39,8 +66,8 @@ class FolderStructureCreator:
 
 
     # 시퀀스 폴더를 만드는 툴
-    def seq_folder_making_tool(self, base_folder, folder_code, task_content=None):
-        path = os.path.join(self.base_path, base_folder, folder_code, task_content or '')
+    # def seq_folder_making_tool(self, base_folder, folder_code, task_content=None):
+    #     path = os.path.join(self.base_path, base_folder, folder_code, task_content or '')
         # print(path)
         # if not os.path.exists(path):
         #     os.makedirs(path)

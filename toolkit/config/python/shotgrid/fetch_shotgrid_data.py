@@ -10,12 +10,11 @@ try :
     from get_user_data import Get_User_Data
     from make_project_dir import FolderStructureCreator
     from new_version_occur_watchdog import VersionUpdateObserver
-    # from webhook_server import WebhookServer
 except :
     from shotgrid.get_user_data import Get_User_Data
     from shotgrid.make_project_dir import FolderStructureCreator
     from shotgrid.new_version_occur_watchdog import VersionUpdateObserver
-    # from shotgrid.webhook_server import WebhookServer
+
 
 
 """
@@ -40,7 +39,6 @@ class ShotGridDataFetcher():
         if self.connected:
             self._fetch_project_id()
             FolderStructureCreator(self, "/home/rapa/baked/show/baked/") # 이건 나중에 yaml에 저장된 경로로 바꿔주세요!
-            # WebhookServer()
             self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/")
         self._get_current_user_data()
 
@@ -58,6 +56,7 @@ class ShotGridDataFetcher():
         self.project = None # 현재 진행하고 있는 프로젝트의 기본적인 entity가 저장되는 곳
         self.user = None # 현재 작업을 하고 있는 HumanUser entity
         self.work = None # 현재 작업 shot, asset의 entity가 들어가는 곳
+        self.task = Nond # 현재 작업 task의 entity가 들어가는 곳
 
 
     def _get_auth(self):
@@ -88,6 +87,11 @@ class ShotGridDataFetcher():
         """
         if self.connected:
             self.user = self.sg.find_one("HumanUser", [['name','is',self.user_info['name']], ['projects','is',self.project]], ['name', 'id']) # user의 entity를 가져오는 뭔가를 작성해야될듯요
+            if self.user_info['asset']:
+                self.work = self.get_asset_entity()
+            elif self.user_info['shot']:
+                self.work = self.get_shot_from_code()
+            self.task = self.get_task_from_ent(self.work)
 
     # 프로젝트 id 를 가져와서 지정해준다.
     def _fetch_project_id(self): # ***** 내부에서만 사용되는 메서드는 이름 앞에 _언더바를 붙여서 표시해주시면 좋아요
@@ -118,20 +122,18 @@ class ShotGridDataFetcher():
     def fetch_assets(self, fields=[]): # ***** 현재 main으로 작업중인 프로젝트 외에는 접근할 일이 없으니 project_id가 매개변수인 것은 불필요 할 것 같아용
         filters = [["project", "is", self.project]] # ***** project entity를 self.project에 저장했으니 해당 값으로 대체 가능
         fields = ["code", "id", "sg_asset_type"] # ***** 저는 or 문장이 오류가 나서... 추가적으로 필요한 필드가 있다면 그냥 extend 해주심이..
-        assets = self.sg.find("Asset", filters, ["code", "id", "sg_asset_type"])
+        assets = self.sg.find("Asset", filters, fields)
         return assets
     
 
     # 에셋에 연결된 태스크를 읽어온다.
-    def fetch_asset_tasks(self, assets):
+    def fetch_tasks_from_all_asset(self, assets):
         # ***** 이런 코드는 모든 asset에 연결된 모든 task를 다.. 가져오기 때문에 재사용성이 너무 떨어져요..
         # 하나의 asset에 연결된 task들을 구하는 메서드를 하나 짜서 모든 asset마다 해당 함수를 돌리는 게.. 좋을 것 같아요
         # 그러면 하나의 asset에 대한 데이터를 구할 때에도 여러 asset의 데이터를 구할때에도 둘다 호출해서 쓸 수 있음
         all_asset_tasks = []
         for asset in assets:
-            filters = [["entity", "is", asset]]
-            fields = ["content", "entity"]
-            asset_tasks = self.sg.find("Task", filters, fields)
+            asset_tasks = self.fetch_tasks_for_asset(asset)
             all_asset_tasks.extend(asset_tasks)
         return all_asset_tasks
     
@@ -160,15 +162,15 @@ class ShotGridDataFetcher():
         return seqs
         
 
-    # 샷들을 읽어온다.
-    def fetch_shots(self, seqs):
-        self.all_shots = []
-        for seq in seqs:
-            filters = [["sg_sequence", "is", seq]]
-            fields = ["code", "id", "sg_sequence"]
-            seq_shots = self.sg.find("Shot", filters, fields)
-            self.all_shots.extend(seq_shots)
-        return self.all_shots # return으로 뽑아낼 값이라면... self를 지양합시다!
+    # # 샷들을 읽어온다.
+    # def fetch_shots(self, seqs):
+    #     self.all_shots = []
+    #     for seq in seqs:
+    #         filters = [["sg_sequence", "is", seq]]
+    #         fields = ["code", "id", "sg_sequence"]
+    #         seq_shots = self.sg.find("Shot", filters, fields)
+    #         self.all_shots.extend(seq_shots)
+    #     return self.all_shots # return으로 뽑아낼 값이라면... self를 지양합시다!
     
     #################################################
     # ***** 샷도 마찬가지로 프로젝트에 존재하는 모든 샷을 구해오기 보단...
@@ -181,14 +183,14 @@ class ShotGridDataFetcher():
     #################################################
 
     # 시퀀스 - 샷에 연결된 태스크들을 읽어온다.
-    def fetch_seq_tasks(self): # ***** 메서드 이름이 이상따리해요 해당 함수도 fetch_task_from_linked_entity로 해결할 수 있을 것 같아요
+    def fetch_seq_tasks(self, seq): # ***** 메서드 이름이 이상따리해요 해당 함수도 fetch_task_from_linked_entity로 해결할 수 있을 것 같아요
+        shots = self.fetch_shot_from_seq(seq)
         all_seq_tasks = []
-        for shot in self.all_shots:
-            filters = [["entity", "is", shot]]
-            fields = ["content", "entity"]
-            seq_tasks = self.sg.find("Task", filters, fields)
+        for shot in shots:
+            seq_tasks = self.fetch_tasks_from_linked_entity(shot)
             all_seq_tasks.extend(seq_tasks)
-        return all_seq_tasks
+        
+        return all_seq_tasks # 이 정보가 왜.. 필요한지 이해가 안됩니다..! 설명 부탁드려요
     
 
     #####################################################################################
