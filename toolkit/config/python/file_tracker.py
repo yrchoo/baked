@@ -72,7 +72,7 @@ class Tracker(QWidget):
         self.ui.listWidget_using.itemClicked.connect(partial(self._set_current_selected_data, "using"))
         self.ui.listWidget_not.itemClicked.connect(partial(self._set_current_selected_data, "not"))
         self.ui.pushButton_load.clicked.connect(self._load_new_version)
-        self.ui.label_thumbnail.doubleClicked.connect(self.open_mov)
+        # self.ui.label_thumbnail.doubleClicked.connect(self.open_mov)
 
     def get_opened_file_list(self):
         ## 현재 내가 작업중인 파일에 열려있는 모든 파일 리스트를 가져온다
