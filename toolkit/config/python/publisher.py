@@ -607,6 +607,19 @@ class Publisher(QWidget):
         published_file_dict, _ = self._separate_pub_review()
         if not published_file_dict:
             return
+        
+        # 현재 나와 버전 code를 가진 version을 가져온다
+        last_version = self.sg.sg.find_one("Version", 
+                                           [['code', 'is not', self.user_data['version']], ['sg_task','is',version['task']], ['entity','is',version['entity']]],
+                                           ['published_files'])
+        
+        # 구한 version에 연결된 PublishedFiles 리스트를 가져온다
+        pub_files_list = {}
+        for file in last_version['publised_files']:
+            file = self.sg.sg.find_one("PublishedFile", 
+                                        [['id','is',file['id']]], 
+                                        ['id', 'code'])
+            pub_files_list[file['code']] = file # pub_files_list['ABC_0010_ANI_v001.abc] = {Published_File_Entity}
 
         # preview path : Lighting 팀은 Pre-Comp 가 끝난 후에 썸네일을 업로드함
         if 'Lighting' in self.ui.comboBox_task.currentText():
@@ -615,10 +628,23 @@ class Publisher(QWidget):
             preview_path = self.preview_info['output_path_jpg']
 
         for detail in published_file_dict.values():
+            # 현재 새로 올리려는 파일의 v000을 제외한 앞 부분을 읽어와서 비교한 뒤
             file_path = detail['path']
+            parse = re.compile("[v]\d{3}")
+            ver = parse.search(os.path.basename(file_path)).group()
+            key_str = os.path.basename(file_path).split(ver)[0]
+            key = next((k for k in pub_files_list.keys() if key_str in k), None)
+            if key :
+                pub_files_list.pop(key)
+                # 같은 이름의 파일이라면 pub_files_list에서 제외해준다
             description = detail['description']
             published_file_type = detail['file type']
             self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
+
+        for pub_file in pub_files_list.values():
+            # 새로운 값이 create되지 않은 파일들은 새로운 version을 version field에 업데이트 해준다
+            self.sg.sg.update("PublishedFile", pub_file['id'], {"version" : version})
+        
 
     def _task_setting(self):
         if self.user_data['task'].lower() in self.asset_steps_dict:

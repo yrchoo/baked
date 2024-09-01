@@ -25,3 +25,6 @@ Icon\r
 # Python bytecode files
 *.pyc
 **/__pycache__/
+
+# show 폴더는 업로드하지 않습니다
+**/show/
