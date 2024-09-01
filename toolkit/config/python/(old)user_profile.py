@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 
 import shotgrid_total_profile
-from config.python.offline_login import Login
+from offline_login import Login
 import sys
 
 from shotgrid.user_env_val import Make_User_Data
@@ -15,7 +15,6 @@ from shotgun_api3 import shotgun
 import requests
 
 from ui_files.ui_Shotgrid_user import Ui_Form
-from loader import Loader
 
 class UserProfile(QWidget):
     def __init__(self):

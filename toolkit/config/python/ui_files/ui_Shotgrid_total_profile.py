@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'Shotgrid_total_profilegGQqjP.ui'
+## Form generated from reading UI file 'Shotgrid_total_profileytViGL.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.2.4
+## Created by: Qt User Interface Compiler version 6.7.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -24,7 +24,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(488, 449)
+        Form.resize(434, 449)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.label = QLabel(Form)
@@ -33,7 +33,7 @@ class Ui_Form(object):
         font.setFamilies([u"Noto Sans CJK KR"])
         font.setBold(True)
         self.label.setFont(font)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.verticalLayout.addWidget(self.label)
 
@@ -62,7 +62,7 @@ class Ui_Form(object):
         self.horizontalLayout_2.setContentsMargins(-1, 1, -1, -1)
         self.label_2 = QLabel(Form)
         self.label_2.setObjectName(u"label_2")
-        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
@@ -73,11 +73,10 @@ class Ui_Form(object):
         self.lineEdit_name = QLineEdit(Form)
         self.lineEdit_name.setObjectName(u"lineEdit_name")
         self.lineEdit_name.setStyleSheet(u"background-color: rgb(186, 189, 182);")
-        self.lineEdit_name.setReadOnly(True)
 
         self.horizontalLayout_2.addWidget(self.lineEdit_name)
 
-        self.horizontalSpacer = QSpacerItem(350, 20, QSizePolicy.Preferred, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(280, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer)
 
@@ -100,7 +99,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_3.addWidget(self.comboBox_task)
 
-        self.horizontalSpacer_2 = QSpacerItem(300, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.horizontalSpacer_2 = QSpacerItem(290, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer_2)
 
@@ -119,7 +118,7 @@ class Ui_Form(object):
 
         self.comboBox_shot = QComboBox(Form)
         self.comboBox_shot.setObjectName(u"comboBox_shot")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.comboBox_shot.sizePolicy().hasHeightForWidth())
@@ -128,7 +127,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_4.addWidget(self.comboBox_shot)
 
-        self.horizontalSpacer_3 = QSpacerItem(270, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(270, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_3)
 
@@ -151,7 +150,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_5.addWidget(self.comboBox_asset)
 
-        self.horizontalSpacer_4 = QSpacerItem(280, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.horizontalSpacer_4 = QSpacerItem(270, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_5.addItem(self.horizontalSpacer_4)
 
@@ -161,7 +160,7 @@ class Ui_Form(object):
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
         self.horizontalLayout_6.setContentsMargins(-1, 0, -1, -1)
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_6.addItem(self.horizontalSpacer_5)
 

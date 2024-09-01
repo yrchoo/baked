@@ -1,6 +1,7 @@
 import os
 import requests
 from shotgun_api3 import Shotgun
+import pickle
 
 from datetime import datetime
 
@@ -33,6 +34,33 @@ shotgrid 데이터 서버에 존재하는 정보들을 가져오는 메서드를
 """
 
 class ShotGridDataFetcher(): 
+    
+######################### Singleton #######################
+    INSTANCE = None
+    FETCHER_DATA_FILE_PATH = ""
+    def __new__(cls):
+        if cls.INSTANCE is None:
+            cls.INSTANCE = super(ShotGridDataFetcher, cls).__new__(cls)
+            # cls.INSTANCE._load_state()
+        return cls.INSTANCE
+    
+    def _load_state(self):
+        # load instance state from file
+        if os.path.exists(self.FETCHER_DATA_FILE_PATH):
+            with open(self.FETCHER_DATA_FILE_PATH, "rb") as f:
+                state = pickle.load(f)
+                self.__dict__.update(state)
+            print(f"Get existing data... current user : {self.user_info['name']}")
+        else :
+            print("Create new instance..")
+            self._save_state()
+
+    def _save_state(self):
+        # Save current instance stat to file
+        with open(self.FETCHER_DATA_FILE_PATH, "wb") as f:
+            pickle.dump(self.__dict__, f)
+###########################################################
+    
     def __init__(self): # ***** 바꿈
         self._set_instance_val()
         self.sg = self._get_auth()
@@ -56,7 +84,7 @@ class ShotGridDataFetcher():
         self.project = None # 현재 진행하고 있는 프로젝트의 기본적인 entity가 저장되는 곳
         self.user = None # 현재 작업을 하고 있는 HumanUser entity
         self.work = None # 현재 작업 shot, asset의 entity가 들어가는 곳
-        self.task = Nond # 현재 작업 task의 entity가 들어가는 곳
+        self.task = None # 현재 작업 task의 entity가 들어가는 곳
 
 
     def _get_auth(self):
@@ -356,38 +384,6 @@ class ShotGridDataFetcher():
 
         
 
-
-if __name__ == "__main__":
-
-    SCRIPT_NAME = "baked"    
-    SCRIPT_KEY = "p)ghhlikzcyzwq4gdgZpnhmkz"
-    SERVER_URL = "https://4thacademy.shotgrid.autodesk.com"
+shogrid_data_fetcher = ShotGridDataFetcher()
 
 
-
-    sg_fetcher = ShotGridDataFetcher() 
-    sg_fetcher.fetch_assets()
-    # project_id = sg_fetcher.fetch_project_id()
-    # if project_id is not None:
-    #     assets = sg_fetcher.fetch_assets(project_id)    
-    #     asset_tasks = sg_fetcher.fetch_asset_tasks(assets)
-    #     seqs = sg_fetcher.fetch_seq(project_id)
-    #     all_shots = sg_fetcher.fetch_shots(seqs)
-    #     seq_tasks = sg_fetcher.fetch_seq_tasks()
-
-    #     print("Assets:", assets)
-    #     print("Asset Tasks:", asset_tasks)
-    #     print("Sequences:", seqs)
-    #     print("Shots:", all_shots)
-    #     print("Sequence Tasks:", seq_tasks)
-
-
-        # sg_fetcher.fetch_assets
-        # sg_fetcher.fetch_asset_tasks
-        # sg_fetcher.fetch_seq
-        # sg_fetcher.fetch_shots
-        # sg_fetcher.fetch_seq_tasks
-        # project_id = 155    
-
-        
-    
