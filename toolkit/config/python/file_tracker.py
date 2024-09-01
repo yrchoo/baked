@@ -22,6 +22,8 @@ from functools import partial
 
 from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
 
+import subprocess
+
 
 class Tracker(QWidget):
     RELOAD_FILE = Signal(str, str)
@@ -53,6 +55,7 @@ class Tracker(QWidget):
         self.pub_file_fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"]
         self.opened_file_path_list = open_file_data
         self.opened_file_dict = {}
+        self.cur_showing_data = {}
 
     def _set_ui(self):
         ui_file_path = f"{self.py_file_path}/ui_files/tracker.ui"
@@ -66,10 +69,10 @@ class Tracker(QWidget):
         ui_file.close()
 
     def _set_event(self):
-        self.ui.listWidget_using.itemClicked.connect(partial(self._show_selected_item_data, "not"))
-        self.ui.listWidget_not.itemClicked.connect(partial(self._show_selected_item_data, "using"))
+        self.ui.listWidget_using.itemClicked.connect(partial(self._set_current_selected_data, "using"))
+        self.ui.listWidget_not.itemClicked.connect(partial(self._set_current_selected_data, "not"))
         self.ui.pushButton_load.clicked.connect(self._load_new_version)
-        # self.ui.label_thumbnail.doubleClicked.connect(self.open_mov)
+        self.ui.label_thumbnail.doubleClicked.connect(self.open_mov)
 
     def get_opened_file_list(self):
         ## 현재 내가 작업중인 파일에 열려있는 모든 파일 리스트를 가져온다
@@ -104,14 +107,17 @@ class Tracker(QWidget):
             for file in self.lastest_file_dict.keys():
                 p = re.compile("[v]\d{3}")
                 version = p.search(file).group()
-                mat = file.split(version)[0]
-                for key in self.opened_file_dict.keys():
-                    if mat in key:
-                        item = self.ui.listWidget_using.addItem(file)
-                        if file != key :
-                            item.setBackground(QColor("yellow"))
-                    else:
-                        self.ui.listWidget_not.addItem(file)
+                mat = file.split(version)[0] +'v'
+                opened_file = next((f for f in self.opened_file_dict.keys() if mat in f), None)
+                if not opened_file:
+                    print(f"Put {file} in not using list.")
+                    self.ui.listWidget_not.addItem(file)
+                else:
+                    print(f"Put {opened_file} in using list.")
+                    item = self.ui.listWidget_using.addItem(opened_file)
+                    if file != opened_file :
+                        item.setBackground(QColor("yellow"))
+                    
 
     
     def _get_file_list_related_to_my_work(self):
@@ -167,44 +173,50 @@ class Tracker(QWidget):
     #                 item.setBackground(QColor("yellow"))
     #                 break
     
-    def _show_selected_item_data(self, list_name, item):
-        not_using_list = getattr(self.ui, f"listWidget_{list_name}")
-        not_using_list.setCurrentRow(-1)
-        
+    def _set_current_selected_data(self, list_name, item):
         key = item.text()
-        try :
-            file_data = self.opened_file_dict[key]
-        except :
-            file_data = self.lastest_file_dict[key]
 
-        self.ui.label_file.setText(key)
-        # self.ui.label_path.setText(file_data['path']['local_path'])
-        self.ui.label_user.setText(file_data['created_by']['name'])
-        self.ui.label_task.setText(file_data['task']['name'])
-        self.ui.label_type.setText(file_data['published_file_type']['name'])
-        self.ui.plainTextEdit_comment.clear()
-        self.ui.plainTextEdit_comment.insertPlainText(file_data['description'])
+        if list_name == "using":
+            self.ui.listWidget_not.setCurrentRow(-1)
+            self.cur_showing_data = self.opened_file_dict[key]
+        elif list_name == "not":
+            self.ui.listWidget_using.setCurrentRow(-1)
+            self.cur_showing_data = self.lastest_file_dict[key]
 
-        path = file_data['path']['local_path']
-        thumbnail_dir = os.path.dirname(path).replace("/scenes/", "/movies/ffmpeg/")
-        file, _ = os.path.splitext(os.path.basename(path))
-        thumbnail_path = f"{thumbnail_dir}{file}_slate.jpg"
-        movie_path = f"{thumbnail_dir}{file}_slate.mov"
-        if os.path.exists(thumbnail_path):
-            pixmap = QPixmap(thumbnail_path)
-            self.ui.label_thumbnail.setPixmap(pixmap)
-            self.ui.label_thumbnail.setScaledContents(True)
+        self._show_selected_item_data(key, list_name)
 
-        if list_name == 'not':
+        if list_name == 'using':
             if item.background().color() == QColor('yellow'):
                 self.ui.label_version.setText("You have a new version for this file")
                 self.ui.pushButton_load.setEnabled(True)
             else:
                 self.ui.label_version.setText("")
                 self.ui.pushButton_load.setEnabled(False)
-        elif list_name == 'using':
+        elif list_name == 'not':
             self.ui.label_version.setText("You didn't open this file yet")
             self.ui.pushButton_load.setEnabled(True)
+
+
+    def _show_selected_item_data(self, key, list_name):
+        self.ui.label_file.setText(key)
+        # self.ui.label_path.setText(file_data['path']['local_path'])
+        self.ui.label_user.setText(self.cur_showing_data['created_by']['name'])
+        self.ui.label_task.setText(self.cur_showing_data['task']['name'])
+        self.ui.label_type.setText(self.cur_showing_data['published_file_type']['name'])
+        self.ui.plainTextEdit_comment.clear()
+        self.ui.plainTextEdit_comment.insertPlainText(self.cur_showing_data['description'])
+
+        path = self.cur_showing_data['path']['local_path']
+        thumbnail_dir = os.path.dirname(path).replace("/scenes/", "/movies/ffmpeg/")
+        file, _ = os.path.splitext(os.path.basename(path))
+        thumbnail_path = f"{thumbnail_dir}{file}_slate.jpg"
+        self.cur_showing_data['movie_path'] = f"{thumbnail_dir}{file}_slate.mov"
+        if os.path.exists(thumbnail_path):
+            pixmap = QPixmap(thumbnail_path)
+            self.ui.label_thumbnail.setPixmap(pixmap)
+            self.ui.label_thumbnail.setScaledContents(True)
+
+
 
 
     def _check_new_data_type(self, data : dict):
@@ -214,9 +226,9 @@ class Tracker(QWidget):
         """
         print(data)
         key = data['code']
-        p = re.compile("[v]\d{3}")
+        p = re.compile("[v]\d{3}") 
         version = p.search(key).group()
-        mat = key.split(version)[0]
+        mat = key.split(version)[0] +'v'
 
         for cur_data in self.lastest_file_dict.keys():
             if mat in cur_data:
@@ -237,7 +249,7 @@ class Tracker(QWidget):
 
             p = re.compile("[v]\d{3}")
             version = p.search(key).group()
-            mat = key.split(version)[0]
+            mat = key.split(version)[0] + "v"
 
             new_v_key = next((n for n in self.lastest_file_dict.keys() if mat in n), None)
 
@@ -255,14 +267,28 @@ class Tracker(QWidget):
 
         elif load_item:
             key = load_item.text()
-            file_path = self.opened_file_dict[key]['path']['local_path']
+            file_path = self.lastest_file_dict[key]['path']['local_path']
+            print(f"Opened {file_path}")
 
             self.opened_file_dict[key] = self.lastest_file_dict[key]
             self._set_list_data()
-
             self.LOAD_FILE.emit(file_path)
-            
-    
+
+    def open_mov(self):
+        if not self.cur_showing_data :
+            return
+        
+        mov_path = self.cur_showing_data['movie_path']
+        
+        rv_player_path = "rv"
+        if not os.path.exists(mov_path):
+            print(f"Error: {mov_path} 파일을 찾을 수 없습니다.")
+            return
+        
+        try:
+            subprocess.run([rv_player_path, mov_path])
+        except Exception as e:
+            print("RV Player 실행 오류")
 
 
 if __name__ == "__main__":

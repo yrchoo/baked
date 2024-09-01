@@ -18,7 +18,7 @@ class FolderStructureCreator:
     # 에셋 폴더를 만드는 툴
     def asset_folder_making_tool(self, asset_type, asset_code, asset_task_content):
         path = os.path.join(self.base_path, "AST", asset_type, asset_code, asset_task_content)
-        print(path)
+        # print(path)
         # if not os.path.exists(path):
         #     os.makedirs(path)
         #     print(f"Folder Created: {path}")
@@ -41,7 +41,7 @@ class FolderStructureCreator:
     # 시퀀스 폴더를 만드는 툴
     def seq_folder_making_tool(self, base_folder, folder_code, task_content=None):
         path = os.path.join(self.base_path, base_folder, folder_code, task_content or '')
-        print(path)
+        # print(path)
         # if not os.path.exists(path):
         #     os.makedirs(path)
         #     print(f"Folder Created: {path}")
