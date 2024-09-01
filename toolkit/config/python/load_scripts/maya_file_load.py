@@ -22,7 +22,7 @@ class LoadMayaFile():
 
     def _make_group_name(self, path):
         file_name = os.path.basename(path)
-        name, _ = os.path.splitext(file_name)
+        name = file_name.split("_v")[0]
         new_name = f"{name}_grp" # Asset_TASK_grp
         return new_name
 
