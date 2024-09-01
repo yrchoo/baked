@@ -1,9 +1,8 @@
 
 from PySide6.QtWidgets import QApplication, QWidget, QTableWidgetItem
 from ui_files.ui_Shotgrid_total_profile import Ui_Form
-
-import sys
 from shotgun_api3 import shotgun
+import sys
 
 class TotalProfile(QWidget):
     def __init__(self, datas, parent = None):
@@ -93,7 +92,7 @@ class TotalProfile(QWidget):
     #프로젝트에 등록할 새로운 사용자 정보 조회.
     def add_selected_user_profile(self):
         col_data = []
-        fields = ["name", "id", "login","projects,", "sg_role"] 
+        fields = ["name", "id", "login","projects"] 
         for row in range(self.table.rowCount()):
             item = self.table.item(row,0)
             if item and item.text() == self.ui.lineEdit_name.text():
@@ -228,11 +227,9 @@ class TotalProfile(QWidget):
         self.ui.setupUi(self)
         self.table = self.ui.tableWidget
         self.table.setRowCount(25) 
-        self.table.setColumnCount(5)  
+        self.table.setColumnCount(4)  
+        self.table.setHorizontalHeaderLabels(["name", "id", "email", "project"])
        
-        self.table.setHorizontalHeaderLabels(["name", "id", "email", "project","Role"])
-        # self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
 if __name__ == "__main__":
 
     app = QApplication(sys.argv) 

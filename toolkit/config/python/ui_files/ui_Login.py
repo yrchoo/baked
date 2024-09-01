@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'LoginOTogbq.ui'
+## Form generated from reading UI file 'LoginwDCLLc.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.2.4
+## Created by: Qt User Interface Compiler version 6.7.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -23,34 +23,31 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(308, 276)
+        Form.resize(214, 276)
         Form.setStyleSheet(u"background-color: rgb(238, 238, 236);")
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.label = QLabel(Form)
         self.label.setObjectName(u"label")
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
         font = QFont()
         font.setFamilies([u"Open Sans ExtraBold"])
-        font.setPointSize(20)
+        font.setPointSize(15)
         font.setBold(True)
         self.label.setFont(font)
         self.label.setStyleSheet(u"color: rgb(46, 52, 54);")
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.horizontalLayout.addWidget(self.label)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.verticalLayout.addWidget(self.label)
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.label_2 = QLabel(Form)
         self.label_2.setObjectName(u"label_2")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
         self.label_2.setSizePolicy(sizePolicy)
         font1 = QFont()
@@ -62,7 +59,7 @@ class Ui_Form(object):
 
         self.lineEdit_name = QLineEdit(Form)
         self.lineEdit_name.setObjectName(u"lineEdit_name")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.lineEdit_name.sizePolicy().hasHeightForWidth())
@@ -71,7 +68,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addWidget(self.lineEdit_name)
 
-        self.horizontalSpacer = QSpacerItem(220, 20, QSizePolicy.Preferred, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(160, 20, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer)
 
@@ -82,6 +79,8 @@ class Ui_Form(object):
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.label_4 = QLabel(Form)
         self.label_4.setObjectName(u"label_4")
+        sizePolicy.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
+        self.label_4.setSizePolicy(sizePolicy)
         self.label_4.setFont(font1)
         self.label_4.setStyleSheet(u"color: rgb(46, 52, 54);")
 
@@ -90,10 +89,11 @@ class Ui_Form(object):
         self.lineEdit_task = QLineEdit(Form)
         self.lineEdit_task.setObjectName(u"lineEdit_task")
         self.lineEdit_task.setStyleSheet(u"background-color: rgb(186, 189, 182);")
+        self.lineEdit_task.setFrame(True)
 
         self.horizontalLayout_4.addWidget(self.lineEdit_task)
 
-        self.horizontalSpacer_3 = QSpacerItem(220, 20, QSizePolicy.Preferred, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(150, 20, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_3)
 
@@ -104,6 +104,8 @@ class Ui_Form(object):
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
         self.label_5 = QLabel(Form)
         self.label_5.setObjectName(u"label_5")
+        sizePolicy.setHeightForWidth(self.label_5.sizePolicy().hasHeightForWidth())
+        self.label_5.setSizePolicy(sizePolicy)
         self.label_5.setFont(font1)
         self.label_5.setStyleSheet(u"color: rgb(46, 52, 54);")
 
@@ -115,7 +117,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_5.addWidget(self.lineEdit_shot)
 
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_4 = QSpacerItem(120, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_5.addItem(self.horizontalSpacer_4)
 
@@ -126,6 +128,8 @@ class Ui_Form(object):
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
         self.label_6 = QLabel(Form)
         self.label_6.setObjectName(u"label_6")
+        sizePolicy.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
+        self.label_6.setSizePolicy(sizePolicy)
         self.label_6.setFont(font1)
         self.label_6.setStyleSheet(u"color: rgb(46, 52, 54);")
 
@@ -137,7 +141,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_6.addWidget(self.lineEdit_asset)
 
-        self.horizontalSpacer_6 = QSpacerItem(150, 20, QSizePolicy.Preferred, QSizePolicy.Minimum)
+        self.horizontalSpacer_6 = QSpacerItem(150, 20, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_6.addItem(self.horizontalSpacer_6)
 
@@ -146,7 +150,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_7 = QHBoxLayout()
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_7.addItem(self.horizontalSpacer_5)
 
