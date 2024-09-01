@@ -72,7 +72,7 @@ class Tracker(QWidget):
         self.ui.listWidget_using.itemClicked.connect(partial(self._set_current_selected_data, "using"))
         self.ui.listWidget_not.itemClicked.connect(partial(self._set_current_selected_data, "not"))
         self.ui.pushButton_load.clicked.connect(self._load_new_version)
-        # self.ui.label_thumbnail.doubleClicked.connect(self.open_mov)
+        self.ui.pushButton_movie.clicked.connect(self.open_mov)
 
     def get_opened_file_list(self):
         ## 현재 내가 작업중인 파일에 열려있는 모든 파일 리스트를 가져온다
@@ -157,21 +157,6 @@ class Tracker(QWidget):
             self.lastest_file_dict = pub_files
         
         pprint(pub_files)
-
-
-    # def _check_version(self):
-    #     for key in self.opened_file_dict:
-    #         p = re.compile("[v]\d{3}")
-    #         version = p.search(key).group()
-    #         mat = key.split(version)[0]
-
-    #         for last_key in self.lastest_file_dict.keys():
-    #             if mat in last_key:
-    #                 if version == self.lastest_file_dict[last_key]['version']:
-    #                     break
-    #                 item = self.ui.listWidget_using.findItems(key, Qt.MatchFlag.MatchExactly)[0]
-    #                 item.setBackground(QColor("yellow"))
-    #                 break
     
     def _set_current_selected_data(self, list_name, item):
         key = item.text()
@@ -215,6 +200,9 @@ class Tracker(QWidget):
             pixmap = QPixmap(thumbnail_path)
             self.ui.label_thumbnail.setPixmap(pixmap)
             self.ui.label_thumbnail.setScaledContents(True)
+
+        self.ui.pushButton_movie.setEnabled(os.path.exists(self.cur_showing_data['movie_path']))
+
 
 
 
