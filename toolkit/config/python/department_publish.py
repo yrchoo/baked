@@ -30,8 +30,6 @@ class DepartmentWork():
         file_parent.setText(1, "ㅡ")
         file_parent.setForeground(1, QBrush(QColor("sky blue")))
         self._set_text_bold(file_parent)
-        self._make_tree_item("Publish to Flow", file_parent)
-        self._make_tree_item("Upload for review", file_parent)
         publish_dict = self.make_data()
         print (publish_dict)
 
@@ -46,8 +44,7 @@ class DepartmentWork():
             parent.setText(1, "ㅡ")
             parent.setForeground(1, QBrush(QColor("sky blue")))
             self._set_text_bold(parent)
-            self._make_tree_item("Publish to Flow", parent)
-            self._make_tree_item("Upload for review", parent)
+
       
         self.tree.expandAll()
         return publish_dict
@@ -55,10 +52,10 @@ class DepartmentWork():
     def make_data(self):
         """ 선택된 object/node 가져오는 메서드 """
         selected_data = self.check_selection()
-        publish_dict = {self.get_current_file_name():{'pub':True, 'rev':False, 'description':'', 'file type':'', 'ext': '', 'path':''}}
+        publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         try:
             for data in selected_data:
-                publish_dict[data] = {'pub':True, 'rev':True, 'description':'', 'file type':'', 'ext': '', 'path':''}
+                publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
         except: 
             pass
         return publish_dict
@@ -109,18 +106,6 @@ class DepartmentWork():
         """ 턴테이블 확장자 정해주는 메서드 """
         return "mov"
     
-    def set_capture_ext(self):
-        """ 캡쳐 확장자 정해주는 메서드 """
-        return "jpg"
-    
-    def set_playblast_ext(self):
-        """ 플레이블라스트 확장자 정해주는 메서드"""
-        return "jpg"
-    
-    def set_scene_ext(self):
-        """ 씬 파일 확장자 정해주는 메서드 """
-        return ""
-    
     def save_scene_file(self, new_path):
         if self.tool == "maya":
             MayaAPI.save_file(self, new_path)
@@ -130,11 +115,14 @@ class DepartmentWork():
     
     def save_as_alembic(self, alembic_path, file):
         MayaAPI.export_alemibc(self, alembic_path, file)
+
+    def save_camera_as_alembic(self, alembic_path, file):
+        MayaAPI.export_alemibc(self, alembic_path, file)
     
 class MOD(DepartmentWork):
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
-        pass
+        MayaAPI.mobeling_publish_set()
     
     def save_data(self, publish_dict):
         """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
@@ -159,7 +147,12 @@ class LDV(DepartmentWork):
     """ Publish Data: mb, ma(shader), png(texture) """    
     def make_data(self):
         """ 쉐이더 텍스쳐 데이터 따로 가져오는 메서드 """
-        pass
+        texture_list = MayaAPI.get_texture_list()
+        shader_list = MayaAPI.get_custom_shader_list()
+        lookdev_list = []
+        lookdev_list.extend(texture_list)
+        lookdev_list.extend(shader_list)
+        return lookdev_list
 
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
@@ -186,10 +179,11 @@ class ANI(DepartmentWork):
     def save_data(self, publish_dict):
         scene_path = publish_dict[self.get_current_file_name()]['path']
         self.save_scene_file(scene_path)
-        for file in publish_dict:
-            if file['file type'] == 'Model Cache' or 'Camera':
-                self.save_as_alembic(file['path'])
-
+        for file, info in publish_dict.items():
+            if 'Cache' in info['file type'] :
+                self.save_as_alembic(info['path'], file)
+            elif info['file type'] in ['Camera']:
+                self.save_camera_as_alembic(info['path'], file)
 
 class LGT(DepartmentWork):
     def make_data(self):

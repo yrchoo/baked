@@ -18,23 +18,23 @@ from load_scripts.maya_file_load import LoadMayaFile
 
 sg = ShotGridDataFetcher()
 
-import loader
-load_win = loader.Loader(sg, "maya")
+# import loader
+# load_win = loader.Loader(sg, "maya")
 
 import save
 save_win = save.SaveFile()
 
 import file_tracker
-tracker_win = file_tracker.Tracker(sg)
+# tracker_win = file_tracker.Tracker(sg)
 
 from importlib import reload
 import publisher
-
+import upload_review
 
 def init():
-    load_win.OPEN_FILE.connect(open_file)
+    # load_win.OPEN_FILE.connect(open_file)
     save_win.SAVE_FILE.connect(save_file)
-    tracker_win.RELOAD_FILE.connect(reload_file)
+    # tracker_win.RELOAD_FILE.connect(reload_file)
 
 def loader_func():
     """
@@ -42,9 +42,9 @@ def loader_func():
     add_custom_menu보다 밑으로 내려가면 함수를 찾지 못해요~!
     이 함수는 메뉴를 테스트하는 함수입니다.
     """
-    ### 예린님 로더에 input값 연결해주기 ###
-    # reload(loader)
-    load_win.show()
+    # ### 예린님 로더에 input값 연결해주기 ###
+    # # reload(loader)
+    # load_win.show()
 
 def open_file(path):
     current_file_path = cmds.file(query=True, sceneName=True)
@@ -69,7 +69,12 @@ def publisher_func():
     reload(publisher)
     win = publisher.Publisher(sg, "maya")
     win.show()
-    
+
+def review_func():
+    global win
+    reload(upload_review)
+    win = upload_review.Review(sg, "maya")
+    win.show()
     
 def add_custom_menu():
     """
@@ -78,8 +83,9 @@ def add_custom_menu():
     """
     gMainWindow = mel.eval('$window=$gMainWindow')
     custom_menu = cmds.menu(parent=gMainWindow, tearOff = True, label = 'BAKED') 
-    cmds.menuItem(label="Loader", parent=custom_menu, command=lambda *args: loader_func())
+    # cmds.menuItem(label="Loader", parent=custom_menu, command=lambda *args: loader_func())
     cmds.menuItem(label="Publisher", parent=custom_menu, command=lambda *args: publisher_func())
+    cmds.menuItem(label="Upload Review", parent=custom_menu, command=lambda *args: review_func())
 
 def _check_dir(external_path):
     # 외부 경로 안에 'maya' 폴더를 추가
@@ -121,14 +127,5 @@ def _check_dir(external_path):
             print(f"Created directory: {dir_path}")
         else:
             print(f"Directory already exists: {dir_path}")
-
-
-
-def add_custom_menu():
-    gMainWindow = mel.eval('$window=$gMainWindow')
-    custom_menu = cmds.menu(parent=gMainWindow, tearOff = True, label = 'BAKED') 
-    cmds.menuItem(label="Loader", parent=custom_menu, command=lambda *args: loader_func())
-    cmds.menuItem(label="Publisher", parent=custom_menu, command=lambda *args: publisher_func())
-
 
 init()
