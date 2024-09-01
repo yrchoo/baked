@@ -2,8 +2,8 @@ import os
 import subprocess
 
 class Make_User_Data():
-    def __init__(self, name="추예린", project="baked", seq="ABC", shot="ABC_0010", asset="", task="CMP",asset_type=""):
-        user_file_path = "/home/rapa/env_baked/user/"
+    def __init__(self, name, project, seq, shot, asset, task, asset_type):
+        user_file_path = "/home/rapa/baked/toolkit/config/core/user"
         user_string = f"""
 export NAME='{name}'
 export PROJECT='{project}'
@@ -15,9 +15,10 @@ export ASSET_TYPE='{asset_type}'
         """
         if not os.path.exists(user_file_path) :
             os.makedirs(user_file_path)
+        print(f"create user data {user_string}")
+        os.system(f"""echo "#!/bin/sh\n {user_string}" > {user_file_path}/user.sh""")
+        subprocess.run(['python3.9', '/home/rapa/baked/toolkit/config/python/shotgrid/fetch_shotgrid_data.py', '&'])
 
-        os.system(f"echo '#!/bin/sh\n {user_string}' > {user_file_path}/user.sh")
-        subprocess.run(['python3.9', '/home/rapa/baked/toolkit/config/python/fetch_shotgrid_data.py', '&'])
 
-
-Make_User_Data()
+if __name__ == "__main__":
+    Make_User_Data("Yerin Choo", "baked", "ABC", "ABC_0010", None, "CMP", None)

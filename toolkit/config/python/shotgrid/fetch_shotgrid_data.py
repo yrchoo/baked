@@ -41,6 +41,7 @@ class ShotGridDataFetcher():
     def __new__(cls):
         if cls.INSTANCE is None:
             cls.INSTANCE = super(ShotGridDataFetcher, cls).__new__(cls)
+            print("New shotgrid_file_fetcher created...")
             # cls.INSTANCE._load_state()
         return cls.INSTANCE
     
@@ -116,9 +117,9 @@ class ShotGridDataFetcher():
         if self.connected:
             self.user = self.sg.find_one("HumanUser", [['name','is',self.user_info['name']], ['projects','is',self.project]], ['name', 'id']) # user의 entity를 가져오는 뭔가를 작성해야될듯요
             if self.user_info['asset']:
-                self.work = self.get_asset_entity()
+                self.work = self.get_asset_entity(self.user_info['asset'])
             elif self.user_info['shot']:
-                self.work = self.get_shot_from_code()
+                self.work = self.get_shot_from_code(self.user_info['shot'])
             self.task = self.get_task_from_ent(self.work)
 
     # 프로젝트 id 를 가져와서 지정해준다.

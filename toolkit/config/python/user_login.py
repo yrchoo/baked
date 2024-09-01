@@ -29,6 +29,8 @@ class UserProfile(QWidget):
         self.load_user_data()
         self.insert_user_name_combobox()
         self.setup_ui_connect()
+
+        self.show()
         
     def setup_ui(self):
         self.ui = Ui_Form()
@@ -50,9 +52,9 @@ class UserProfile(QWidget):
             sg = Shotgun(URL, script_name, script_key)
             return sg
         
-        except Shotgun.AuthenticationFault:
-            self.show_error_message("Failed to login to ShotGrid")
-            return None
+        # except Shotgun.AuthenticationFault: # ***** 주소 오류나면 여기서 멈추는데... 확인 부탁드립니다!
+        #     self.show_error_message("Failed to login to ShotGrid")
+        #     return None
         except Exception as e:
             self.show_error_message(f"Error : {e}")
             return None
@@ -273,15 +275,21 @@ class UserProfile(QWidget):
     
     #사용자의 정보를 저장, 전달합니다.
     def save_and_close(self):
-        user_data = {
-            "name": self.ui.comboBox_user.currentText(),
-            "project": self.ui.label_project.text(),
-            "task": self.ui.lineEdit_task.text(),
-            "shot": self.ui.label_shot_asset.text(),
-            "asset": self.ui.label_shot_asset.text(),
-            "asset_type": self.ui.label_asset_type.text()
-        }
-        Make_User_Data(user_data)
+        name = self.ui.comboBox_user.currentText()
+        project = self.ui.label_project.text()
+        task = self.ui.lineEdit_task.text()
+        if self.ui.label_shot_asset.text() == "Shot":
+            seq = shot.split("_")[0]
+            shot = self.ui.comboBox_shot_asset.currentText()
+            asset = None
+            asset_type = None
+        else :
+            seq = None
+            shot = None
+            asset =self.ui.label_shot_asset.text()
+            asset_type = self.ui.label_asset_type.text()
+
+        Make_User_Data(name, project, seq, shot, asset, task, asset_type)
         self.close()
         
     #샷그리드가 작동하지 않을경우 새로운 로그인창 연결.
@@ -298,5 +306,5 @@ if __name__ == "__main__":
     
     app = QApplication(sys.argv)
     win = UserProfile()
-    win.show()
+    # win.show()
     sys.exit(app.exec())
