@@ -56,9 +56,9 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>30</y>
+       <y>0</y>
        <width>271</width>
-       <height>511</height>
+       <height>541</height>
       </rect>
      </property>
      <property name="editTriggers">
@@ -72,16 +72,6 @@
        <string notr="true">1</string>
       </property>
      </column>
-    </widget>
-    <widget class="QLineEdit" name="lineEdit_search">
-     <property name="geometry">
-      <rect>
-       <x>2</x>
-       <y>2</y>
-       <width>261</width>
-       <height>26</height>
-      </rect>
-     </property>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_seq">
