@@ -38,7 +38,7 @@ class FolderStructure():
         print(addr)
         # os.system(f"touch {addr}/.gitkeep")
         if os.path.exists(addr) : return
-        # os.makedirs(addr)
+        os.makedirs(addr)
 
     def _get_entity_from_project(self, entity_name):
         filters = [['project', 'is', self.project_data]]
@@ -79,7 +79,7 @@ class FolderStructure():
         asset_types = self.sg.schema_field_read("Asset", "sg_asset_type", self.project_data)['sg_asset_type']['properties']['valid_values']['value']
         
         for asset_type in asset_types:
-            asset_addr = f"{addr}/{asset_type}"
+            asset_addr = f"{addr}/{asset_type.title()}"
             self._check_file_exist(asset_addr)
             assets = self.sg.find('Asset', [['project', 'is', self.project_data],['sg_asset_type', 'is', asset_type]], ['code'])
             for ast in assets:

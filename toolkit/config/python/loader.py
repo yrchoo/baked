@@ -20,7 +20,7 @@ import yaml
 # from pprint import pprint
 
 
-from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
+from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher, shogrid_data_fetcher
 
 from file_open import FileOpen
 
@@ -32,7 +32,6 @@ class Loader(QWidget):
     주석에서 말하는 서버는 작업에 쓰이는 파일들이 저장되는 곳을 뜻합니다
     Shotgrid 서버를 말하는 경우엔 Shotgrid라고 명시하고 있습니다
     """
-
 
     OPEN_FILE = Signal(str)
 
@@ -846,6 +845,6 @@ class Loader(QWidget):
         
 if __name__ == "__main__":
     app = QApplication()
-    win = Loader(ShotGridDataFetcher())
+    win = Loader(shogrid_data_fetcher)
     win.show()
     app.exec()

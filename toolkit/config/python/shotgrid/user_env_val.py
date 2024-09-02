@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 
 class Make_User_Data():
@@ -17,8 +18,9 @@ export ASSET_TYPE='{asset_type}'
             os.makedirs(user_file_path)
         print(f"create user data {user_string}")
         os.system(f"""echo "#!/bin/sh\n {user_string}" > {user_file_path}/user.sh""")
-        subprocess.run(['python3.9', '/home/rapa/baked/toolkit/config/python/shotgrid/fetch_shotgrid_data.py', '&'])
+        subprocess.Popen(['python3.9', '/home/rapa/baked/toolkit/config/python/shotgrid/fetch_shotgrid_data.py &'], shell=True)
+        sys.exit()
 
 
 if __name__ == "__main__":
-    Make_User_Data("Yerin Choo", "baked", "ABC", "ABC_0010", None, "CMP", None)
+    Make_User_Data("Yerin Choo", "baked", "ABC", "ABC_0010", "", "CMP", "")

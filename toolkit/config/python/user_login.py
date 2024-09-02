@@ -9,6 +9,7 @@ from shotgrid.user_env_val import Make_User_Data
 import sys
 import shotgrid_total_profile
 
+
 class UserProfile(QWidget):
     def __init__(self):
         super().__init__()
@@ -281,16 +282,17 @@ class UserProfile(QWidget):
         if self.ui.label_shot_asset.text() == "Shot":
             seq = shot.split("_")[0]
             shot = self.ui.comboBox_shot_asset.currentText()
-            asset = None
-            asset_type = None
+            asset = ""
+            asset_type = ""
         else :
-            seq = None
-            shot = None
+            seq = ""
+            shot = ""
             asset =self.ui.label_shot_asset.text()
             asset_type = self.ui.label_asset_type.text()
 
         Make_User_Data(name, project, seq, shot, asset, task, asset_type)
         self.close()
+        QApplication.quit()
         
     #샷그리드가 작동하지 않을경우 새로운 로그인창 연결.
     def open_offline_login_window(self):
