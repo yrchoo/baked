@@ -308,8 +308,9 @@ class ShotGridDataFetcher():
                                    [['project','is',self.project], ['code','is',version],['sg_task','is',task], ['entity','is',link]],
                                    ['project','code','description','entity','sg_task','created_by','sg_status_list'])
         
+        print (self.project, task, link, shot_code)
         if version_ent:
-
+            print("version already exists")
             return version_ent
         
         new_version_data = {
@@ -323,6 +324,7 @@ class ShotGridDataFetcher():
             "user" : self.user
         }
 
+        print (new_version_data)
         version = self.sg.create("Version", new_version_data)
         self.sg.upload("Version", version['id'], thumbnail_file_path, field_name="sg_uploaded_movie")
 

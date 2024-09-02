@@ -4,6 +4,7 @@ import os
 import json
 import subprocess
 import datetime
+import ffmpeg
 class MayaAPI():
     def __init__(self):
         pass
@@ -147,7 +148,7 @@ class MayaAPI():
         top_left, _ = os.path.splitext(os.path.basename(output_path))
         top_center = project_name
         top_right = datetime.date.today().strftime("%Y/%m/%d")
-        bot_left = "SIZE : 1920x1080"
+        bot_left = "1920x1080"
         bot_center = ""
 
         frame_cmd = "'Frame \: %{eif\:n+"
@@ -155,26 +156,9 @@ class MayaAPI():
         bot_right = frame_cmd
 
         if last_frame == 1:
-            font_size = "h/20"
-            slate_size = "h/20"
+            bot_right = "Frame1"
+            self.make_ffmpeg_jpg(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path, project_name)
 
-            bot_right = "Frame 1"
-            cmd = f'{ffmpeg}'
-            cmd += ' -i %s ' % (input_path)
-            cmd += ' -vf "drawbox=y=0 :color=black :width=iw: height=%s :t=fill, ' % (slate_size)
-            cmd += 'drawbox=y=ih-%s :color=black :width=iw: height=%s :t=fill, ' % (slate_size, slate_size)
-            cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=%s :y=%s,' % (font_path, font_size, top_left, text_x_padding, text_y_padding)
-            cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=(w-text_w)/2 :y=%s,' % (font_path, font_size, top_center, text_y_padding)
-            cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=w-tw-%s :y=%s,' % (font_path, font_size, top_right, text_x_padding, text_y_padding)
-            cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=%s :y=h-th-%s,' % (font_path, font_size, bot_left, text_x_padding, text_y_padding)
-            cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=(w-text_w)/2 :y=h-th-%s,' % (font_path, font_size, bot_center, text_y_padding)
-            cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=w-tw-%s :y=h-th-%s' % (font_path, font_size, bot_right, text_x_padding, text_y_padding)
-            cmd += '"'
-            cmd += f' -frames:v 1 {output_path.replace(".mov", ".jpg")}'
-            os.system(cmd)
-            return output_path.replace('.mov', '.jpg')
-
-    
         cmd = '%s -framerate %s -y -start_number %s ' % (ffmpeg, frame_rate, first)
         cmd += '-i %s' % (input_path)
         cmd += ' -vf "drawbox=y=0 :color=black :width=iw: height=%s :t=fill, ' % (slate_size)
@@ -191,6 +175,41 @@ class MayaAPI():
 
         os.system(cmd)
         return output_path
+    
+    def make_ffmpeg_jpg(self, top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path):
+        
+        self.find_frame(input_path)
+        self.input_jpg_slate(top_left, top_center, top_right, bot_left, bot_center, bot_right)
+        
+        self.gamma = "eq=gamma=1.4,"
+        self.render_jpg_slate(input_path, output_path)
+        
+    def find_frame(self,input):
+        probe = ffmpeg.probe(input)
+        video_stream = next((stream for stream in probe['streams']if stream['codec_type'] == 'video'),None)
+        self.width = int(video_stream['width'])
+        self.height = int(video_stream['height'])
+    
+    def render_jpg_slate(self,input,output):
+        (
+            ffmpeg
+            .input(input)    
+            .output(output,vf=f"{self.box}"f"{self.gamma}"f"{self.top_Left},{self.top_Middel},{self.top_Right},{self.bot_Left},{self.bot_Middle},{self.bot_Right}")
+            .run()
+        )    
+
+    def input_jpg_slate(self, top_left, top_center, top_right, bot_left, bot_center, bot_right):
+        
+        font_size = self.height/18 - 5
+        box_size = self.height/18
+        fontfile = "/home/rapa/문서/font/waltographUI.ttf"
+        self.top_Left = f"drawtext=fontfile={fontfile}:text   = {top_left}: : x=5:y=2           :fontcolor=white@0.7:fontsize={font_size}"
+        self.top_Middel = f"drawtext=fontfile={fontfile}:text = {top_center}: : x=(w-tw)/2:y=2   :fontcolor=white@0.7:fontsize={font_size}"
+        self.top_Right = f"drawtext=fontfile={fontfile}:text  = {top_right}: : x=w-tw-5:y=2      :fontcolor=white@0.7:fontsize={font_size}"
+        self.bot_Left = f"drawtext=fontfile={fontfile}:text   = {bot_left}: : x=5:y=h-th        :fontcolor=white@0.7:fontsize={font_size}"
+        self.bot_Middle = f"drawtext=fontfile={fontfile}:text = {bot_center}: : x=(w-tw)/2:y=h-th :fontcolor=white@0.7:fontsize={font_size}"
+        self.bot_Right = f"drawtext=fontfile={fontfile}: text = {bot_right}:start_number = 1001 : x=w-tw-5:y=h-th     :fontcolor=white@0.7:fontsize={font_size}"
+        self.box = f"drawbox = x=0: y=0: w={self.width}: h={box_size}: color = black: t=fill,drawbox = x=0: y={self.height-box_size}: w={self.width}: h={self.height}: color = black: t=fill,"
         
     # def make_ffmpeg(self, input_path, output_path, project_name, start_frame=None, last_frame=None):
     #     print ("**********************************************************************************")
@@ -269,7 +288,7 @@ class MayaAPI():
     #         return output_path.replace('.mov', '.jpg')
     
     @staticmethod
-    def mobeling_publish_set(self):
+    def modeling_publish_set(self):
         # 1. 에셋 스케일 고정 (Freeze Transformations)
         selected_objects = cmds.ls(selection=True)
         if selected_objects:
@@ -472,17 +491,39 @@ class MayaAPI():
         all_layers = cmds.ls(type="renderLayer")
         return all_layers
     
+    def render_all_layers_to_exr(self, layer, publish_dict):
+        """
+        모든 렌더 레이어를 EXR 형식으로 렌더링하고, 지정된 경로에 저장하는 함수.
+        
+        Args:
+            output_dir (str): 렌더링된 이미지가 저장될 디렉토리 경로.
+        """
+        path = publish_dict[layer]["path"]
+        output_dir = '/'.join(path.split('/')[:-1])
+
+        # 렌더 레이어 변경
+        cmds.editRenderLayerGlobals(currentRenderLayer=layer)
+
+        
+        # 파일 이름 접두사 설정
+        file_prefix = f"{output_dir}/{layer}/{layer}"
+        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", file_prefix, type="string")
+        print (publish_dict)
+        
+        # 배치 렌더링 수행
+        cmds.arnoldRender(batch=True)
+        print(f"{layer} 레이어의 EXR 렌더링이 {file_prefix}.####.exr 경로에 완료되었습니다.")
+        publish_dict[layer]["path"] = f"{file_prefix}.####.exr"
+
+        return publish_dict
+    
     def _render_lighting_layers(self, render_path):
-
-        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", render_path, type="string")
-        _, render_ext = os.path.splitext(render_path)
-
-        # 파일 확장자 설정 (필요시)
-        cmds.setAttr("defaultRenderGlobals.imageFormat", render_ext, type="string")
-
+        print ("@@", render_path)
+        dir_path = '/'.join(render_path.split('/')[:-1])
+        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", dir_path, type="string")
         # 렌더 레이어 선택 및 렌더링
-        selected_layer = self._get_lighting_layers()
-        for layer in selected_layer:
+        all_layers = cmds.ls(type="renderLayer")
+        for layer in all_layers:
             # 렌더 레이어 변경
             cmds.editRenderLayerGlobals(currentRenderLayer=layer)
             

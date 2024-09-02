@@ -91,12 +91,14 @@ class Publisher(QWidget):
         """
         self.tree = self.ui.treeWidget
         self.work = DepartmentWork(self.tree, self.tool)
-        self.publish_dict = self.work.put_data_in_tree()
         self.show()
 
         self.ui.pushButton_load.setIcon(QIcon(f"/home/rapa/baked/toolkit/config/python/icons/reload.png"))
         self.user_data = self._get_user_info(self.sg.user_info) # 현재 유저 정보, 작업 파일 딕셔너리로 저장
-        self.user_data['task']
+        self.department = self.user_data['task']
+        self.dep_class = getattr(department_publish, self.department)(self.tree, self.tool) # 부서 클래스를 인스턴스화 하기
+        self.publish_dict = self.dep_class.make_data()
+        print (self.publish_dict)
 
     def _get_user_info(self, user_data):
         """ 유저에 대한 정보 가저오는 메서드 """ # 임시 설정 
@@ -257,6 +259,7 @@ class Publisher(QWidget):
         treewidget 각 아이템별로 저장된 description 보여주는 메서드
         """
         file = item.text(0)
+        print (f"/// {file}, {self.publish_dict}")
         self.ui.plainTextEdit_description.setPlainText(self.publish_dict[file].get('description', ""))
         
     def _write_description(self):
@@ -342,8 +345,9 @@ class Publisher(QWidget):
     ############################# Flow: publish/versions에 올리기 ########################################
     
     def _show_thumbnail(self, button):
-        """썸네일 보여주는 메서드"""
-
+        """
+        썸네일 보여주는 메서드
+        """
         image_path = ""
         if button.text() == "PlayBlast":
             image_path = self._get_path_using_template("playblast")
@@ -355,21 +359,19 @@ class Publisher(QWidget):
 
         path = self._check_validate(image_path)    
         files = glob.glob(f"{path}/*")
-        print (path, "---------------------------------------")
-        print (files, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-        if not files:
+        if not files: # 썸네일 파일이 없는 경우
             self.ui.label_thumbnail.setText("No Thumbnail Found")
             self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
             return
 
-        if button.text() in ["PlayBlast", "Render"]:
+        if button.text() in ["PlayBlast", "Render"]: # 플레이블라스트, 렌더를 하는 경우
             recent_image_file = max(files, key=os.path.getmtime)
             start_frame, last_frame = self._get_frame_number(files) # 프레임 넘버, 경로 정보 저장하기
             self.preview_info = {'input path' : image_path, 
                                  'start frame' : int(start_frame),
                                  'last frame' : int(last_frame)}
         else:
-            parse = re.compile("[v]\d{3}")
+            parse = re.compile("[v]\d{3}") # 캡쳐를 하는 경우
             for file in files:
                 version = parse.search(os.path.basename(file)).group()[1:]
                 if version == self.user_data["version"]:
@@ -379,6 +381,7 @@ class Publisher(QWidget):
                                     'last frame' : 1}
                     pass
 
+        # ui에 썸네일 미리보여주기
         pixmap = QPixmap(recent_image_file) 
         scaled_pixmap = pixmap.scaled(288, 162) 
         self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
@@ -389,9 +392,7 @@ class Publisher(QWidget):
         """ 
         플레이블라스트, 렌더, 캡처를 통해 받은 파일 경로로 프레임 넘버 가져오기 
         """
-        if len(files) == 1:
-            return 1, None
-        
+
         files = sorted(files)
         start_image = files[0]
         last_image = files[-1]
@@ -405,7 +406,9 @@ class Publisher(QWidget):
         return start_frame, last_frame
         
     def _make_thumbnail(self): 
-        """ 썸네일 새로 만들어주는 메서드 """
+        """ 
+        썸네일 새로 만들어주는 메서드 
+        """
         # Lighting, Comp 팀은 지원해주지 않기
 
         if self.ui.radioButton_playblast.isChecked():
@@ -464,7 +467,7 @@ class Publisher(QWidget):
                 ext = ''
             self._get_path_using_template('pub', ext)
 
-        self.dep_class.save_data(self.publish_dict)
+        self.publish_dict = self.dep_class.save_data(self.publish_dict)
         print (f"476: save_file_pub: {self.publish_dict}")
     
     def _get_path_for_selected_files(self):
@@ -478,10 +481,12 @@ class Publisher(QWidget):
                 self.ui.label_file_info_2.setText(f"Please select file type")
                 return False
             print (3333, file_info['ext'], self.file_type_ext, self.file_type_ext[file_info['file type']])
+
             file_info['ext'] = self.file_type_ext[file_info['file type']]
             self.user_data['group'] = file
             path = self._get_path_using_template("pub", file_info['ext'])
             file_info['path'] = path
+            
             print ("..........", file, ".........")
         print (f"480_________{self.publish_dict}")
         return True
@@ -535,8 +540,8 @@ class Publisher(QWidget):
         """ (5) 샷그리드 versions에 오리는 메서드 """
         print (f"REVIEW     /// {self.publish_dict}")
 
-        if self.tool == "maya" and self.user_data['task'] == "LGT": # 라이팅 마야작업은 펍만되고 버전은 안 만들어져 (리소스로서만 쓰이지) => 근데 리뷰 받고 싶을 수도 있잖아.? 흠 
-            return
+        # if self.tool == "maya" and self.user_data['task'] == "LGT": # 라이팅 마야작업은 펍만되고 버전은 안 만들어져 (리소스로서만 쓰이지) => 근데 리뷰 받고 싶을 수도 있잖아.? 흠 
+        #     return
         # version
         version = self.user_data['version']
         version = f'v{version}'
@@ -567,7 +572,11 @@ class Publisher(QWidget):
     def _create_published_file(self, version):
         """ (4) 샷그리드 published_file 에 pub 파일들 올리는 메서드 """
         print (f"PUBLISHED /// {self.publish_dict}")
-        print (version)
+
+
+        # if not version:
+        #     self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
+        #     return
         # 현재 나와 버전 code를 가진 version을 가져온다
         last_version = self.sg.sg.find_one("Version", 
                                            [['code', 'is_not', f"v{self.user_data['version']}"], ['sg_task', 'is', version['sg_task']], ['entity', 'is', version['entity']]],
@@ -588,6 +597,7 @@ class Publisher(QWidget):
 
         for detail in self.publish_dict.values():
             # 현재 새로 올리려는 파일의 v000을 제외한 앞 부분을 읽어와서 비교한 뒤
+            print (detail)
             file_path = detail['path']
             if pub_files_list :
                 parse = re.compile("[v]\d{3}")
@@ -597,6 +607,7 @@ class Publisher(QWidget):
                 if key :
                     pub_files_list.pop(key)
                     # 같은 이름의 파일이라면 pub_files_list에서 제외해준다
+
             description = detail['description']
             published_file_type = detail['file type']
             preview_path = self.preview_info['output_path_jpg']
@@ -609,4 +620,5 @@ class Publisher(QWidget):
             self.sg.sg.update("PublishedFile", pub_file['id'], {"version" : version})
 
 if __name__ == "__main__":
+
     app = QApplication(sys.argv) 
