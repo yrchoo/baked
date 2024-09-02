@@ -20,7 +20,7 @@ import yaml
 # from pprint import pprint
 
 
-from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher, shogrid_data_fetcher
+from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
 
 from file_open import FileOpen
 
@@ -37,10 +37,11 @@ class Loader(QWidget):
 
 ######################## __init__ 시점에서 불려지는 함수들 ###########################
 
-    def __init__(self, sg : ShotGridDataFetcher, tool : str = None):
+    def __init__(self, sg = None, tool : str = None):
         """
         처음 Loader가 생성될 때 설정되어야하는 메서드들이 작성되어있는 생성자 
         """
+        print("Loader __init__()")
         super().__init__()
         self._set_init_val(sg, tool)
         self._set_ui()
@@ -63,7 +64,10 @@ class Loader(QWidget):
 
         self.project_name = "baked" # 프로젝트 이름 데이터 후에 login 시 읽어온 데이터로 사용해야됨. (추후 제거)
         self.py_file_path = os.path.dirname(__file__)
-        self.sg : ShotGridDataFetcher = sg # login 시에 지정된 userdata를 가지고 Shotgrid에서 정보를 가져오는 Shotgrid_Data() 클래스
+        self.sg : ShotGridDataFetcher = sg
+        if not self.sg :
+            self.sg = ShotGridDataFetcher()
+        print(self.sg) # login 시에 지정된 userdata를 가지고 Shotgrid에서 정보를 가져오는 Shotgrid_Data() 클래스
         self.project_path = f"{self.home_path}/show/{self.project_name}" # shotgrid가 실행되지 않을 때를 위한 기본 경로값 (추후 제거?)
         self.tool = tool # 현재 loader가 tool 프로그램을 통해서 실행되었을 때 값이 들어가는 변수
         self.content_files_data = {} # 현재 작업에서 사용되는 파일들의 정보들이 들어가는 dict
@@ -222,11 +226,14 @@ class Loader(QWidget):
                     ["code", "contains", t],
                     ["code", "contains", w],
                 ]
-                fields = ["id", "code", "path", "published_file_type"]
-                file_data = self.sg.sg.find_one("PublishedFile", filters, fields, order=[{'field_name': 'created_at', 'direction': 'asc'}])
+                fields = ["id", "code", "path", "version", "published_file_type"]
+                file_data = self.sg.sg.find_one("PublishedFile", filters, fields, order=[{'field_name': 'created_at', 'direction': 'desc'}])
                 if not file_data:
                     continue
-                self.content_files_data[file_data['code']] = file_data # 내 작업에 필요한 데이터를 가져옴
+                version = self.sg.sg.find_one("Version", [['id','is',file_data['version']['id']]], ['id', 'code', 'published_files'])
+                for file in version['published_files']:
+                    file_data = self.sg.sg.find_one("PublishedFile", [['id','is',file['id']]], fields)
+                    self.content_files_data[file_data['code']] = file_data # 내 작업에 필요한 데이터를 가져옴
                 # print(file_data)
 
                 """
@@ -695,6 +702,9 @@ class Loader(QWidget):
         if self.tool:
             self.close()
 
+        self.set_tree_widget_data()
+        
+
     def _open_file_from_loader(self, path):
         """
         file Open을 담당하는 class 생성 path(str)값 전달
@@ -845,6 +855,6 @@ class Loader(QWidget):
         
 if __name__ == "__main__":
     app = QApplication()
-    win = Loader(shogrid_data_fetcher)
+    win = Loader()
     win.show()
     app.exec()
