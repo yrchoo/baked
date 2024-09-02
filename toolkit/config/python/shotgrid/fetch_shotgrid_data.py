@@ -10,11 +10,11 @@ import time
 try :
     from get_user_data import Get_User_Data
     from make_project_dir import FolderStructureCreator
-    from new_version_occur_watchdog import VersionUpdateObserver
+    # from new_version_occur_watchdog import VersionUpdateObserver
 except :
     from shotgrid.get_user_data import Get_User_Data
     from shotgrid.make_project_dir import FolderStructureCreator
-    from shotgrid.new_version_occur_watchdog import VersionUpdateObserver
+    # from shotgrid.new_version_occur_watchdog import VersionUpdateObserver
 
 
 
@@ -52,7 +52,7 @@ class ShotGridDataFetcher():
         if self.connected:
             self._fetch_project_id()
             FolderStructureCreator(self, "/home/rapa/baked/show/baked/") # 이건 나중에 yaml에 저장된 경로로 바꿔주세요!
-            self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/")
+            # self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/")
         self._get_current_user_data()
 
     def _set_instance_val(self):
@@ -70,6 +70,12 @@ class ShotGridDataFetcher():
         self.user = None # 현재 작업을 하고 있는 HumanUser entity
         self.work = None # 현재 작업 shot, asset의 entity가 들어가는 곳
         self.task = None # 현재 작업 task의 entity가 들어가는 곳
+        self.frame_start = None # 현재 작업에 프레임이 정해져있다면 시작 프레임 값이 저장되는 변수
+        self.frame_end = None # 현재 작업에 프레임이 정해져있다면 마지막 프레임 값이 저장되는 변수
+        self.height = None
+        self.width = None
+        self.undistortion_height = None
+        self.undistortion_width = None
 
 
     def _get_auth(self):
@@ -104,7 +110,13 @@ class ShotGridDataFetcher():
                 self.work = self.get_asset_entity(self.user_info['asset'])
             elif self.user_info['shot']:
                 self.work = self.get_shot_from_code(self.user_info['shot'])
-            self.task = self.get_task_from_ent(self.work)
+                self.frame_start = self.work.get('sg_cut_in')
+                self.frame_last = self.work.get('sg_cut_out')
+                self.undistortion_height = self.work.get('sg_undistortion_height')
+                self.undistortion_width = self.work.get('sg_undistortion_width')
+                self.width = self.work.get('sg_resolutin_width')
+                self.height = self.work.get('sg_resolution_height')
+                self.task = self.get_task_from_ent(self.work)
 
     # 프로젝트 id 를 가져와서 지정해준다.
     def _fetch_project_id(self): # ***** 내부에서만 사용되는 메서드는 이름 앞에 _언더바를 붙여서 표시해주시면 좋아요
@@ -348,7 +360,7 @@ class ShotGridDataFetcher():
         publish = self.sg.create("PublishedFile", published_file)
         self.sg.upload_thumbnail("PublishedFile", publish['id'], thumbnail_file_path)
         print(f"publish : {publish}")
-        self.send_data_to_webhook_server(version)
+        # self.send_data_to_webhook_server(version)
 
     def send_data_to_webhook_server(self, data:dict):
         url = ""
