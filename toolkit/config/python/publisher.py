@@ -96,6 +96,7 @@ class Publisher(QWidget):
 
         self.ui.pushButton_load.setIcon(QIcon(f"/home/rapa/baked/toolkit/config/python/icons/reload.png"))
         self.user_data = self._get_user_info(self.sg.user_info) # 현재 유저 정보, 작업 파일 딕셔너리로 저장
+        self.user_data['task']
 
     def _get_user_info(self, user_data):
         """ 유저에 대한 정보 가저오는 메서드 """ # 임시 설정 
@@ -311,6 +312,7 @@ class Publisher(QWidget):
         """ treewidget 아이템 별로 published type 기록하는 메서드 """
         selected_items = self.tree.selectedItems()
         file_type = self.ui.comboBox_type.currentText()
+        print ( "^^^^^^", file_type)
         if file_type != "":
             for item in selected_items:
                 file = item.text(0)
@@ -319,6 +321,7 @@ class Publisher(QWidget):
                 item.setForeground(1, QBrush(QColor("light pink")))
         else:
             for item in selected_items:
+                file = item.text(0)
                 self.publish_dict[file]['file type'] = ""
                 item.setText(1, "ㅡ")
                 item.setForeground(1, QBrush(QColor("sky blue")))
@@ -431,6 +434,7 @@ class Publisher(QWidget):
     def _publish_file_data(self): ########## MAIN ############
         """publish 눌렀을 때 발생하는 이벤트"""
 
+        self.tree.clearSelection()
         self._connect_department()
         self._save_file_pub()
         input_path = self.preview_info['input path']
@@ -467,9 +471,9 @@ class Publisher(QWidget):
         """ 선택된 파일 타입에 따라 경로 만들어서 딕셔너리에 넣어주기 """
         self.ui.label_info_2.clear()
         for file, file_info in self.publish_dict.items():
-            print (file,  file_info['file type'])
-            try:
-                file_info['file type']### check empty data
+            print ("+++", file,  file_info['file type'])
+            try:  ### check empty data
+                file_info['file type']
             except:
                 self.ui.label_file_info_2.setText(f"Please select file type")
                 return False
@@ -531,6 +535,8 @@ class Publisher(QWidget):
         """ (5) 샷그리드 versions에 오리는 메서드 """
         print (f"REVIEW     /// {self.publish_dict}")
 
+        if self.tool == "maya" and self.user_data['task'] == "LGT": # 라이팅 마야작업은 펍만되고 버전은 안 만들어져 (리소스로서만 쓰이지) => 근데 리뷰 받고 싶을 수도 있잖아.? 흠 
+            return
         # version
         version = self.user_data['version']
         version = f'v{version}'
@@ -568,6 +574,7 @@ class Publisher(QWidget):
                                            ['published_files', 'code'], 
                                            order=[{'field_name': 'created_at', 'direction': 'desc'}])
         print ("****", last_version)
+        print("****", self.publish_dict)
         # 구한 version에 연결된 PublishedFiles 리스트를 가져온다
         pub_files_list = {}
         if last_version:

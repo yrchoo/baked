@@ -8,6 +8,7 @@ except:
     from PySide2.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
 
 import sys
+import os
 
 
 class SubWindow_Open(QWidget):
@@ -106,6 +107,8 @@ class SubWindow_Open(QWidget):
             rect = self.get_fixed_aspect_rect()
             x, y, w, h = rect.x(), rect.y(), rect.width(), rect.height()
 
+            if os.path.exists(self.outpath):
+                os.remove(self.outpath)
             screen = QApplication.primaryScreen()
             screenshot = screen.grabWindow(0, x, y, w, h)
             screenshot.save(self.outpath, "jpg", quality=100)

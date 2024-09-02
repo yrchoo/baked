@@ -231,7 +231,8 @@ class Review(QWidget):
         elif button.text() == "Capture":
             image_path = self._get_path_using_template("capture")
         elif button.text() == "Render":
-            image_path = self._get_path_using_template("render") # 부서별로 펍할 external 입력받기
+            ext = self.work.set_render_ext()
+            image_path = self._get_path_using_template("render", ext) # 부서별로 펍할 external 입력받기
 
         path = self._check_validate(image_path)    
         files = glob.glob(f"{path}/*")
@@ -242,15 +243,27 @@ class Review(QWidget):
             self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
             return
 
-        if len(files) > 1:
+        if button.text() in ["PlayBlast", "Render"]:
             recent_image_file = max(files, key=os.path.getmtime)
             start_frame, last_frame = self._get_frame_number(files) # 프레임 넘버, 경로 정보 저장하기
             self.preview_info = {'input path' : image_path, 
                                  'start frame' : int(start_frame),
                                  'last frame' : int(last_frame)}
-        else:
-            recent_image_file = image_path
-            self.preview_info = {'input path' : image_path}
+        elif button.text() == "Capture":
+            parse = re.compile("[v]\d{3}")
+            for file in files:
+                version = parse.search(os.path.basename(file)).group()[1:]
+                print (version, self.user_data["version"])
+                if version == self.user_data["version"]:
+                    recent_image_file = file
+                    self.preview_info = {'input path' : image_path,
+                                    'start frame' : 1,
+                                    'last frame' : 1}
+
+            if not self.preview_info:
+                self.ui.label_thumbnail.setText("No Thumbnail Found")
+                self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
+                return
 
         pixmap = QPixmap(recent_image_file) 
         scaled_pixmap = pixmap.scaled(288, 162) 
@@ -308,8 +321,7 @@ class Review(QWidget):
         start_frame = self.preview_info['start frame']
         last_frame = self.preview_info['last frame']
         print ("-----------------", input_path, output_path, project_name, start_frame, last_frame)
-        pass
-        MayaAPI.make_ffmpeg(self, input_path, output_path, project_name, start_frame, last_frame)
+        MayaAPI.make_ffmpeg(self, start_frame, last_frame, input_path, output_path, project_name)
         self.preview_info['output_path'] = output_path
         self.preview_info['output_path_jpg'] = self._export_slate_image(output_path)
         print(f"%%%%%%%%%%%%%%%%%%%%%{self.preview_info}")
@@ -330,7 +342,7 @@ class Review(QWidget):
     def _process_review_funcs(self):
         input_path = self.preview_info['input path']
         self._apply_ffmpeg(input_path, self.user_data["project"])
-        self._update_version_data()
+        # self._update_version_data()
 
     def _update_version_data(self):
 
@@ -359,7 +371,7 @@ class Review(QWidget):
 
         print("#####################################")
         print(version, task, description, preview_path, shot, asset)
-        version = self.sg.update_version_for_review(version, task, description, preview_path, shot, asset)
+        version = self.sg.update_version_for_review(version, task, preview_path, description, shot, asset)
         return version
 
 if __name__ == "__main__":

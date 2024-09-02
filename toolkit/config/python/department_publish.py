@@ -22,7 +22,7 @@ class DepartmentWork():
         self.tree.setColumnWidth(0,250)
         self.tree.setColumnWidth(1,10)
 
-    def put_data_in_tree(self):
+    def put_data_in_tree(self, publish_dict):
         """아이템을 트리위젯에 넣는 메서드"""
         file_name = self.get_current_file_name()
         file_parent = QTreeWidgetItem(self.tree)
@@ -30,7 +30,7 @@ class DepartmentWork():
         file_parent.setText(1, "ㅡ")
         file_parent.setForeground(1, QBrush(QColor("sky blue")))
         self._set_text_bold(file_parent)
-        publish_dict = self.make_data()
+        # publish_dict = self.make_data()
         print (publish_dict)
 
         # 데이터가 없는 경우에도 오류없이 import 되게끔
@@ -119,7 +119,21 @@ class DepartmentWork():
     def save_camera_as_alembic(self, alembic_path, file):
         MayaAPI.export_alemibc(self, alembic_path, file)
     
+    def render_as_exr(self, path):
+        MayaAPI.render_exr_sequence(path)
+
 class MOD(DepartmentWork):
+    def make_data(self):
+        """ 선택된 object/node 가져오는 메서드 """
+        selected_data = self.check_selection()
+        publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
+        try:
+            for data in selected_data:
+                publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
+        except: 
+            pass
+        self.put_data_in_tree(publish_dict)
+    
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
         MayaAPI.mobeling_publish_set()
@@ -134,6 +148,17 @@ class MOD(DepartmentWork):
                 self.save_as_alembic(publish_dict[file]['path'], file)
 
 class RIG(DepartmentWork):
+    def make_data(self):
+        """ 선택된 object/node 가져오는 메서드 """
+        selected_data = self.check_selection()
+        publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
+        try:
+            for data in selected_data:
+                publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
+        except: 
+            pass
+        self.put_data_in_tree(publish_dict)
+    
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
         pass
@@ -152,6 +177,7 @@ class LDV(DepartmentWork):
         lookdev_list = []
         lookdev_list.extend(texture_list)
         lookdev_list.extend(shader_list)
+        self.put_data_in_tree(lookdev_list)
         return lookdev_list
 
     def set_render_ext(self):
@@ -172,6 +198,17 @@ class LDV(DepartmentWork):
                 self.save_as_alembic(file['path'])
     
 class ANI(DepartmentWork):
+    def make_data(self):
+        """ 선택된 object/node 가져오는 메서드 """
+        selected_data = self.check_selection()
+        publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
+        try:
+            for data in selected_data:
+                publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
+        except: 
+            pass
+        self.put_data_in_tree(publish_dict)
+    
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
@@ -187,11 +224,26 @@ class ANI(DepartmentWork):
 
 class LGT(DepartmentWork):
     def make_data(self):
-        pass
+        selected_data = MayaAPI._get_lighting_layers()
+        publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
+        try:
+            for data in selected_data:
+                publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
+        except: 
+            pass
+        self.put_data_in_tree(publish_dict)
+        return publish_dict
     
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
+    
+    def save_data(self, publish_dict):
+        scene_path = publish_dict[self.get_current_file_name()]['path']
+        self.save_scene_file(scene_path)
+        for file, info in publish_dict.items():
+            if 'Lighting' in info['file type']:
+                MayaAPI._render_lighting_layers(info['path'])
 
 class MM(DepartmentWork):
     def make_data(self):
