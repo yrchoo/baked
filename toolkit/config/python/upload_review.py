@@ -56,7 +56,7 @@ class Review(QWidget):
         pass
 
         self.ui.pushButton_cancel.clicked.connect(self._close_ui)
-        self.ui.pushButton_upload.clicked.connect(self._create_version_data)
+        self.ui.pushButton_upload.clicked.connect(self._process_review_funcs)
         self.ui.pushButton_thumbnail.clicked.connect(self._make_thumbnail)
 
         self.ui.comboBox_task.currentIndexChanged.connect(self._show_link_entity)
@@ -106,9 +106,13 @@ class Review(QWidget):
             self.ui.comboBox_task.setCurrentText(self.shot_steps_dict[self.user_data['task'].lower()])
 
     def _get_user_info(self, user_data):
-        """ 유저에 대한 정보 가저오는 메서드 """ # 임시 설정 
-        """ 유저 커스텀 버튼 있으면 좋을듯 """
-        
+        if self.tool == "maya":
+            current_file = MayaAPI.get_file_name(self)
+        elif self.tool == "nuke":
+            current_file = NukeAPI.get_file_name(self)
+
+        version = self._get_version_from_current_file(current_file)
+        user_data['version'] = version
         user_data['tool'] = self.tool
         if user_data["asset"]:
             user_data["seq/asset"] = "asset"
@@ -135,6 +139,48 @@ class Review(QWidget):
     def _close_ui(self):
         """UI창 끄는 메서드"""
         self.close()
+
+    def _import_yaml_template(self):
+        """ 
+        각 파일별로 경로 설정해주는 template.yml 파일을 import 하는 메서드입니다
+        """
+        with open('/home/rapa/baked/toolkit/config/core/env/sy_template.yml') as f:
+            yaml_data = yaml.load(f, Loader=yaml.FullLoader)
+            yaml_path = yaml_data["paths"]
+            yaml_key = yaml_data["keys"]
+        return yaml_path, yaml_key
+    
+        
+    def _check_validate(self, new_path):
+        """저장할 파일 경로가 유효한지 확인하는 메서드 (폴더가 존재하지 않으면 생성해주기)"""
+        print (new_path)
+        file_path = "/".join(new_path.split("/")[:-1])
+        print (f"206/_check_validate : {file_path}")
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        return file_path
+
+    def _get_path_using_template(self, work, ext=""):
+        """ yaml 템플릿을 이용해서 저장할 경로, 파일 이름 만드는 메서드 """
+
+        yaml_path, _ = self._import_yaml_template()
+        file_info_dict = self.user_data
+        tool = file_info_dict["tool"]
+        level = file_info_dict["seq/asset"]
+        current = f"{tool}_{level}_{work}"
+        if ext: 
+            current += f"_{ext}"
+        print (f"+++++ _get_path_using_template : {current}")
+        
+        new_path = ""
+        if current in yaml_path:
+            root_path = yaml_path[f"{level}_root"]
+            new_path = yaml_path[current]["definition"].replace(f"@{level}_root", root_path)
+            new_path = new_path.format(**file_info_dict)
+            self._check_validate(new_path)
+        print ("###", new_path)
+        return new_path
+
               
     ################################### get shotgrid data ##########################################
         
@@ -257,9 +303,12 @@ class Review(QWidget):
     def _apply_ffmpeg(self, input_path, project_name):
         """ (3) ffmpeg 만드는 메서드"""
         """ 예린님 코드로 연결시키기"""
+        
         output_path = self._get_path_using_template("ffmpeg")
         start_frame = self.preview_info['start frame']
         last_frame = self.preview_info['last frame']
+        print ("-----------------", input_path, output_path, project_name, start_frame, last_frame)
+        pass
         MayaAPI.make_ffmpeg(self, input_path, output_path, project_name, start_frame, last_frame)
         self.preview_info['output_path'] = output_path
         self.preview_info['output_path_jpg'] = self._export_slate_image(output_path)
@@ -277,10 +326,13 @@ class Review(QWidget):
         return img_path
 
     ############### 샷그리드에 파일 올리는 메서드들은 따로 파일 만들예정 ###############
-    
-    def _create_version_data(self):
-        """ (5) 샷그리드 versions에 오리는 메서드 """
-        print (f"REVIEW     /// {self.publish_dict}")
+
+    def _process_review_funcs(self):
+        input_path = self.preview_info['input path']
+        self._apply_ffmpeg(input_path, self.user_data["project"])
+        self._update_version_data()
+
+    def _update_version_data(self):
 
         # version
         version = self.user_data['version']
@@ -304,9 +356,10 @@ class Review(QWidget):
         else:
             shot = self.ui.comboBox_link.currentText()
             asset = None
+
         print("#####################################")
         print(version, task, description, preview_path, shot, asset)
-        version = self.sg.create_new_version_entity(version, task, description, preview_path, shot, asset)
+        version = self.sg.update_version_for_review(version, task, description, preview_path, shot, asset)
         return version
 
 if __name__ == "__main__":

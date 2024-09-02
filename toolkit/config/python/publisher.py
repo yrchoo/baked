@@ -307,17 +307,22 @@ class Publisher(QWidget):
             link_list.append(item['entity'].get('name'))
         self.ui.comboBox_link.addItems(link_list)
     
-    def _put_publish_type_info_dict(self, index):
+    def _put_publish_type_info_dict(self):
         """ treewidget 아이템 별로 published type 기록하는 메서드 """
-        item = self.tree.currentItem()
-        file = item.text(0)
+        selected_items = self.tree.selectedItems()
         file_type = self.ui.comboBox_type.currentText()
-
         if file_type != "":
-            self.publish_dict[file]['file type'] = file_type
-            item.setText(1, "O")
-            item.setForeground(1, QBrush(QColor("light pink")))
-    
+            for item in selected_items:
+                file = item.text(0)
+                self.publish_dict[file]['file type'] = file_type
+                item.setText(1, "O")
+                item.setForeground(1, QBrush(QColor("light pink")))
+        else:
+            for item in selected_items:
+                self.publish_dict[file]['file type'] = ""
+                item.setText(1, "ㅡ")
+                item.setForeground(1, QBrush(QColor("sky blue")))
+        
     def _load_publish_summary(self):
         """ 퍼블리쉬할 데이터 보여주는 메서드 """
 

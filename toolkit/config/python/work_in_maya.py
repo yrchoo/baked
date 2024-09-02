@@ -139,16 +139,16 @@ class MayaAPI():
         slate_size = 60
         font_path = "/home/rapa/문서/font/waltographUI.ttf"
         font_size = 40
-        frame_count = int(last_frame) - int(start_frame)
         text_x_padding = 10
         text_y_padding = 20
 
         # top_left = cmds.file(query=True, sn=True, shn=True)
-        top_left = os.path.splitext(output_path)[0].split('/')[-1]
+        top_left, _ = os.path.splitext(os.path.basename(output_path))
         top_center = project_name
         top_right = datetime.date.today().strftime("%Y/%m/%d")
         bot_left = "SIZE : 1920x1080"
         bot_center = ""
+        frame_count = int(last_frame) - int(start_frame)
 
         frame_cmd = "'Frame \: %{eif\:n+"
         frame_cmd += "%s\:d}' (%s)"  % (first, frame_count+1)
