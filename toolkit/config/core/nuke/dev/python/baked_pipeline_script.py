@@ -45,6 +45,22 @@ def open_file(path):
         tracker_win.get_opened_file_list()
     else : 
         nuke.scriptOpen(path)
+        nuke.root().knob("first_frame").setValue(sg.frame_start)
+        nuke.root().knob("last_frame").setValue(sg.frame_last)
+        new_format = f"{sg.width} {sg.height} 1.0 {sg.project['name']}_{sg.height}"
+        nuke.addFormat(new_format)
+        nuke.root().knob("foramt").setValue(f"{sg.project['name']}_{sg.height}")
+
+        # Undistortion을 위한 노드 생성
+        lens_distortion_node = nuke.createNode('LensDistortion')
+        lens_distortion_node['invertDistortion'].setValue(True)
+
+        reformat_node = nuke.createNode('Reformat')
+        reformat_node['resize'].setValue('none')  # Resize 옵션을 None으로 설정 (리사이즈 방지)
+        reformat_node['box_width'].setValue(sg.undistortion_width)
+        reformat_node['box_height'].setValue(sg.undistortion_height)
+
+
     # tracker에 존재하는 리스트를 갱신해줘야함
 
 @ Slot()
@@ -70,9 +86,10 @@ def read_node_file_list():
 sg = ShotGridDataFetcher()
 load_win = loader.Loader(sg, "nuke")
 save_win = save.SaveFile()
-tracker_win = file_tracker.Tracker(sg)
+
 publish_win = publisher.Publisehr(sg, "nuke")
 review_win = upload_review.Review(sg, "nuke")
+tracker_win = file_tracker.Tracker(sg, read_node_file_list())
 
 init()
 if nuke.root().knob("name").value() == "" : 
