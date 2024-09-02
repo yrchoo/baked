@@ -36,32 +36,14 @@ shotgrid 데이터 서버에 존재하는 정보들을 가져오는 메서드를
 class ShotGridDataFetcher(): 
     
 ######################### Singleton #######################
-    INSTANCE = None
-    FETCHER_DATA_FILE_PATH = "/home/rapa/baked/toolkit/config/python/data_fetcher/shotgrid_data_fetcher.pkl"
+    _instance = None
     def __new__(cls):
-        if cls.INSTANCE is None:
-            cls.INSTANCE = super(ShotGridDataFetcher, cls).__new__(cls)
+        if cls._instance is None:
+            cls._instance = super(ShotGridDataFetcher, cls).__new__(cls)
             print("New shotgrid_file_fetcher created...")
-            # cls.INSTANCE._load_state()
         else:
             print("Load shotgrid_file_fetcher...")
-        return cls.INSTANCE
-    
-    def _load_state(self):
-        # load instance state from file
-        if os.path.exists(self.FETCHER_DATA_FILE_PATH):
-            with open(self.FETCHER_DATA_FILE_PATH, "rb") as f:
-                state = pickle.load(f)
-                self.__dict__.update(state)
-            print(f"Get existing data... current user : {self.user_info['name']}")
-        else :
-            print("Create new instance..")
-            self._save_state()
-
-    def _save_state(self):
-        # Save current instance stat to file
-        with open(self.FETCHER_DATA_FILE_PATH, "wb") as f:
-            pickle.dump(self.__dict__, f)
+        return cls._instance
 ###########################################################
     
     def __init__(self): # ***** 바꿈
@@ -70,7 +52,7 @@ class ShotGridDataFetcher():
         if self.connected:
             self._fetch_project_id()
             FolderStructureCreator(self, "/home/rapa/baked/show/baked/") # 이건 나중에 yaml에 저장된 경로로 바꿔주세요!
-            # self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/")
+            self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/")
         self._get_current_user_data()
 
     def _set_instance_val(self):
@@ -402,9 +384,6 @@ class ShotGridDataFetcher():
         
         self.sg.update('Playlist', playlist, { 'versions': versions })
 
-        
-
-shogrid_data_fetcher = ShotGridDataFetcher()
 
 if __name__ == "__main__":
     while True:

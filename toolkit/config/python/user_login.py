@@ -1,12 +1,11 @@
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtWidgets import QWidget, QListWidgetItem
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
 from offline_login import Login
 from ui_files.ui_Shotgrid_user import Ui_Form
 from shotgun_api3 import Shotgun
 from shotgrid.user_env_val import Make_User_Data
 import sys
+import os
 import shotgrid_total_profile
 
 
@@ -47,10 +46,10 @@ class UserProfile(QWidget):
 
     def connect_sg(self):
         try:
-            URL = "https://4thacademy.shotgrid.autodesk.com"
-            script_name = "baked"
-            script_key = "p)ghhlikzcyzwq4gdgZpnhmkz"
-            sg = Shotgun(URL, script_name, script_key)
+            script_url = os.getenv("SHOTGRID_URL")
+            script_name = os.getenv("SHOTGRID_PROJECT")
+            script_key = os.getenv("SHOTGRID_KEY")
+            sg = Shotgun(script_url, script_name, script_key)
             return sg
         
         # except Shotgun.AuthenticationFault: # ***** 주소 오류나면 여기서 멈추는데... 확인 부탁드립니다!
@@ -279,20 +278,19 @@ class UserProfile(QWidget):
         name = self.ui.comboBox_user.currentText()
         project = self.ui.label_project.text()
         task = self.ui.lineEdit_task.text()
-        if self.ui.label_shot_asset.text() == "Shot":
-            seq = shot.split("_")[0]
+        if "Shot" in self.ui.label_shot_asset.text():
             shot = self.ui.comboBox_shot_asset.currentText()
+            seq = shot.split("_")[0]
             asset = ""
             asset_type = ""
         else :
             seq = ""
             shot = ""
-            asset =self.ui.label_shot_asset.text()
+            asset =self.ui.comboBox_shot_asset.text()
             asset_type = self.ui.label_asset_type.text()
 
         Make_User_Data(name, project, seq, shot, asset, task, asset_type)
         self.close()
-        QApplication.quit()
         
     #샷그리드가 작동하지 않을경우 새로운 로그인창 연결.
     def open_offline_login_window(self):
