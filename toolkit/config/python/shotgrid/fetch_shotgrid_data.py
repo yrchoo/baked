@@ -5,7 +5,7 @@ import pickle
 
 from datetime import datetime
 
-
+import time
 
 try :
     from get_user_data import Get_User_Data
@@ -37,12 +37,14 @@ class ShotGridDataFetcher():
     
 ######################### Singleton #######################
     INSTANCE = None
-    FETCHER_DATA_FILE_PATH = ""
+    FETCHER_DATA_FILE_PATH = "/home/rapa/baked/toolkit/config/python/data_fetcher/shotgrid_data_fetcher.pkl"
     def __new__(cls):
         if cls.INSTANCE is None:
             cls.INSTANCE = super(ShotGridDataFetcher, cls).__new__(cls)
             print("New shotgrid_file_fetcher created...")
             # cls.INSTANCE._load_state()
+        else:
+            print("Load shotgrid_file_fetcher...")
         return cls.INSTANCE
     
     def _load_state(self):
@@ -387,4 +389,7 @@ class ShotGridDataFetcher():
 
 shogrid_data_fetcher = ShotGridDataFetcher()
 
+if __name__ == "__main__":
+    while True:
+        time.sleep(5)
 
