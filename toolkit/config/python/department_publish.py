@@ -259,4 +259,25 @@ class FX(DepartmentWork):
 
 class CMP(DepartmentWork):
     def make_data(self):
-        pass
+        """트리 위젯에 내보내는 데이터 모아두기"""
+        selected_data = NukeAPI._get_lighting_layers()
+        publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
+        try:
+            for data in selected_data:
+                publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
+        except: 
+            pass
+        self.put_data_in_tree(publish_dict)
+        return publish_dict
+
+    def set_render_ext(self):
+        """ 렌더 확장자 정해주는 메서드 """
+        return "exr"
+    
+    def save_data(self, publish_dict):
+        """데이터 저장하기"""
+        scene_path = publish_dict[self.get_current_file_name()]['path']
+        self.save_scene_file(scene_path)
+        for file, info in publish_dict.items():
+            if 'Comp?' in info['file type']:
+                NukeAPI.저장 어쩌고
