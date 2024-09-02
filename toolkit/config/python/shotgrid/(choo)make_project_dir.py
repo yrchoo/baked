@@ -76,7 +76,8 @@ class FolderStructure():
     def _make_asset_folder(self, addr):
         addr = f"{addr}"
         self._check_file_exist(f"{addr}")
-        asset_types = self.sg.schema_field_read("Asset", "sg_asset_type", self.project_data)['sg_asset_type']['properties']['valid_values']['value']
+        # asset_types = self.sg.schema_field_read("Asset", "sg_asset_type", self.project_data)['sg_asset_type']['properties']['valid_values']['value']
+        asset_types = ["Character", "Prop", "Environment"]
         
         for asset_type in asset_types:
             asset_addr = f"{addr}/{asset_type.title()}"

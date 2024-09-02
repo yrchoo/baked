@@ -29,8 +29,9 @@ class Tracker(QWidget):
     RELOAD_FILE = Signal(str, str)
     LOAD_FILE = Signal(str)
 
-    def __init__(self, sg : ShotGridDataFetcher = None, open_file_data = None):
+    def __init__(self, sg : ShotGridDataFetcher, open_file_data = None):
         super().__init__()
+        print("Tracker __init__()")
         self._set_instance_val(sg, open_file_data)
         self._set_ui()
         self._set_event()
@@ -44,12 +45,9 @@ class Tracker(QWidget):
 
     def _set_instance_val(self, sg, open_file_data):
         self.py_file_path = os.path.dirname(__file__)
-        if not sg :
-            self.sg = ShotGridDataFetcher()
-            # 샷그리드 데이터가 연결되지 않으니 tracker를 사용할 수 없다고 pop하기!
-        else : 
-            self.sg = sg
-            self.sg.observer.NEW_FILE_OCCUR.connect(self._check_new_data_type)
+        self.sg = sg
+        # 샷그리드 데이터가 연결되지 않으니 tracker를 사용할 수 없다고 pop하기!
+        self.sg.observer.NEW_FILE_OCCUR.connect(self._check_new_data_type)
 
         self.lastest_file_dict = {}
         self.pub_file_fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"]
@@ -144,7 +142,7 @@ class Tracker(QWidget):
             version = self.sg.sg.find_one("Version", 
                                           [['entity','is',entity],['sg_task','is',task]], 
                                           ['published_files'],
-                                          order=[{'field_name': 'created_at', 'direction': 'asc'}])
+                                          order=[{'field_name': 'created_at', 'direction': 'desc'}])
             if not version:
                 continue
 
