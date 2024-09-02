@@ -19,13 +19,11 @@ from load_scripts.maya_file_load import LoadMayaFile
 sg = ShotGridDataFetcher()
 
 import loader
-load_win = loader.Loader(sg, "maya")
-
 import save
-save_win = save.SaveFile()
 
-import file_tracker
-tracker_win = file_tracker.Tracker(sg)
+
+# import file_tracker
+
 
 from importlib import reload
 import publisher
@@ -34,7 +32,7 @@ import upload_review
 def init():
     load_win.OPEN_FILE.connect(open_file)
     save_win.SAVE_FILE.connect(save_file)
-    tracker_win.RELOAD_FILE.connect(reload_file)
+    # tracker_win.RELOAD_FILE.connect(reload_file)
 
 def loader_func():
     """
@@ -46,12 +44,31 @@ def loader_func():
     # # reload(loader)
     load_win.show()
 
+def save_func():
+    save_win.show()
+
 def open_file(path):
     current_file_path = cmds.file(query=True, sceneName=True)
     if current_file_path :
         LoadMayaFile().load_file(path)
     else :
         current_file_path = path
+        # 해상도 설정
+        cmds.setAttr('defaultResolution.width', sg.resolution_width)
+        cmds.setAttr('defaultResolution.height', sg.resolution_height)
+
+        # 언디스토션 사이즈 설정
+        cmds.setAttr('defaultResolution.deviceAspectRatio', sg.undistortion_width / sg.undistortion_height)
+        cmds.setAttr('defaultResolution.pixelAspect', 1)
+
+        # 프레임 설정
+        cmds.playbackOptions(min=sg.frame_start, max=sg.frame_end)
+        cmds.currentTime(sg.frame_start)
+
+        # 렌더 프레임 설정
+        cmds.setAttr('defaultRenderGlobals.startFrame', sg.frame_start)
+        cmds.setAttr('defaultRenderGlobals.endFrame', sg.frame_end)
+
         cmds.file(path, open=True, force=True)
 
     _check_dir(current_file_path)
@@ -62,6 +79,17 @@ def save_file(path):
 
 def reload_file(cur_path, new_path):
     LoadMayaFile().reload_maya_file(cur_path, new_path)
+
+def get_ref_file_path_list():
+    path_list = []
+
+    ref_nodes = cmds.ls(type='reference')
+    ref_nodes = [ref for ref in ref_nodes if not ref.endswith("RN")]
+
+    for ref in ref_nodes:
+        ref_path = cmds.referenceQuery(ref, filename=True)
+        path_list.append(ref_path)
+    return path_list
         
 
 def publisher_func():
@@ -84,6 +112,7 @@ def add_custom_menu():
     gMainWindow = mel.eval('$window=$gMainWindow')
     custom_menu = cmds.menu(parent=gMainWindow, tearOff = True, label = 'BAKED') 
     cmds.menuItem(label="Loader", parent=custom_menu, command=lambda *args: loader_func())
+    cmds.menuItem(label="Save File", parent=custom_menu, command=lambda *args: save_func)
     cmds.menuItem(label="Publisher", parent=custom_menu, command=lambda *args: publisher_func())
     cmds.menuItem(label="Upload Review", parent=custom_menu, command=lambda *args: review_func())
     # cmds.menuItem(label="Tracker", parent=custom_menu, command=lambda *args: )
@@ -129,4 +158,8 @@ def _check_dir(external_path):
         else:
             print(f"Directory already exists: {dir_path}")
 
+
+load_win = loader.Loader(sg, "maya")
+save_win = save.SaveFile()
+# tracker_win = file_tracker.Tracker(sg, get_ref_file_path_list)
 init()
