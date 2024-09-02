@@ -2,9 +2,9 @@
  
 export NAME='윤서연'
 export PROJECT='baked'
-export SEQ='ABC'
-export SHOT='ABC_0010'
-export ASSET=''
-export TASK='ANI'
-export ASSET_TYPE=''
+export SEQ=
+export SHOT=
+export ASSET='Banana'
+export TASK='RIG'
+export ASSET_TYPE='Character'
         

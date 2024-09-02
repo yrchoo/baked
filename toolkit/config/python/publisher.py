@@ -183,6 +183,7 @@ class Publisher(QWidget):
             new_path = yaml_path[current]["definition"].replace(f"@{level}_root", root_path)
             new_path = new_path.format(**file_info_dict)
             self._check_validate(new_path)
+        print ("###", new_path)
         return new_path
 
     def _get_version_each_node(self):
@@ -225,6 +226,7 @@ class Publisher(QWidget):
     
     def _check_validate(self, new_path):
         """저장할 파일 경로가 유효한지 확인하는 메서드 (폴더가 존재하지 않으면 생성해주기)"""
+        print (new_path)
         file_path = "/".join(new_path.split("/")[:-1])
         print (f"206/_check_validate : {file_path}")
         if not os.path.exists(file_path):
@@ -352,17 +354,22 @@ class Publisher(QWidget):
             self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
             return
 
-        if len(files) > 1:
+        if button.text() in ["PlayBlast", "Render"]:
             recent_image_file = max(files, key=os.path.getmtime)
             start_frame, last_frame = self._get_frame_number(files) # 프레임 넘버, 경로 정보 저장하기
             self.preview_info = {'input path' : image_path, 
                                  'start frame' : int(start_frame),
                                  'last frame' : int(last_frame)}
         else:
-            recent_image_file = image_path
-            self.preview_info = {'input path' : image_path,
-                                 'start frame' : 1,
-                                 'last frame' : 1}
+            parse = re.compile("[v]\d{3}")
+            for file in files:
+                version = parse.search(os.path.basename(file)).group()[1:]
+                if version == self.user_data["version"]:
+                    recent_image_file = file
+                    self.preview_info = {'input path' : image_path,
+                                    'start frame' : 1,
+                                    'last frame' : 1}
+                    pass
 
         pixmap = QPixmap(recent_image_file) 
         scaled_pixmap = pixmap.scaled(288, 162) 
