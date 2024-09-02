@@ -138,6 +138,7 @@ class MayaAPI():
         ffmpeg = "ffmpeg"
         slate_size = 60
         font_path = "/home/rapa/문서/font/waltographUI.ttf"
+        frame_count = int(last_frame) - int(start_frame)
         font_size = 40
         text_x_padding = 10
         text_y_padding = 20
@@ -148,13 +149,15 @@ class MayaAPI():
         top_right = datetime.date.today().strftime("%Y/%m/%d")
         bot_left = "SIZE : 1920x1080"
         bot_center = ""
-        frame_count = int(last_frame) - int(start_frame)
 
         frame_cmd = "'Frame \: %{eif\:n+"
         frame_cmd += "%s\:d}' (%s)"  % (first, frame_count+1)
         bot_right = frame_cmd
 
         if last_frame == 1:
+            font_size = "h/20"
+            slate_size = "h/20"
+
             bot_right = "Frame 1"
             cmd = f'{ffmpeg}'
             cmd += ' -i %s ' % (input_path)
@@ -293,6 +296,60 @@ class MayaAPI():
             print(f"{len(unused_shaders)}개의 필요없는 쉐이더가 삭제되었습니다.")
         else:
             print("삭제할 필요없는 쉐이더가 없습니다.")
+    
+    def set_single_renderable_camera(self, camera_name):
+        """
+        지정된 카메라만 렌더러블 상태로 유지하고, 다른 모든 카메라는 비활성화합니다.
+        
+        Args:
+        camera_name (str): 렌더러블 상태로 유지할 카메라의 이름.
+        """
+        all_cameras = cmds.ls(type='camera')
+        for cam in all_cameras:
+            cmds.setAttr(f"{cam}.renderable", cam == camera_name)
+    
+    def render_exr_sequence(self, output_path):
+        """
+        'anicam' 또는 'mmcam' 카메라를 사용하여 여러 프레임을 .exr 형식으로 렌더링합니다.
+        
+        Args:
+        output_dir (str): 렌더링된 이미지가 저장될 디렉토리.
+        output_file_name (str): 렌더링된 이미지 파일의 이름.
+        start_frame (int): 렌더링 시작 프레임.
+        end_frame (int): 렌더링 종료 프레임.
+        """
+
+        camera_name = None
+        if cmds.objExists("anicam"):
+            camera_name = "anicam"
+        elif cmds.objExists("mmcam"):
+            camera_name = "mmcam"
+        
+        if not camera_name:
+            print("Error: Neither 'anicam' nor 'mmcam' exists in the scene.")
+            return
+        
+        print(f"Using camera: {camera_name}")
+        
+        # 지정된 카메라만 렌더러블 상태로 유지
+        self.set_single_renderable_camera(camera_name)
+
+        # 프레임 가져오기
+        start_frame = cmds.playbackOptions(q=True, min=True)
+        last_frame = cmds.playbackOptions(q=True, max=True)
+
+        
+        # 렌더 설정
+        cmds.setAttr("defaultRenderGlobals.imageFormat", 51)  # 51: OpenEXR 형식
+        cmds.setAttr("defaultRenderGlobals.imfkey", "exr", type="string")
+        cmds.setAttr("defaultRenderGlobals.currentRenderer", "arnold", type="string")
+        
+        # 프레임 범위에 따라 렌더링 수행
+        for frame in range(start_frame, last_frame + 1):
+            cmds.currentTime(frame)  # 현재 프레임 설정
+            cmds.setAttr("defaultRenderGlobals.imageFilePrefix", output_path, type="string")
+            cmds.arnoldRender(cam=camera_name, width=1920, height=1080)
+            print(f"Rendered frame {frame} saved as {output_path}")
 
     def get_texture_list(self):
         """
@@ -410,8 +467,29 @@ class MayaAPI():
             return
 
         self.export_alemibc(output_path, camera)
+
+    def _get_lighting_layers(self):
+        all_layers = cmds.ls(type="renderLayer")
+        return all_layers
     
+    def _render_lighting_layers(self, render_path):
+
+        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", render_path, type="string")
+        _, render_ext = os.path.splitext(render_path)
+
+        # 파일 확장자 설정 (필요시)
+        cmds.setAttr("defaultRenderGlobals.imageFormat", render_ext, type="string")
+
+        # 렌더 레이어 선택 및 렌더링
+        selected_layer = self._get_lighting_layers()
+        for layer in selected_layer:
+            # 렌더 레이어 변경
+            cmds.editRenderLayerGlobals(currentRenderLayer=layer)
             
+            # 배치 렌더링 수행
+            cmds.arnoldRender(batch=True)
+            print(f"{layer} 레이어의 EXR 렌더링이 완료되었습니다.")
+    
         # import nuke
         # import os
 

@@ -315,6 +315,7 @@ class ShotGridDataFetcher():
                                    ['project','code','description','entity','sg_task','created_by','sg_status_list'])
         
         if version_ent:
+
             return version_ent
         
         new_version_data = {
@@ -334,24 +335,15 @@ class ShotGridDataFetcher():
         return version
     
     def update_version_for_review(self, version, task_name, review_movie_path, description, shot_code=None, asset =None):
-        
-        if asset:
-            link = self.get_asset_entity(asset)
-        if shot_code:
-            link = self.get_shot_from_code(shot_code)
-        task = self.fetch_cur_task_by_taskname_linkedentity(task_name, link)
 
-        # 현재 작업중인 파일의 version entity 찾기
-        version_ent = self.sg.find_one("Version", 
-                                   [['project','is',self.project], ['code','is',version],['sg_task','is',task], ['entity','is',link]],
-                                   ['project','code','description','entity','sg_task','created_by','sg_status_list'])
+        version_ent = self.create_new_version_entity(version, task_name, review_movie_path, description, shot_code, asset)
         
         data = {
                 "description": description,
-                "sg_uploaded_movie": review_movie_path
                 }
 
         # ShotGrid에서 Version 엔터티 업데이트
+        self.sg.upload("Version", version_ent['id'], review_movie_path, field_name="sg_uploaded_movie")
         self.sg.update("Version", version_ent["id"], data)
 
 
