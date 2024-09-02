@@ -70,7 +70,7 @@ class ShotGridDataFetcher():
         if self.connected:
             self._fetch_project_id()
             FolderStructureCreator(self, "/home/rapa/baked/show/baked/") # 이건 나중에 yaml에 저장된 경로로 바꿔주세요!
-            self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/")
+            # self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/")
         self._get_current_user_data()
 
     def _set_instance_val(self):
@@ -310,12 +310,12 @@ class ShotGridDataFetcher():
             link = self.get_shot_from_code(shot_code)
         task = self.fetch_cur_task_by_taskname_linkedentity(task_name, link)
 
-        version = self.sg.find_one("Version", 
+        version_ent = self.sg.find_one("Version", 
                                    [['project','is',self.project], ['code','is',version],['sg_task','is',task], ['entity','is',link]],
                                    ['project','code','description','entity','sg_task','created_by','sg_status_list'])
         
-        if version:
-            return version
+        if version_ent:
+            return version_ent
         
         new_version_data = {
             "project" : self.project,
@@ -325,12 +325,36 @@ class ShotGridDataFetcher():
             "sg_task": task,
             "created_by" : self.user,
             "sg_status_list" : "rev",
+            "user" : self.user
         }
 
         version = self.sg.create("Version", new_version_data)
         self.sg.upload("Version", version['id'], thumbnail_file_path, field_name="sg_uploaded_movie")
-        self.sg.upload_thumbnail("Version", version['id'], thumbnail_file_path)
+
         return version
+    
+    def update_version_for_review(self, version, task_name, review_movie_path, description, shot_code=None, asset =None):
+        
+        if asset:
+            link = self.get_asset_entity(asset)
+        if shot_code:
+            link = self.get_shot_from_code(shot_code)
+        task = self.fetch_cur_task_by_taskname_linkedentity(task_name, link)
+
+        # 현재 작업중인 파일의 version entity 찾기
+        version_ent = self.sg.find_one("Version", 
+                                   [['project','is',self.project], ['code','is',version],['sg_task','is',task], ['entity','is',link]],
+                                   ['project','code','description','entity','sg_task','created_by','sg_status_list'])
+        
+        data = {
+                "description": description,
+                "sg_uploaded_movie": review_movie_path
+                }
+
+        # ShotGrid에서 Version 엔터티 업데이트
+        self.sg.update("Version", version_ent["id"], data)
+
+
 
     def create_new_publish_entity(self, version, file_path, description, thumbnail_file_path, published_file_type):
         file_name = os.path.basename(file_path)
@@ -343,7 +367,8 @@ class ShotGridDataFetcher():
             "entity" : version['entity'],
             "version": version,  # 버전과 연결
             "path": {"local_path": file_path},
-            "published_file_type": published_file_type
+            "published_file_type": published_file_type,
+            "created_by" : self.user
         }
 
         publish = self.sg.create("PublishedFile", published_file)
