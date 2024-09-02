@@ -24,8 +24,8 @@ load_win = loader.Loader(sg, "maya")
 import save
 save_win = save.SaveFile()
 
-import file_tracker
-tracker_win = file_tracker.Tracker(sg)
+# import file_tracker
+# tracker_win = file_tracker.Tracker(sg)
 
 from importlib import reload
 import publisher
@@ -34,7 +34,7 @@ import upload_review
 def init():
     load_win.OPEN_FILE.connect(open_file)
     save_win.SAVE_FILE.connect(save_file)
-    tracker_win.RELOAD_FILE.connect(reload_file)
+    # tracker_win.RELOAD_FILE.connect(reload_file)
 
 def loader_func():
     """

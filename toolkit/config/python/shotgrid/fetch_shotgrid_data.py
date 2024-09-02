@@ -10,11 +10,11 @@ import time
 try :
     from get_user_data import Get_User_Data
     from make_project_dir import FolderStructureCreator
-    from new_version_occur_watchdog import VersionUpdateObserver
+    # from new_version_occur_watchdog import VersionUpdateObserver
 except :
     from shotgrid.get_user_data import Get_User_Data
     from shotgrid.make_project_dir import FolderStructureCreator
-    from shotgrid.new_version_occur_watchdog import VersionUpdateObserver
+    # from shotgrid.new_version_occur_watchdog import VersionUpdateObserver
 
 
 
@@ -52,7 +52,7 @@ class ShotGridDataFetcher():
         if self.connected:
             self._fetch_project_id()
             FolderStructureCreator(self, "/home/rapa/baked/show/baked/") # 이건 나중에 yaml에 저장된 경로로 바꿔주세요!
-            self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/")
+            # self.observer = VersionUpdateObserver("/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/")
         self._get_current_user_data()
 
     def _set_instance_val(self):
@@ -296,8 +296,9 @@ class ShotGridDataFetcher():
                                    [['project','is',self.project], ['code','is',version],['sg_task','is',task], ['entity','is',link]],
                                    ['project','code','description','entity','sg_task','created_by','sg_status_list'])
         
+        print (self.project, task, link, shot_code)
         if version_ent:
-
+            print("version already exists")
             return version_ent
         
         new_version_data = {
@@ -311,6 +312,7 @@ class ShotGridDataFetcher():
             "user" : self.user
         }
 
+        print (new_version_data)
         version = self.sg.create("Version", new_version_data)
         self.sg.upload("Version", version['id'], thumbnail_file_path, field_name="sg_uploaded_movie")
 

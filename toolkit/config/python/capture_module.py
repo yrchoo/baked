@@ -136,6 +136,6 @@ class MakeScreenCapture(QWidget):
 if __name__ == "__main__":
    app = QApplication(sys.argv)
    oupath = "/home/rapa/test.jpg"
-   window = MakeScreenCapture("/home/rapa/test.jpg")
+   window = MakeScreenCapture("/home/rapa/test3.jpg")
    window.show()
    sys.exit(app.exec())

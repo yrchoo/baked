@@ -317,6 +317,8 @@ class Review(QWidget):
         """ (3) ffmpeg 만드는 메서드"""
         """ 예린님 코드로 연결시키기"""
         
+        if self.preview_info['last_frame'] == 1:
+            output_path = self._get_path_using_template("ffmpeg", "jpg")
         output_path = self._get_path_using_template("ffmpeg")
         start_frame = self.preview_info['start frame']
         last_frame = self.preview_info['last frame']
