@@ -49,6 +49,7 @@ class Publisher(QWidget):
         self._link_setting()
         self._connect_department()
         self._set_event()
+        print(".......")
 
     def _set_initial_val(self, sg, tool):
         self.sg : ShotGridDataFetcher = sg # login 시에 지정된 userdata를 가지고 Shotgrid에서 정보를 가져오는 Shotgrid_Data() 클래스
@@ -91,16 +92,17 @@ class Publisher(QWidget):
         """
         초기 ui 세팅하는 메서드
         """
+
         self.tree = self.ui.treeWidget
         self.work = DepartmentWork(self.tree, self.tool)
         self.show()
-
         self.ui.pushButton_load.setIcon(QIcon(f"/home/rapa/baked/toolkit/config/python/icons/reload.png"))
         self.user_data = self._get_user_info(self.sg.user_info) # 현재 유저 정보, 작업 파일 딕셔너리로 저장
         self.department = self.user_data['task']
         self.dep_class = getattr(department_publish, self.department)(self.tree, self.tool) # 부서 클래스를 인스턴스화 하기
         self.publish_dict = self.dep_class.make_data()
-        print (self.publish_dict)
+        print (f"self.user_Data: {self.user_data}")
+        print (f"self.publish_dict: {self.publish_dict}")
 
     def _get_user_info(self, user_data):
         """ 유저에 대한 정보 가저오는 메서드 """ # 임시 설정 
@@ -280,6 +282,7 @@ class Publisher(QWidget):
         """
         shotgrid에서 task 종류 가져오는 메서드
         """
+        print("_get_task_type")
         asset_steps_list = []
         shot_steps_list = []
         self.asset_steps_dict = {}
@@ -293,14 +296,15 @@ class Publisher(QWidget):
         for shot in shot_steps:
             self.shot_steps_dict[shot['code']] = f"[Shot]   {shot['description']}"
             shot_steps_list.append(f"[Shot]   {shot['description']}")
-
+        
+        print ("@@", asset_steps_list, shot_steps_list)
         self.ui.comboBox_task.addItems(asset_steps_list)
         self.ui.comboBox_task.addItems(shot_steps_list)
         
         self.task_dict = {} # mod:[Asset]  Modeling
         self.task_dict.update(self.asset_steps_dict)
         self.task_dict.update(self.shot_steps_dict)
-        print (self.task_dict)
+        print ("^^^^", self.task_dict)
 
     def _show_link_entity(self):
         """
@@ -352,6 +356,7 @@ class Publisher(QWidget):
         """
         썸네일 보여주는 메서드
         """
+        self.maya_api = MayaAPI()
         image_path = ""
         if button.text() == "PlayBlast":
             image_path = self._get_path_using_template("playblast")
@@ -501,7 +506,7 @@ class Publisher(QWidget):
         output_path = self._get_path_using_template("ffmpeg")
         start_frame = self.preview_info['start frame']
         last_frame = self.preview_info['last frame']
-        MayaAPI.make_ffmpeg(self, start_frame, last_frame, input_path, output_path, project_name)
+        self.maya_api.make_ffmpeg(start_frame, last_frame, input_path, output_path, project_name)
         self.preview_info['output_path'] = output_path
         self.preview_info['output_path_jpg'] = self._export_slate_image(output_path)
         print(f"%%%%%%%%%%%%%%%%%%%%%{self.preview_info}")

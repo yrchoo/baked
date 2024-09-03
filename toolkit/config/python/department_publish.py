@@ -208,6 +208,7 @@ class ANI(DepartmentWork):
         except: 
             pass
         self.put_data_in_tree(publish_dict)
+        return publish_dict
     
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """

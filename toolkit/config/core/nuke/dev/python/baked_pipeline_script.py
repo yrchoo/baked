@@ -14,6 +14,8 @@ from load_scripts.nuke_file_load import LoadNukeFile
 import publisher
 import upload_review
 
+from importlib import reload
+
 
 def init():
     load_win.OPEN_FILE.connect(open_file)
@@ -30,10 +32,13 @@ def show_tracker():
     pass
 
 def show_publisher():
+    reload(publisher)
+    global publish_win
     publish_win = publisher.Publisher(sg, "nuke")
     publish_win.show()
 
 def show_review():
+    reload(upload_review)
     review_win = upload_review.Review(sg, "nuke")
     review_win.show()
 
@@ -42,8 +47,8 @@ def show_review():
 def open_file(path):
     if nuke.root().knob("name").value():
         LoadNukeFile().load_file_with_read_node(path)
-        tracker_win.opened_file_path_list.append(path)
-        tracker_win.get_opened_file_list()
+        # tracker_win.opened_file_path_list.append(path)
+        # tracker_win.get_opened_file_list()
     else : 
         nuke.scriptOpen(path)
         nuke.root().knob("first_frame").setValue(sg.frame_start)

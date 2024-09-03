@@ -5,7 +5,7 @@ export PROJECT='baked'
 export SEQ='ABC'
 export SHOT='ABC_0010'
 export ASSET=
-export TASK='CMP'
+export TASK='ANI'
 export ASSET_TYPE=
 
         
