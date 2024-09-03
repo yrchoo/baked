@@ -7,11 +7,9 @@ except:
     from PySide2.QtCore import Qt
     from PySide2.QtGui import QFont, QBrush, QColor
 
-try:
-    from work_in_maya import MayaAPI
-except:
-    import work_in_nuke as NukeAPI
-import work_in_nuke as NukeAPI
+from work_in_maya import MayaAPI
+from work_in_nuke import NukeAPI
+
 class DepartmentWork():
     def __init__(self, treewidget, tool):
         self.tree = treewidget
