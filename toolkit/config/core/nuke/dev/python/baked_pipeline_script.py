@@ -111,8 +111,8 @@ def set_write_node_path():
         node_name = node.knob("name").value()
         new_write_file = f"{base_name.split('.')[0]}_{node_name}"
         new_write_path = f"{dir_name}{new_write_file}/{new_write_file}.exr"
-        if not os.path.exists(new_write_path):
-            os.makedirs(new_write_path)
+        if not os.path.exists(os.path.basename(new_write_path)):
+            os.makedirs(os.path.basename(new_write_path))
         node.knob("file").setValue(f"{dir_name}{new_write_path}")
 
 

@@ -49,11 +49,11 @@ def save_as_current_script(path, filename):
 def render_selected_write_nodes_with_exr(start_frame, last_frame): # 프레임 값을 굳이 받아올 필요는 없을 것 같아영*****
     """exr 포맷으로 렌더링을 해주는 메서드"""
     write_node = get_selected_write_nodes()[0]
-    start_frame = nuke.root().knob("first_frame").value() 
-    last_frame = nuke.root().knob("last_frame").value()
+    start_frame = int(nuke.root().knob("first_frame").value() )
+    last_frame = 1001
 
     if not write_node:
         return
 
-    nuke.execute(write_node, float(start_frame), float(last_frame), incr=1)
+    nuke.execute(write_node, start_frame, last_frame, incr=1)
         
