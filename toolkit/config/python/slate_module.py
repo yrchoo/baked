@@ -149,7 +149,7 @@ class Potato():
         self.gamma = "eq=gamma=1.4,"
         self.render_jpg_slate(input_path, output_path)
         
-    def find_frame(self,input):
+    def find_frame(self, input):
         probe = ffmpeg.probe(input)
         video_stream = next((stream for stream in probe['streams']if stream['codec_type'] == 'video'),None)
         self.width = int(video_stream['width'])
@@ -175,5 +175,7 @@ class Potato():
         self.bot_Middle = f"drawtext=fontfile={fontfile}:text = {bot_center}: : x=(w-tw)/2:y=h-th :fontcolor=white@0.7:fontsize={font_size}"
         self.bot_Right = f"drawtext=fontfile={fontfile}: text = {bot_right}:start_number = 1001 : x=w-tw-5:y=h-th     :fontcolor=white@0.7:fontsize={font_size}"
         self.box = f"drawbox = x=0: y=0: w={self.width}: h={box_size}: color = black: t=fill,drawbox = x=0: y={self.height-box_size}: w={self.width}: h={self.height}: color = black: t=fill,"
+
+
 p = Potato()
-p.start_jpg("/home/rapa/test2.jpg", "/home/rapa/ffmpeg_test2.jpg")
+p.make_ffmpeg_jpg("top_left", "top_center", "top_right", "bot_left", "bot_center", "bot_right", "/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/ANI/dev/maya/images/captures/ABC_0010_ANI_v007_capture.jpg", "/home/rapa/hellooo22.jpg")
