@@ -286,6 +286,48 @@ class MayaAPI():
         else:
             raise ValueError(f"지원되지 않는 이미지 형식: {format_name}")
 
+    def render_file(self, path):
+        dir_name = os.path.dirname(path)
+        base_name = os.path.basename(path)
+        file_name = base_name.split(".")[0]
+        ext = os.path.split(".")[-1]
+
+        if ext.lower() == "jpg":
+            ext = "jpeg"
+
+        print (dir_name, base_name, "+", file_name, ext)
+
+        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", os.path.join(dir_name, file_name), type="string")
+        cmds.setAttr("defaultRenderGlobals.extensionPadding", 4)
+        cmds.setAttr("defaultRenderGlobals.animation", 1)
+        cmds.setAttr("defaultRenderGlobals.putFrameBeforeExt", 1)
+
+        # 이미지 파일을 저장할 디렉토리 설정
+        cmds.workspace(fileRule=['images', dir_name])
+
+        # 파일 형식을 JPG로 설정
+        cmds.setAttr("defaultArnoldDriver.aiTranslator", ext, type="string")
+
+        # 카메라 설정 및 확인
+        cameras = cmds.ls(type='camera')
+        print(cameras)
+        for camera_ in cameras:
+            if camera_ == "renderCam":
+                cam_transform = cmds.listRelatives(camera_, parent=True)[0]
+                print(f"Checking camera transform: {cam_transform}")
+
+        # 모델 패널 설정
+        model_panels = cmds.getPanel(type="modelPanel")
+        if model_panels:
+            for panel in model_panels:
+                cmds.modelEditor(panel, e=True, displayLights="all")
+                cmds.modelEditor(panel, e=True, shadows=True)
+                cmds.modelEditor(panel, e=True, grid=False)
+                print("조명과 그림자가 활성화 되었고 그리드는 비활성화 되었습니다.")
+
+        # 특정 카메라로 보기 전환 및 Arnold 렌더링 실행
+        cmds.lookThru("renderCam")
+        cmds.arnoldRender(batch=True)
 
     def render_turntable(self, output_path, start_frame=1, end_frame=120, width=1920, height=1080):
         # 턴테이블 애니메이션을 위한 설정
