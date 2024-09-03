@@ -8,6 +8,7 @@ import json
 import subprocess
 import datetime
 import ffmpeg
+
 class MayaAPI():
     def __init__(self):
         pass
@@ -162,6 +163,8 @@ class MayaAPI():
             print("캡쳐라서 jpg 메서드로")
             bot_right = "Frame1"
             output_path = output_path.replace('.mov', '.jpg')
+            print ("!!!", input_path, output_path)
+            print (top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
             self.make_ffmpeg_jpg(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
 
         cmd = '%s -framerate %s -y -start_number %s ' % (ffmpeg, frame_rate, first)
@@ -184,24 +187,55 @@ class MayaAPI():
     def make_ffmpeg_jpg(self, top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path):
         
         self.find_frame(input_path)
-        self.input_jpg_slate(top_left, top_center, top_right, bot_left, bot_center, bot_right)
+        # self.input_jpg_slate(top_left, top_center, top_right, bot_left, bot_center, bot_right)
         
         self.gamma = "eq=gamma=1.4,"
-        self.render_jpg_slate(input_path, output_path)
+        self.render_jpg_slate(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
         
-    def find_frame(self,input):
+    def find_frame(self, input):
         probe = ffmpeg.probe(input)
         video_stream = next((stream for stream in probe['streams']if stream['codec_type'] == 'video'),None)
         self.width = int(video_stream['width'])
         self.height = int(video_stream['height'])
+
     
-    def render_jpg_slate(self, input, output):
-        (
-            ffmpeg
-            .input(input)    
-            .output(output,vf=f"{self.box}"f"{self.gamma}"f"{self.top_Left},{self.top_Middel},{self.top_Right},{self.bot_Left},{self.bot_Middle},{self.bot_Right}")
-            .run()
-        )    
+    def render_jpg_slate(self, top_left, top_center, top_right, bot_left, bot_center, bot_right, input, output):
+        font_size = self.height / 18 - 5
+        box_size = self.height / 18
+        fontfile = "/home/rapa/문서/font/waltographUI.ttf"
+        
+        # drawtext 필터를 위한 문자열 구성
+        top_left_text = f"drawtext=fontfile={fontfile}:text='{top_left}':x=5:y=2:fontcolor=white@0.7:fontsize={font_size}"
+        top_center_text = f"drawtext=fontfile={fontfile}:text='{top_center}':x=(w-tw)/2:y=2:fontcolor=white@0.7:fontsize={font_size}"
+        top_right_text = f"drawtext=fontfile={fontfile}:text='{top_right}':x=w-tw-5:y=2:fontcolor=white@0.7:fontsize={font_size}"
+        bot_left_text = f"drawtext=fontfile={fontfile}:text='{bot_left}':x=5:y=h-th:fontcolor=white@0.7:fontsize={font_size}"
+        bot_center_text = f"drawtext=fontfile={fontfile}:text='{bot_center}':x=(w-tw)/2:y=h-th:fontcolor=white@0.7:fontsize={font_size}"
+        bot_right_text = f"drawtext=fontfile={fontfile}:text='{bot_right}':x=w-tw-5:y=h-th:fontcolor=white@0.7:fontsize={font_size}"
+        
+        # drawbox 필터를 위한 문자열 구성
+        box_filter = (
+            f"drawbox=x=0:y=0:w={self.width}:h={box_size}:color=black@1:t=fill,"
+            f"drawbox=x=0:y={self.height-box_size}:w={self.width}:h={box_size}:color=black@1:t=fill"
+        )
+        
+        # 전체 필터 문자열 구성
+        vf_filter = f"{box_filter},{top_left_text},{top_center_text},{top_right_text},{bot_left_text},{bot_center_text},{bot_right_text}"
+
+        # ffmpeg 명령어 문자열 구성
+        cmd = (
+            f"ffmpeg -i {input} -vf \"{vf_filter}\" -y {output}"
+        )
+        
+        # ffmpeg 명령어 실행
+        os.system(cmd)
+            
+        # (
+        #     ffmpeg
+        #     .input(input)    
+        #     .output(output,vf=f"{self.box}"f"{self.gamma}"f"{self.top_Left},{self.top_Middel},{self.top_Right},{self.bot_Left},{self.bot_Middle},{self.bot_Right}")
+        #     .overwrite_output()
+        #     .run()
+        # )  
 
     def input_jpg_slate(self, top_left, top_center, top_right, bot_left, bot_center, bot_right):
         
@@ -220,7 +254,63 @@ class MayaAPI():
         width = cmds.getAttr('defualtResolution.width')
         height = cmds.getAttr('defaultResolution.height')
         return width, height
+    
 
+    def render_to_multiple_formats(self, output_path, width=1920, height=1080):
+
+        # 공통 렌더링 설정
+        cmds.setAttr("defaultResolution.width", width)
+        cmds.setAttr("defaultResolution.height", height)
+        
+        # 현재 뷰의 카메라 가져오기
+        current_camera = cmds.modelPanel(cmds.getPanel(withFocus=True), q=True, camera=True)
+        
+        # 렌더링
+        ext = os.path.splitext(output_path)[1]
+        self.set_image_format(ext)
+        cmds.render(current_camera, x=width, y=height, f=output_path)
+
+    def set_image_format(format_name):
+        """이미지 형식을 설정하는 함수"""
+        format_dict = {
+            ".jpg": 8,
+            ".jpeg": 8,
+            ".exr": 51,
+            ".png": 32,
+            ".tiff": 3,
+            ".tif": 3,
+            }
+        
+        if format_name.lower() in format_dict:
+            cmds.setAttr("defaultRenderGlobals.imageFormat", format_dict[format_name.lower()])
+        else:
+            raise ValueError(f"지원되지 않는 이미지 형식: {format_name}")
+
+
+    def render_turntable(self, output_path, start_frame=1, end_frame=120, width=1920, height=1080):
+        # 턴테이블 애니메이션을 위한 설정
+        ext = os.path.splitext(output_path)[1]
+        print("******", ext)
+        self.set_image_format(ext)
+        
+        cmds.setAttr("defaultResolution.width", width)
+        cmds.setAttr("defaultResolution.height", height)
+        
+        # 카메라 설정
+        camera = cmds.camera()[0]
+        cmds.setAttr(camera + ".translateX", 0)
+        cmds.setAttr(camera + ".translateY", 0)
+        cmds.setAttr(camera + ".translateZ", 30)  # 모델에서 적절한 거리로 조정
+        
+        # 카메라를 중심으로 360도 회전하는 애니메이션 설정
+        cmds.setKeyframe(camera, attribute="rotateY", t=start_frame, v=0)
+        cmds.setKeyframe(camera, attribute="rotateY", t=end_frame, v=360)
+        cmds.playbackOptions(min=start_frame, max=end_frame)
+        
+        # 턴테이블 렌더링 수행
+        for frame in range(start_frame, end_frame + 1):
+            cmds.currentTime(frame)
+            cmds.render(camera, x=width, y=height, f=output_path)
         
     # def make_ffmpeg(self, input_path, output_path, project_name, start_frame=None, last_frame=None):
     #     print ("**********************************************************************************")
@@ -581,3 +671,4 @@ class MayaAPI():
 
 
         # make_mov_with_slate_data(path, first_frame, last_frame)
+

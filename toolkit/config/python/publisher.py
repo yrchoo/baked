@@ -363,8 +363,10 @@ class Publisher(QWidget):
         elif button.text() == "Capture":
             image_path = self._get_path_using_template("capture")
         elif button.text() == "Render":
-            ext = self.work.set_render_ext()
+            ext = self.dep_class.set_render_ext()
             image_path = self._get_path_using_template("render", ext) # 부서별로 펍할 external 입력받기
+
+        print ("???", image_path)
 
         path = self._check_validate(image_path)    
         files = glob.glob(f"{path}/*")
@@ -388,8 +390,12 @@ class Publisher(QWidget):
                     self.preview_info = {'input path' : image_path,
                                     'start frame' : 1,
                                     'last frame' : 1}
-                    pass
+                    break
+                recent_image_file = None
 
+        if not recent_image_file: 
+            return
+            
         # ui에 썸네일 미리보여주기
         pixmap = QPixmap(recent_image_file) 
         scaled_pixmap = pixmap.scaled(288, 162) 
@@ -436,9 +442,10 @@ class Publisher(QWidget):
             self._show_thumbnail(self.ui.radioButton_capture)
 
         elif self.ui.radioButton_render.isChecked():
-            ext = self.work.set_render_ext()
+            ext = self.dep_class.set_render_ext()
             image_path = self._get_path_using_template("render", ext)
-            self._check_validate(image_path)  
+            self._check_validate(image_path)
+            self.dep_class.render_data(image_path)  
             self._show_thumbnail(self.ui.radioButon_render)
     
     ######################### PUBLISH 버튼 누르면 발생하는 이벤트 ############################
@@ -503,12 +510,20 @@ class Publisher(QWidget):
     def _apply_ffmpeg(self, input_path, project_name):
         """ (3) ffmpeg 만드는 메서드"""
         """ 예린님 코드로 연결시키기"""
-        output_path = self._get_path_using_template("ffmpeg")
+
+        if os.path.splitext(input_path)[1] == ".jpg":
+            output_path = self._get_path_using_template("ffmpeg", "jpg")
+            self.preview_info['output_path'] = output_path
+            self.preview_info['output_path_jpg'] = output_path
+        else:
+            output_path = self._get_path_using_template("ffmpeg")
+            self.preview_info['output_path'] = output_path
+            self.preview_info['output_path_jpg'] = self._export_slate_image(output_path)
+
         start_frame = self.preview_info['start frame']
         last_frame = self.preview_info['last frame']
         self.maya_api.make_ffmpeg(start_frame, last_frame, input_path, output_path, project_name)
-        self.preview_info['output_path'] = output_path
-        self.preview_info['output_path_jpg'] = self._export_slate_image(output_path)
+
         print(f"%%%%%%%%%%%%%%%%%%%%%{self.preview_info}")
 
     def _export_slate_image(self,  input_mov):

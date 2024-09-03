@@ -75,7 +75,7 @@ paths:
   
   # Rendered output
   maya_sequence_render_mov:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/{shot}_{task}_v{version}.mov'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/mov/{shot}_{task}_v{version}.mov'
   maya_sequence_render_exr:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/images/exr/{shot}_{task}_v{version}/{shot}_{task}_v{version}.####.exr'
   maya_sequence_render_jpg:
@@ -91,10 +91,10 @@ paths:
       definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/images/{shot}_{task}_v{version}_playblast/{shot}_{task}_v{version}.%04d.jpg'
   # Ffmpeg_output
   maya_sequence_ffmpeg:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/{shot}_{task}_v{version}_slate.mov'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/ffmpeg/{shot}_{task}_v{version}_slate.mov'
   # Ffmpeg_output
   maya_sequence_ffmpeg_jpg:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/{shot}_{task}_v{version}_slate.jpg'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/images/{shot}_{task}_v{version}_slate.jpg'
 
   
 
@@ -122,16 +122,16 @@ paths:
   nuke_sequence_render_exr:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/exr/{shot}_{task}_v{version}/{shot}_{task}_v{version}.####.exr'
   nuke_sequence_render_jpg:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/images/jpg/{shot}_{task}_v{version}.####.jpg'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/images/jpg/{shot}_{task}_v{version}/{shot}_{task}_v{version}.####.jpg'
   nuke_sequence_render_png:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/images/png/{shot}_{task}_v{version}.####.png'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/images/png/{shot}_{task}_v{version}/{shot}_{task}_v{version}.####.png'
 
   # Ffmpeg output
   nuke_sequence_ffmpeg:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/ffmpeg/{shot}_{task}_v{version}_slate.mov'
   # Capture output
   nuke_sequence_capture:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/movies/imgaes/captures/{shot}_{task}_v{version}_capture.jpg'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/imgaes/captures/{shot}_{task}_v{version}_capture.jpg'
 
 
   ##########################################################################################
@@ -161,13 +161,13 @@ paths:
   
   # Rendered output
   maya_asset_render_mov:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/movies/{asset}_{task}_v{version}.mov'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/movies/mov/{asset}_{task}_v{version}.mov'
   maya_asset_render_exr:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/exr/{asset}_{task}_v{version}.####.exr'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/exr/{asset}_{task}_v{version}/{asset}_{task}_v{version}.####.exr'
   maya_asset_render_jpg:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/jpg/{asset}_{task}_v{version}.####.jpg'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/jpg/{asset}_{task}_v{version}/{asset}_{task}_v{version}.####.jpg'
   maya_asset_render_png:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/png/{asset}_{task}_v{version}.####.png'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/png/{asset}_{task}_v{version}/{asset}_{task}_v{version}.####.png'
   
   # The location of published shader ma files
   maya_asset_shader:
