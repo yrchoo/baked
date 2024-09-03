@@ -159,8 +159,10 @@ class MayaAPI():
         bot_right = frame_cmd
 
         if last_frame == 1:
+            print("캡쳐라서 jpg 메서드로")
             bot_right = "Frame1"
-            self.make_ffmpeg_jpg(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path, project_name)
+            output_path = output_path.replace('.mov', '.jpg')
+            self.make_ffmpeg_jpg(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
 
         cmd = '%s -framerate %s -y -start_number %s ' % (ffmpeg, frame_rate, first)
         cmd += '-i %s' % (input_path)
@@ -193,7 +195,7 @@ class MayaAPI():
         self.width = int(video_stream['width'])
         self.height = int(video_stream['height'])
     
-    def render_jpg_slate(self,input,output):
+    def render_jpg_slate(self, input, output):
         (
             ffmpeg
             .input(input)    
@@ -213,6 +215,12 @@ class MayaAPI():
         self.bot_Middle = f"drawtext=fontfile={fontfile}:text = {bot_center}: : x=(w-tw)/2:y=h-th :fontcolor=white@0.7:fontsize={font_size}"
         self.bot_Right = f"drawtext=fontfile={fontfile}: text = {bot_right}:start_number = 1001 : x=w-tw-5:y=h-th     :fontcolor=white@0.7:fontsize={font_size}"
         self.box = f"drawbox = x=0: y=0: w={self.width}: h={box_size}: color = black: t=fill,drawbox = x=0: y={self.height-box_size}: w={self.width}: h={self.height}: color = black: t=fill,"
+
+    def get_undistortion_size(self):
+        width = cmds.getAttr('defualtResolution.width')
+        height = cmds.getAttr('defaultResolution.height')
+        return width, height
+
         
     # def make_ffmpeg(self, input_path, output_path, project_name, start_frame=None, last_frame=None):
     #     print ("**********************************************************************************")

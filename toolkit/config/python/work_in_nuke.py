@@ -15,13 +15,12 @@ class NukeAPI():
         nodes = nuke.selectedNodes()
         write_nodes = []
         for node in nodes:
-            if node.Class() == 'Write':  
-                write_nodes.append(node)
+            if node.Class() == 'Write': 
+                write_node = node.knob("name").value()
+                write_nodes.append(write_node)
+
         if not write_nodes:  
             print("there is no write nodes")
-        else:
-            for node in write_nodes:
-                print(node.name()) 
         return write_nodes
    
     def get_file_name(self):
@@ -46,7 +45,6 @@ class NukeAPI():
             return True
         except Exception as e:
             return False
-
         
     def render_selected_write_nodes_with_exr(self, start_frame, last_frame):
         """exr 포맷으로 렌더링을 해주는 메서드"""

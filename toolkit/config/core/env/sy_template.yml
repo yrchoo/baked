@@ -85,7 +85,7 @@ paths:
   
   # Capture output
   maya_sequence_capture:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/images/captures/{asset}_{task}_v{version}.jpg'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/images/captures/{shot}_{task}_v{version}_capture.jpg'
   # Playblast output
   maya_sequence_playblast:
       definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/images/{shot}_{task}_v{version}_playblast/{shot}_{task}_v{version}.%04d.jpg'
