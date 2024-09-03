@@ -7,8 +7,10 @@ except:
     from PySide2.QtCore import Qt
     from PySide2.QtGui import QFont, QBrush, QColor
 
-from work_in_maya import MayaAPI
-from work_in_nuke import NukeAPI
+try:
+    from work_in_maya import MayaAPI
+except:
+    from work_in_nuke import NukeAPI
 
 class DepartmentWork():
     def __init__(self, treewidget, tool):

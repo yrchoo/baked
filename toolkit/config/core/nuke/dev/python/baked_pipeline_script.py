@@ -87,7 +87,7 @@ sg = ShotGridDataFetcher()
 load_win = loader.Loader(sg, "nuke")
 save_win = save.SaveFile()
 
-publish_win = publisher.Publisehr(sg, "nuke")
+publish_win = publisher.Publisher(sg, "nuke")
 review_win = upload_review.Review(sg, "nuke")
 tracker_win = file_tracker.Tracker(sg, read_node_file_list())
 
