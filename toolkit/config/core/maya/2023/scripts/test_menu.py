@@ -53,21 +53,32 @@ def open_file(path):
     else :
         current_file_path = path
         # 해상도 설정
-        cmds.setAttr('defaultResolution.width', int(sg.width))
-        cmds.setAttr('defaultResolution.height', int(sg.height))
+        if sg.width and sg.height:
+            cmds.setAttr('defaultResolution.width', sg.width)
+            cmds.setAttr('defaultResolution.height', sg.height)
 
         # 언디스토션 사이즈 설정
-        cmds.setAttr('defaultResolution.deviceAspectRatio', sg.undistortion_width / sg.undistortion_height)
-        cmds.setAttr('defaultResolution.pixelAspect', 1)
+        if sg.undistortion_width and sg.undistortion_height:
+            cmds.setAttr('defaultResolution.deviceAspectRatio', sg.undistortion_width / sg.undistortion_height)
+            cmds.setAttr('defaultResolution.pixelAspect', 1)
 
         # 프레임 설정
-        cmds.playbackOptions(min=sg.frame_start, max=sg.frame_end)
-        cmds.currentTime(sg.frame_start)
+        if sg.frame_start and sg.frame_end:
+            cmds.playbackOptions(min=sg.frame_start, max=sg.frame_end)
+            
+            # cmds.currentTime(sg.frame_start)
+            cmds.setAttr('defaultRenderGlobals.startFrame', sg.frame_start)
+            cmds.setAttr('defaultRenderGlobals.endFrame', sg.frame_end)
+
+        else:
+            cmds.playbackOptions(min=1001, max=1010)
+            # cmds.currentTime(sg.frame_start)
+            
+            cmds.setAttr('defaultRenderGlobals.startFrame', "1001")
+            cmds.setAttr('defaultRenderGlobals.endFrame', "1010")
 
         # 렌더 프레임 설정
-        cmds.setAttr('defaultRenderGlobals.startFrame', sg.frame_start)
-        cmds.setAttr('defaultRenderGlobals.endFrame', sg.frame_end)
-
+        
         cmds.file(path, open=True, force=True)
 
     _check_dir(current_file_path)
