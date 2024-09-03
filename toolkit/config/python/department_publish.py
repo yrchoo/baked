@@ -125,7 +125,7 @@ class MOD(DepartmentWork):
         return publish_dict
     
     def render_data(self, render_path):
-        MayaAPI.render_turntable(self, render_path)
+        MayaAPI.render_file(self, render_path)
 
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """

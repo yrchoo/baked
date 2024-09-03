@@ -53,8 +53,8 @@ def open_file(path):
     else :
         current_file_path = path
         # 해상도 설정
-        cmds.setAttr('defaultResolution.width', sg.resolution_width)
-        cmds.setAttr('defaultResolution.height', sg.resolution_height)
+        cmds.setAttr('defaultResolution.width', int(sg.width))
+        cmds.setAttr('defaultResolution.height', int(sg.height))
 
         # 언디스토션 사이즈 설정
         cmds.setAttr('defaultResolution.deviceAspectRatio', sg.undistortion_width / sg.undistortion_height)
