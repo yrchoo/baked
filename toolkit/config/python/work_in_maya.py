@@ -1,5 +1,8 @@
-import maya.cmds as cmds 
-import maya.mel as mel 
+try:
+    import maya.cmds as cmds 
+    import maya.mel as mel 
+except:
+    pass
 import os
 import json
 import subprocess

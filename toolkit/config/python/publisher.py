@@ -19,8 +19,10 @@ from department_publish import DepartmentWork, MOD, RIG
 import shotgrid.fetch_shotgrid_data
 from importlib import reload
 from capture_module import SubWindow_Open, MakeScreenCapture
-from work_in_maya import MayaAPI
-from work_in_nuke import NukeAPI
+try:
+    from work_in_maya import MayaAPI
+except:
+    from work_in_nuke import NukeAPI
 import work_in_maya
 import sys
 import os
@@ -214,6 +216,7 @@ class Publisher(QWidget):
             if info['sg_task'] in [self.department, None]:
                 filtered_types.append(info['code'])
                 self.file_type_ext[info['code']] = info['sg_ext']
+        print ("&&&", filtered_types)
         self.ui.comboBox_type.clear()
         self.ui.comboBox_type.addItems(filtered_types)
         
@@ -297,6 +300,7 @@ class Publisher(QWidget):
         self.task_dict = {} # mod:[Asset]  Modeling
         self.task_dict.update(self.asset_steps_dict)
         self.task_dict.update(self.shot_steps_dict)
+        print (self.task_dict)
 
     def _show_link_entity(self):
         """

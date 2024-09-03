@@ -7,9 +7,11 @@ except:
     from PySide2.QtCore import Qt
     from PySide2.QtGui import QFont, QBrush, QColor
 
-from work_in_maya import MayaAPI
+try:
+    from work_in_maya import MayaAPI
+except:
+    from work_in_nuke import NukeAPI
 from work_in_nuke import NukeAPI
-
 class DepartmentWork():
     def __init__(self, treewidget, tool):
         self.tree = treewidget
@@ -280,7 +282,8 @@ class MM(DepartmentWork):
 class CMP(DepartmentWork):
     def make_data(self):
         """트리 위젯에 내보내는 데이터 모아두기"""
-        selected_data = NukeAPI._get_lighting_layers()
+        selected_data = NukeAPI.get_selected_write_nodes(self)
+        print ("###", selected_data)
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         try:
             for data in selected_data:
