@@ -9,31 +9,32 @@ import os
 import loader
 from fetch_shotgrid_data import ShotGridDataFetcher
 import save
-import file_tracker
+# import file_tracker
 from load_scripts.nuke_file_load import LoadNukeFile
 import publisher
 import upload_review
 
 
 def init():
-    show_publisher()
-    show_review()
     load_win.OPEN_FILE.connect(open_file)
     save_win.SAVE_FILE.connect(save_file)
-    tracker_win.RELOAD_FILE.connect(reload_file)
-    tracker_win.LOAD_FILE.connect(LoadNukeFile().load_file_with_read_node)
+    # tracker_win.RELOAD_FILE.connect(reload_file)
+    # tracker_win.LOAD_FILE.connect(LoadNukeFile().load_file_with_read_node)
 
 def show_loader():
     load_win.show()
 
 def show_tracker():
     # tracker에 존재하는 리스트를 갱신해줘야함
-    tracker_win.show()
+    # tracker_win.show()
+    pass
 
 def show_publisher():
+    publish_win = publisher.Publisher(sg, "nuke")
     publish_win.show()
 
 def show_review():
+    review_win = upload_review.Review(sg, "nuke")
     review_win.show()
 
 
@@ -87,9 +88,8 @@ sg = ShotGridDataFetcher()
 load_win = loader.Loader(sg, "nuke")
 save_win = save.SaveFile()
 
-publish_win = publisher.Publisehr(sg, "nuke")
-review_win = upload_review.Review(sg, "nuke")
-tracker_win = file_tracker.Tracker(sg, read_node_file_list())
+
+# tracker_win = file_tracker.Tracker(sg, read_node_file_list())
 
 init()
 if nuke.root().knob("name").value() == "" : 
