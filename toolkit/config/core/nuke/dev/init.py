@@ -19,8 +19,9 @@ nuke.pluginAddPath("./lib/python3.9/site-packages")
 nuke.pluginAddPath("./lut")
 nuke.pluginAddPath("./python")
 nuke.pluginAddPath("./plugins")
+# nuke.pluginAddPath("/home/rapa/baked/toolkit/config/python")
 
 import sys
-sys.path.append("/home/rapa/baked/toolkit/config/python/")
+sys.path.append("/home/rapa/baked/toolkit/config/python")
 sys.path.append("/home/rapa/baked/toolkit/config/python/shotgrid")
 

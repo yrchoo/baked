@@ -7,10 +7,8 @@ except:
     from PySide2.QtCore import Qt
     from PySide2.QtGui import QFont, QBrush, QColor
 
-try:
-    from work_in_maya import MayaAPI
-except:
-    from work_in_nuke import NukeAPI
+from work_in_maya import MayaAPI
+from work_in_nuke import NukeAPI
 
 class DepartmentWork():
     def __init__(self, treewidget, tool):
@@ -82,7 +80,7 @@ class DepartmentWork():
         if self.tool == "maya":
             return MayaAPI.get_file_name(self)
         elif self.tool == "nuke":
-            return NukeAPI.get_file_name(self)
+            return NukeAPI.get_file_name()
         
     """ 부모클래스에 디폴트 값으로 렌더, 캡쳐, 플레이블라스트 확장자를 선언하고, 
         만약 부서별로 다른 확장자로 렌더/플레이블라스트를 export 하고 싶을 때 
@@ -99,7 +97,7 @@ class DepartmentWork():
         if self.tool == "maya":
             MayaAPI.save_file(self, new_path)
         elif self.tool == "nuke":
-            NukeAPI.save_file(self, new_path)
+            NukeAPI.save_file(new_path)
         print (f"&&&&&&&&&&&&&&&&& {new_path}")
     
     def save_as_alembic(self, alembic_path, file):
@@ -124,6 +122,9 @@ class MOD(DepartmentWork):
         self.put_data_in_tree(publish_dict)
         return publish_dict
     
+    def render_data(self, render_path):
+        MayaAPI.render_file(self, render_path)
+
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
         MayaAPI.modeling_publish_set(self)
@@ -151,10 +152,9 @@ class RIG(DepartmentWork):
         self.put_data_in_tree(publish_dict)
         return publish_dict
     
-    def get_ready_for_publish(self):
-        """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
-        pass
-    
+    def render_data(self, render_path):
+        MayaAPI.render_to_multiple_formats(render_path)
+
     def save_data(self, publish_dict):
         """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
         scene_path = publish_dict[self.get_current_file_name()]['path']
@@ -179,14 +179,17 @@ class LDV(DepartmentWork):
         self.put_data_in_tree(lookdev_list)
         return publish_dict
 
-    def set_render_ext(self):
+    def set_render_ext(self): #######
         """ 렌더 확장자 정해주는 메서드 """
         render_ext_dict = {}
         render_ext_dict["pub"] = "tiff"
         render_ext_dict["review"] = "jpg"
         return render_ext_dict
     
-    def set_scene_ext(self):
+    def render_data(self, render_path):
+        MayaAPI.render_to_multiple_formats(render_path)
+    
+    def set_scene_ext(self): ##### 쉐이더 제이슨 경로
         return "ma"
     
     def save_data(self, publish_dict):
@@ -196,7 +199,8 @@ class LDV(DepartmentWork):
             if file['file type'] == 'Model Cache':
                 self.save_as_alembic(file['path'])
         return publish_dict
-    
+
+
 class ANI(DepartmentWork):
     def make_data(self):
         """ 선택된 object/node 가져오는 메서드 """
@@ -208,10 +212,14 @@ class ANI(DepartmentWork):
         except: 
             pass
         self.put_data_in_tree(publish_dict)
+        return publish_dict
     
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
+    
+    def render_data(self, path):
+        MayaAPI.render_to_multiple_formats(self, path)
     
     def save_data(self, publish_dict):
         scene_path = publish_dict[self.get_current_file_name()]['path']
@@ -239,15 +247,17 @@ class LGT(DepartmentWork):
                 pass
             self.put_data_in_tree(publish_dict)
         elif self.tool == "nuke":
-            selected_data = NukeAPI.get_selected_write_nodes(self)
+            selected_data = NukeAPI.get_selected_write_nodes()
             publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
             try:
                 for data in selected_data:
                     publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
             except:
                 pass
+            self.put_data_in_tree(publish_dict)
         return publish_dict
-    
+
+
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
@@ -263,26 +273,46 @@ class LGT(DepartmentWork):
                     print ("##", info['path'])
                     publish_dict = MayaAPI.render_all_layers_to_exr(self, file, publish_dict)
                 elif self.tool == "nuke":
-                    publish_dict = NukeAPI.render_selected_write_nodes_with_exr(self, 1001, 1096)
+                    publish_dict = NukeAPI.render_selected_write_nodes_with_exr(1001, 1096)
             elif 'Precomp' in info['file type']:
                 scene_path = publish_dict[self.get_current_file_name()]['path']
                 self.save_scene_file(scene_path)
         return publish_dict
-    
+
     # 라이팅 누크쪽
 
 class MM(DepartmentWork):
     def make_data(self):
-        pass
+        selected_data = self.check_selection()
+        publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
+        try:
+            for data in selected_data:
+                publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
+        except: 
+            pass
+        self.put_data_in_tree(publish_dict)
+        return publish_dict
     
     def set_render_ext(self):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
+    
+    def save_data(self, publish_dict):
+        scene_path = publish_dict[self.get_current_file_name()]['path']
+        self.save_scene_file(scene_path)
+        for file, info in publish_dict.items():
+            if 'Camera' in file['file type']:
+                self.save_as_alembic(info['path'])
+            elif "Scene" in file['file type']:
+                self.save_scene_file(info['path'])
+        return publish_dict
+    
 
 class CMP(DepartmentWork):
     def make_data(self):
         """트리 위젯에 내보내는 데이터 모아두기"""
-        selected_data = NukeAPI._get_lighting_layers()
+        selected_data = NukeAPI.get_selected_write_nodes()
+        print ("###", selected_data)
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         try:
             for data in selected_data:

@@ -1,11 +1,9 @@
 #!/bin/sh
  
-export NAME='Inhee Choi'
+export NAME='Yerin Choo'
 export PROJECT='baked'
-export SEQ=
-export SHOT=
-export ASSET='Melon'
-export TASK='MOD'
-export ASSET_TYPE='Character'
-
-        
+export SEQ='ABC'
+export SHOT='ABC_0010'
+export ASSET=
+export TASK='LGT'
+export ASSET_TYPE=

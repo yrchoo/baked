@@ -1,3 +1,7 @@
+
+
+
+
 try :
     from PySide6.QtCore import Slot
 except:
@@ -14,10 +18,10 @@ from load_scripts.nuke_file_load import LoadNukeFile
 import publisher
 import upload_review
 
+from importlib import reload
+
 
 def init():
-    show_publisher()
-    show_review()
     load_win.OPEN_FILE.connect(open_file)
     save_win.SAVE_FILE.connect(save_file)
     tracker_win.RELOAD_FILE.connect(reload_file)
@@ -28,12 +32,18 @@ def show_loader():
 
 def show_tracker():
     # tracker에 존재하는 리스트를 갱신해줘야함
-    tracker_win.show()
+    # tracker_win.show()
+    pass
 
 def show_publisher():
+    reload(publisher)
+    global publish_win
+    publish_win = publisher.Publisher(sg, "nuke")
     publish_win.show()
 
 def show_review():
+    reload(upload_review)
+    review_win = upload_review.Review(sg, "nuke")
     review_win.show()
 
 
@@ -45,23 +55,30 @@ def open_file(path):
         tracker_win.get_opened_file_list()
     else : 
         nuke.scriptOpen(path)
-        nuke.root().knob("first_frame").setValue(sg.frame_start)
-        nuke.root().knob("last_frame").setValue(sg.frame_last)
-        new_format = f"{sg.width} {sg.height} 1.0 {sg.project['name']}_{sg.height}"
-        nuke.addFormat(new_format)
-        nuke.root().knob("foramt").setValue(f"{sg.project['name']}_{sg.height}")
+        if sg.frame_start :
+            nuke.root().knob("first_frame").setValue(sg.frame_start)
+        else:
+            nuke.root().knob("first_frame").setValue(1001)
+        if sg.frame_last:
+            nuke.root().knob("last_frame").setValue(sg.frame_last)
+        else:
+            nuke.root().knob("last_frame").setValue(nuke.root().knob("first_frame").value() + 100)
+        
+        if sg.width and sg.height:
+            new_format = f"{sg.width} {sg.height} 1.0 {sg.project['name']}_{sg.height}"
+            nuke.addFormat(new_format)
+            nuke.root().knob("format").setValue(f"{sg.project['name']}_{sg.height}")
+            
+def create_undistortion_node():
+    # Undistortion을 위한 노드 생성
+    lens_distortion_node = nuke.createNode('LensDistortion')
+    lens_distortion_node['invertDistortion'].setValue(True)
 
-        # Undistortion을 위한 노드 생성
-        lens_distortion_node = nuke.createNode('LensDistortion')
-        lens_distortion_node['invertDistortion'].setValue(True)
+    reformat_node = nuke.createNode('Reformat')
+    reformat_node['resize'].setValue('none')  # Resize 옵션을 None으로 설정 (리사이즈 방지)
+    reformat_node['box_width'].setValue(sg.undistortion_width)
+    reformat_node['box_height'].setValue(sg.undistortion_height)
 
-        reformat_node = nuke.createNode('Reformat')
-        reformat_node['resize'].setValue('none')  # Resize 옵션을 None으로 설정 (리사이즈 방지)
-        reformat_node['box_width'].setValue(sg.undistortion_width)
-        reformat_node['box_height'].setValue(sg.undistortion_height)
-
-
-    # tracker에 존재하는 리스트를 갱신해줘야함
 
 @ Slot()
 def reload_file(cur_path, new_path):
@@ -83,12 +100,25 @@ def read_node_file_list():
 
     return open_file_list
 
+def set_write_node_path():
+    cur_path = nuke.root().knob("name").value()
+    dir_name = os.path.dirname(cur_path)
+    dir_name = dir_name.replace('/scenes', '/images/')
+    base_name, ext = os.path.splitext(os.path.basename(cur_path))
+    
+    nodes = nuke.allNodes("Write")
+    for node in nodes:
+        node_name = node.knob("name").value()
+        new_write_file = f"{base_name.split('.')[0]}_{node_name}"
+        new_write_path = f"{dir_name}{new_write_file}/{new_write_file}.exr"
+        if not os.path.exists(os.path.basename(new_write_path)):
+            os.makedirs(os.path.basename(new_write_path))
+        node.knob("file").setValue(f"{dir_name}{new_write_path}")
+
+
 sg = ShotGridDataFetcher()
 load_win = loader.Loader(sg, "nuke")
 save_win = save.SaveFile()
-
-publish_win = publisher.Publisher(sg, "nuke")
-review_win = upload_review.Review(sg, "nuke")
 tracker_win = file_tracker.Tracker(sg, read_node_file_list())
 
 init()

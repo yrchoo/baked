@@ -1,17 +1,13 @@
 try :
-    from PySide6.QtWidgets import QApplication, QWidget, QTreeWidgetItem
-    from PySide6.QtWidgets import QTreeWidget, QLabel, QHBoxLayout
-    from PySide6.QtWidgets import QVBoxLayout
+    from PySide6.QtWidgets import QApplication, QWidget
     from PySide6.QtUiTools import QUiLoader
-    from PySide6.QtCore import QFile, Qt, Signal
+    from PySide6.QtCore import QFile, Signal
     from PySide6.QtGui import QPixmap, QColor
 
 except:
-    from PySide2.QtWidgets import QApplication, QWidget, QTreeWidgetItem
-    from PySide2.QtWidgets import QTreeWidget, QLabel, QHBoxLayout
-    from PySide2.QtWidgets import QVBoxLayout
+    from PySide2.QtWidgets import QApplication, QWidget
     from PySide2.QtUiTools import QUiLoader
-    from PySide2.QtCore import QFile, Qt, Signal
+    from PySide2.QtCore import QFile, Signal
     from PySide2.QtGui import QPixmap, QColor
 
 import os
