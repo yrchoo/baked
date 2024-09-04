@@ -14,8 +14,7 @@ def get_selected_write_nodes():
     if len(nodes) == 1:
         node = nodes[0]
         if node.Class() == 'Write': 
-            write_node = node.knob("name").value()
-            write_nodes.append(write_node)
+            write_nodes.append(node)
 
     if not write_nodes:  
         print("there is no write nodes")
@@ -46,11 +45,14 @@ def save_as_current_script(path, filename):
     except Exception as e:
         return False
     
-def render_selected_write_nodes_with_exr(start_frame, last_frame): # 프레임 값을 굳이 받아올 필요는 없을 것 같아영*****
+def render_selected_write_nodes_with_exr(path, start_frame, last_frame): # 프레임 값을 굳이 받아올 필요는 없을 것 같아영*****
     """exr 포맷으로 렌더링을 해주는 메서드"""
     write_node = get_selected_write_nodes()[0]
+    print(path)
+    write_node.knob("file").setValue(path)
+
     start_frame = int(nuke.root().knob("first_frame").value() )
-    last_frame = 1001
+    last_frame = int(nuke.root().knob("last_frame").value() )
 
     if not write_node:
         return

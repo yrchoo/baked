@@ -55,19 +55,7 @@ def open_file(path):
         tracker_win.get_opened_file_list()
     else : 
         nuke.scriptOpen(path)
-        if sg.frame_start :
-            nuke.root().knob("first_frame").setValue(sg.frame_start)
-        else:
-            nuke.root().knob("first_frame").setValue(1001)
-        if sg.frame_last:
-            nuke.root().knob("last_frame").setValue(sg.frame_last)
-        else:
-            nuke.root().knob("last_frame").setValue(nuke.root().knob("first_frame").value() + 100)
-        
-        if sg.width and sg.height:
-            new_format = f"{sg.width} {sg.height} 1.0 {sg.project['name']}_{sg.height}"
-            nuke.addFormat(new_format)
-            nuke.root().knob("format").setValue(f"{sg.project['name']}_{sg.height}")
+        setup_nuke_project()
             
 def create_undistortion_node():
     # Undistortion을 위한 노드 생성
@@ -110,10 +98,33 @@ def set_write_node_path():
     for node in nodes:
         node_name = node.knob("name").value()
         new_write_file = f"{base_name.split('.')[0]}_{node_name}"
-        new_write_path = f"{dir_name}{new_write_file}/{new_write_file}.exr"
+        new_write_path = f"{dir_name}{new_write_file}/{new_write_file}.####.exr"
         if not os.path.exists(os.path.basename(new_write_path)):
             os.makedirs(os.path.basename(new_write_path))
         node.knob("file").setValue(f"{dir_name}{new_write_path}")
+
+def setup_nuke_project():
+    nuke.root().knob("colorManagement").setValue("OCIO")
+    nuke.root().knob("OCIO_config").setValue("fn-nuke_cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+
+    if sg.frame_start :
+            nuke.root().knob("first_frame").setValue(sg.frame_start)
+    else:
+        nuke.root().knob("first_frame").setValue(1001)
+    first_frame = nuke.root().knob("first_frame").value()
+    print(f"Set Start Frame to {first_frame}")
+    if sg.frame_last:
+        nuke.root().knob("last_frame").setValue(sg.frame_last)
+    else:
+        nuke.root().knob("last_frame").setValue(nuke.root().knob("first_frame").value() + 100)
+    last_frame = nuke.root().knob("last_frame").value()
+    print(f"Set Last Frame to {last_frame}")
+    
+    if sg.width and sg.height:
+        new_format = f"{sg.width} {sg.height} 1.0 {sg.project['name']}_{sg.height}"
+        nuke.addFormat(new_format)
+        nuke.root().knob("format").setValue(f"{sg.project['name']}_{sg.height}")
+        print(f"Set Format to {new_format}")
 
 
 sg = ShotGridDataFetcher()
