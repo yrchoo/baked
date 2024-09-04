@@ -603,6 +603,7 @@ class Publisher(QWidget):
         print("#####################################")
         print(version, task, description, preview_path, shot, asset)
         version = self.sg.create_new_version_entity(version, task, description, preview_path, shot, asset)
+        # 호출 JSON().save_json(pub_data)
         return version
 
     def _create_published_file(self, version):

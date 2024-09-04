@@ -19,7 +19,7 @@ def webhook():
     data = request.json
     print(f"Received data: {data}")
 
-    cur_daytime = datetime.today().strftime("%Y-%M-%d_%H:%M:%S")
+    cur_daytime = datetime.today().strftime("%Y-%m-%d_%H:%M:%S")
     out_path = f"/home/rapa/baked/toolkit/config/python/shotgrid/new_data_json/{cur_daytime}.json"
 
     with open(out_path, "w", encoding="UTF-8") as f:
