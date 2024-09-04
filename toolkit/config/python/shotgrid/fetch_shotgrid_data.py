@@ -332,8 +332,9 @@ class ShotGridDataFetcher():
         return version
 
     def update_version_for_review(self, version, task_name, description, review_movie_path, shot_code=None, asset =None):
-
-        version_ent = self.create_new_version_entity(version, task_name, description, shot_code, asset)
+        print("_______________________________________________________________________________")
+        print(version, task_name, description, review_movie_path, shot_code, asset)
+        version_ent = self.create_new_version_entity(version, task_name, description, review_movie_path, shot_code, asset)
         
         data = {"description": description}
 

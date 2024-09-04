@@ -7,4 +7,3 @@ export SHOT=
 export ASSET='Choo'
 export TASK='MOD'
 export ASSET_TYPE='Character'
-        

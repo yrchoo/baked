@@ -17,11 +17,13 @@ import os
 
 class DepartmentWork():
     def __init__(self, treewidget, tool):
+        print (treewidget)
         self.tree = treewidget
         self.tool = tool
-        self.maya = MayaAPI
+        self.maya = MayaAPI()
         # self.nuke = NukeAPI
-        self.initial_tree_setting()
+        if treewidget:
+            self.initial_tree_setting()
         
     def initial_tree_setting(self):
         """트리위젯 초기 설정"""
@@ -130,7 +132,10 @@ class MOD(DepartmentWork):
         return publish_dict
     
     def render_data(self, render_path):
-        MayaAPI.render_turntable(render_path)
+        # self.maya_api = 
+        print (render_path)
+        print (os.path.splitext(render_path))
+        self.maya.render_turntable(render_path)
 
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
@@ -160,8 +165,7 @@ class RIG(DepartmentWork):
         return publish_dict
     
     def render_data(self, render_path):
-        self.maya_api = MayaAPI()
-        self.maya_api.render_turntable(render_path)
+        self.maya.render_turntable(render_path)
 
     def save_data(self, publish_dict):
         """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
@@ -200,14 +204,13 @@ class LKD(DepartmentWork):
         MayaAPI.render_file(self, render_path) 
     
     def save_data(self, publish_dict):
-        self.maya_api = MayaAPI()
         file_name = self.get_current_file_name()
         scene_path = publish_dict[file_name]['path'].replace(".ma", ".mb")
         self.save_scene_file(scene_path) # mb
 
         ma_file = self.get_current_file_name().replace(".mb", ".ma")
         ma_file_path = publish_dict[ma_file]['path']
-        json_file_name, json_file_path = self.maya_api.export_shader(ma_file_path) #ma, #json
+        json_file_name, json_file_path = self.maya.export_shader(ma_file_path) #ma, #json
 
         publish_dict[json_file_name]['path'] = json_file_path # json
         print ("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
