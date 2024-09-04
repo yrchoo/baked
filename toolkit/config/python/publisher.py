@@ -344,7 +344,6 @@ class Publisher(QWidget):
 
         # only for shader
         self.ui.textEdit.clear()
-        print (";;;", self.dep_class.lookdev_list)
         if self.department == "LKD":
             self.ui.textEdit.append(f'<b>{"Shader & Texture List"}</b>')
             for item in self.dep_class.lookdev_list:
