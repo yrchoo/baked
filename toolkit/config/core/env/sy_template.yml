@@ -169,13 +169,16 @@ paths:
   maya_asset_render_exr:
       definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/exr/{asset}_{task}_v{version}/{asset}_{task}_v{version}.####.exr'
   maya_asset_render_jpg:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/jpg/{asset}_{task}_v{version}/{asset}_{task}_v{version}.####.jpg'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/jpg/{asset}_{task}_v{version}/{asset}_{task}_v{version}.%04d.jpg'
   maya_asset_render_png:
       definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/png/{asset}_{task}_v{version}/{asset}_{task}_v{version}.####.png'
   
   # The location of published shader ma files
-  maya_asset_shader:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/shader/{asset}_{task}_{group}_v{version}.ma'
+  maya_asset_pub_ma:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/scenes/shader/{asset}_{task}_v{version}_shader.ma'
+  # The location of published shader json files
+  maya_asset_pub_json:
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/data/{asset}_{task}_v{version}_shader.json'
   # The location of published texture tiff files
   maya_asset_texture:
       definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/sourceimages/texture/{asset}_{task}_{group}_v{version}.tiff'
@@ -185,7 +188,7 @@ paths:
       definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/images/captures/{asset}_{task}_v{version}_capture.jpg'
   # Playblast output
   maya_asset_playblast:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/movies/{asset}_{task}_v{version}/{asset}_{task}_v{version}.%04d.jpg'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/dev/maya/images/{shot}_{task}_v{version}_playblast/{asset}_{task}_v{version}.%04d.jpg'
   # Ffmpeg_output
   maya_asset_ffmpeg:
       definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/movies/ffmpeg/{asset}_{task}_v{version}_slate.mov'
