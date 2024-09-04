@@ -656,6 +656,14 @@ class Publisher(QWidget):
 
             self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
 
+            backup_data = {
+                            "version" : version,
+                            "file_path" : file_path, 
+                            "description" : description,
+                            "preview_path" : preview_path,
+                            "published_file_type" : published_file_type
+                            }
+
         for pub_file in pub_files_list.values():
             # 새로운 값이 create되지 않은 파일들은 새로운 version을 version field에 업데이트 해준다
             print (f"res = {pub_file}")
