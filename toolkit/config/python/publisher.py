@@ -368,6 +368,10 @@ class Publisher(QWidget):
             ext = self.dep_class.set_render_ext()
             image_path = self._get_path_using_template("render", ext) # 부서별로 펍할 external 입력받기
 
+        self.preview_info = {'input path' : image_path,  # ***** 임시 추가
+                        'start frame' : int(self.sg.frame_start),
+                        'last frame' : int(self.sg.frame_last)}
+
         print ("???", image_path)
 
         path = self._check_validate(image_path)    
@@ -451,7 +455,7 @@ class Publisher(QWidget):
             self._check_validate(image_path)
             self.dep_class.render_data(image_path)  
             self._show_thumbnail(self.ui.radioButton_render)
-    
+
     ######################### PUBLISH 버튼 누르면 발생하는 이벤트 ############################
 
     def _publish_file_data(self): ########## MAIN ############
@@ -497,6 +501,10 @@ class Publisher(QWidget):
             self.user_data['group'] = file
             path = self._get_path_using_template("pub", file_info['ext'])
             file_info['path'] = path
+            self.preview_info['output_path'] = self._get_path_using_template("ffmpeg")
+            
+            
+
             print ("..........", file, ".........")
         print (f"480_________{self.publish_dict}")
         return True
@@ -519,7 +527,13 @@ class Publisher(QWidget):
         
             start_frame = self.preview_info['start frame']
             last_frame = self.preview_info['last frame']
-            self.maya_api.make_ffmpeg(start_frame, last_frame, input_path, output_path, project_name)
+            if self.tool == 'maya':
+                self.maya_api.make_ffmpeg(start_frame, last_frame, input_path, output_path, project_name)
+            elif self.tool == 'nuke':
+                print("------------------run make slate mov nuke")
+                cmd = f'''/opt/Nuke/Nuke15.1v1/Nuke15.1 --nc -t /home/rapa/baked/toolkit/config/python/make_slate_mov_nuke.py -input_path "{input_path}" -first "{self.sg.frame_start}" -last "{self.sg.frame_last}" -output_path "{self.preview_info["output_path"]}"'''
+                # print(cmd)
+                subprocess.run(cmd, shell=True)
             self._export_slate_image(output_path)
 
         print(f"%%%%%%%%%%%%%%%%%%%%%{self.preview_info}")
@@ -616,7 +630,6 @@ class Publisher(QWidget):
             #                                 [['id','is',file['id']]], 
             #                                 ['id', 'code'])
             #     pub_files_list[file['code']] = file # pub_files_list['ABC_0010_ANI_v001.abc] = {Published_File_Entity}
-
         for detail in self.publish_dict.values():
             # 현재 새로 올리려는 파일의 v000을 제외한 앞 부분을 읽어와서 비교한 뒤
             print (detail)

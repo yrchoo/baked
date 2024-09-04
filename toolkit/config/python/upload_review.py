@@ -19,7 +19,7 @@ import shotgrid.fetch_shotgrid_data
 from importlib import reload
 from capture_module import SubWindow_Open, MakeScreenCapture
 from work_in_maya import MayaAPI
-from work_in_nuke import NukeAPI
+import work_in_nuke as NukeAPI
 import work_in_maya
 import sys
 import os
