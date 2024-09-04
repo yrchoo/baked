@@ -167,13 +167,13 @@ class RIG(DepartmentWork):
         self.save_scene_file(scene_path)
         return publish_dict
 
-class LDV(DepartmentWork):
+class LKD(DepartmentWork):
     """ Publish Data: mb, ma(shader), tiff(texture) """    
 
     def make_data(self):
         """ 쉐이더 텍스쳐 데이터 따로 가져오는 메서드 """
-        texture_list = MayaAPI.get_texture_list()
-        shader_list = MayaAPI.get_custom_shader_list()
+        texture_list = MayaAPI.get_texture_list(self)
+        shader_list = MayaAPI.get_custom_shader_list(self)
         lookdev_list = []
         lookdev_list.extend(texture_list)
         lookdev_list.extend(shader_list)

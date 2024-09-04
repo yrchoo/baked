@@ -764,5 +764,5 @@ class MayaAPI():
 
 
 # {'input path': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/images/jpg/Tree_RIG_v001/Tree_RIG_v001.%04d.jpg', 'start frame': 1, 'last frame': 96, 'output_path': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.mov', 'output_path_jpg': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.jpg'}
-p = MayaAPI()
-p.make_ffmpeg(1001, 1096, '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/images/jpg/Tree_RIG_v001/Tree_RIG_v001.%04d.jpg', '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.mov', "baked")
+# p = MayaAPI()
+# p.make_ffmpeg(1001, 1096, '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/images/jpg/Tree_RIG_v001/Tree_RIG_v001.%04d.jpg', '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.mov', "baked")
