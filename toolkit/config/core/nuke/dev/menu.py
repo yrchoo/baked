@@ -30,3 +30,4 @@ node_menu.addCommand("Lens Distortion Node", baked_pipeline_script.create_undist
 # Callback
 nuke.addOnCreate(baked_pipeline_script.set_write_node_path, nodeClass='Write')
 nuke.addOnScriptSave(baked_pipeline_script.set_write_node_path)
+nuke.addOnScriptLoad(baked_pipeline_script.setup_nuke_project)

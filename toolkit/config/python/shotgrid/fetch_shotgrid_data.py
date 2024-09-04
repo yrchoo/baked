@@ -71,7 +71,7 @@ class ShotGridDataFetcher():
         self.work = None # 현재 작업 shot, asset의 entity가 들어가는 곳
         self.task = None # 현재 작업 task의 entity가 들어가는 곳
         self.frame_start = None # 현재 작업에 프레임이 정해져있다면 시작 프레임 값이 저장되는 변수
-        self.frame_end = None # 현재 작업에 프레임이 정해져있다면 마지막 프레임 값이 저장되는 변수
+        self.frame_last = None # 현재 작업에 프레임이 정해져있다면 마지막 프레임 값이 저장되는 변수
         self.height = None
         self.width = None
         self.undistortion_height = None
@@ -110,13 +110,14 @@ class ShotGridDataFetcher():
                 self.work = self.get_asset_entity(self.user_info['asset'])
             elif self.user_info['shot']:
                 self.work = self.get_shot_from_code(self.user_info['shot'])
-                self.frame_start = self.work.get('sg_cut_in')
-                self.frame_last = self.work.get('sg_cut_out')
-                self.undistortion_height = self.work.get('sg_undistortion_height')
-                self.undistortion_width = self.work.get('sg_undistortion_width')
-                self.width = self.work.get('sg_resolutin_width')
-                self.height = self.work.get('sg_resolution_height')
+                self.frame_start = self.work['sg_cut_in']
+                self.frame_last = self.work['sg_cut_out']
+                self.undistortion_height = self.work['sg_undistortion_height']
+                self.undistortion_width = self.work['sg_undistortion_width']
+                self.width = self.project['sg_resolutin_width']
+                self.height = self.project['sg_resolution_height']
                 self.task = self.get_task_from_ent(self.work)
+                print(self.frame_start, self.frame_last, self.undistortion_height, self.undistortion_width, self.width, self.height)
 
     # 프로젝트 id 를 가져와서 지정해준다.
     def _fetch_project_id(self): # ***** 내부에서만 사용되는 메서드는 이름 앞에 _언더바를 붙여서 표시해주시면 좋아요
@@ -126,7 +127,7 @@ class ShotGridDataFetcher():
         """
         project_name = 'baked'  # 나중에 self.user_info['project']로 변경
         filters = [['name', 'is', project_name]]
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'sg_resolutin_width', 'sg_resolution_height']
         project = self.sg.find_one('Project', filters, fields) # 프로젝트는 중복되는 값이 존재할 수 없기 때문에 find_one으로 수정 *****
 
         if not project:
@@ -135,7 +136,6 @@ class ShotGridDataFetcher():
             # project_id = project[0]['id']
             # print(f"프로젝트 ID : {project_id}")
             print(f"Project : {project}")
-        print(project)
         self.project = project
 
     """
@@ -282,7 +282,7 @@ class ShotGridDataFetcher():
             shot_code = self.user_info["shot"]
         if not shot_code : return None
         filter_for_shot = [['code', 'is', shot_code]]
-        fields_for_shot = []
+        fields_for_shot = ['sg_cut_in', 'sg_cut_out', 'sg_undistortion_height', 'sg_undistortion_width']
         shot = self.sg.find_one("Shot", filter_for_shot, fields_for_shot)
         return shot
 

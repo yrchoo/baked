@@ -115,6 +115,8 @@ paths:
   # The location of published nuke script with tag
   nuke_sequence_pub_tag:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/scenes/{shot}_{task}_v{version}_{tag}.nknc'
+  nuke_sequence_pub_exr:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/exr/{shot}_{task}_v{version}/{shot}_{task}_v{version}.####.exr'
  
   # Rendered output
   nuke_sequence_render_mov:
@@ -128,10 +130,12 @@ paths:
 
   # Ffmpeg output
   nuke_sequence_ffmpeg:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/ffmpeg/{shot}_{task}_v{version}_slate.mov'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/movies/ffmpeg/{shot}_{task}_v{version}_slate.mov'
+  nuke_sequence_ffmpeg_jpg:
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/nuke/movies/ffmpeg/{shot}_{task}_v{version}_slate.jpg'
   # Capture output
   nuke_sequence_capture:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/maya/imgaes/captures/{shot}_{task}_v{version}_capture.jpg'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/dev/nuke/imgaes/captures/{shot}_{task}_v{version}_capture.jpg'
 
 
   ##########################################################################################

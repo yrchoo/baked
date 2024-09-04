@@ -13,6 +13,8 @@ except:
     import work_in_nuke as NukeAPI
 import work_in_nuke as NukeAPI
 
+import os
+
 class DepartmentWork():
     def __init__(self, treewidget, tool):
         self.tree = treewidget
@@ -254,7 +256,7 @@ class LGT(DepartmentWork):
             publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
             try:
                 for data in selected_data:
-                    publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
+                    publish_dict[data.knob('name').value()] = {'description':'', 'file type':'', 'ext': '', 'path':''}
             except:
                 pass
             self.put_data_in_tree(publish_dict)
@@ -276,11 +278,18 @@ class LGT(DepartmentWork):
                     print ("##", info['path'])
                     publish_dict = MayaAPI.render_all_layers_to_exr(self, file, publish_dict)
                 elif self.tool == "nuke":
-                    publish_dict = NukeAPI.render_selected_write_nodes_with_exr(1001, 1096)
+                    NukeAPI.render_selected_write_nodes_with_exr(info['path'], 1001, 1096)
+                    # os.system(f'''nuke -t make_slate_mov_nuke.py -path "{info['path']}" -first "1001" -last "1096"''')
             elif 'Precomp' in info['file type']:
                 scene_path = publish_dict[self.get_current_file_name()]['path']
                 self.save_scene_file(scene_path)
         return publish_dict
+    
+    def render_data(self, image_path):
+        # 누크에서는 바로 thumbnail을 render하지 않습니다
+        pass
+
+    
 
     # 라이팅 누크쪽
 
@@ -319,7 +328,7 @@ class CMP(DepartmentWork):
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         try:
             for data in selected_data:
-                publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
+                publish_dict[data.knob('name').value()] = {'description':'', 'file type':'', 'ext': '', 'path':''}
         except: 
             pass
         self.put_data_in_tree(publish_dict)
