@@ -135,7 +135,7 @@ class Review(QWidget):
         reversed_task_dict = dict(map(reversed, self.task_dict.items()))
         task = self.ui.comboBox_task.currentText()
         self.department = reversed_task_dict[task].upper()
-        self.dep_class = getattr(department_publish, self.department)(self.tree, self.tool) # 부서 클래스를 인스턴스화 하기
+        self.dep_class = getattr(department_publish, self.department)(None, self.tool) # 부서 클래스를 인스턴스화 하기
 
     def _close_ui(self):
         """UI창 끄는 메서드"""
@@ -388,8 +388,8 @@ class Review(QWidget):
             asset = None
 
         print("#####################################")
-        print(version, task, description, preview_path, shot, asset)
-        version = self.sg.update_version_for_review(version, task, preview_path, description, shot, asset)
+
+        version = self.sg.update_version_for_review(version, task, description, preview_path, shot, asset)
         return version
 
 if __name__ == "__main__":
