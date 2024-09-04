@@ -31,9 +31,7 @@ def show_loader():
     load_win.show()
 
 def show_tracker():
-    # tracker에 존재하는 리스트를 갱신해줘야함
-    # tracker_win.show()
-    pass
+    tracker_win.show()
 
 def show_publisher():
     reload(publisher)
