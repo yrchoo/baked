@@ -29,9 +29,10 @@ import publisher
 import upload_review
 
 def init():
-    load_win.OPEN_FILE.connect(open_file)
-    save_win.SAVE_FILE.connect(save_file)
+    # load_win.OPEN_FILE.connect(open_file)
+    # save_win.SAVE_FILE.connect(save_file)
     # tracker_win.RELOAD_FILE.connect(reload_file)
+    pass
 
 def loader_func():
     """
@@ -121,8 +122,8 @@ def add_custom_menu():
     """
     gMainWindow = mel.eval('$window=$gMainWindow')
     custom_menu = cmds.menu(parent=gMainWindow, tearOff = True, label = 'BAKED') 
-    cmds.menuItem(label="Loader", parent=custom_menu, command=lambda *args: loader_func())
-    cmds.menuItem(label="Save File", parent=custom_menu, command=lambda *args: save_func)
+    # cmds.menuItem(label="Loader", parent=custom_menu, command=lambda *args: loader_func())
+    # cmds.menuItem(label="Save File", parent=custom_menu, command=lambda *args: save_func)
     cmds.menuItem(label="Publisher", parent=custom_menu, command=lambda *args: publisher_func())
     cmds.menuItem(label="Upload Review", parent=custom_menu, command=lambda *args: review_func())
     # cmds.menuItem(label="Tracker", parent=custom_menu, command=lambda *args: )
@@ -169,7 +170,7 @@ def _check_dir(external_path):
             print(f"Directory already exists: {dir_path}")
 
 
-load_win = loader.Loader(sg, "maya")
-save_win = save.SaveFile()
+# load_win = loader.Loader(sg, "maya")
+# save_win = save.SaveFile()
 # tracker_win = file_tracker.Tracker(sg, get_ref_file_path_list)
 init()

@@ -135,6 +135,7 @@ class Review(QWidget):
         reversed_task_dict = dict(map(reversed, self.task_dict.items()))
         task = self.ui.comboBox_task.currentText()
         self.department = reversed_task_dict[task].upper()
+        self.dep_class = getattr(department_publish, self.department)(self.tree, self.tool) # 부서 클래스를 인스턴스화 하기
 
     def _close_ui(self):
         """UI창 끄는 메서드"""
@@ -182,7 +183,7 @@ class Review(QWidget):
         return new_path
 
               
-    ################################### get shotgrid data ##########################################
+    ################################### task linke 보여주기 ##########################################
         
     def _get_task_type(self):
         """shotgrid에서 task 종류 가져오는 메서드"""
@@ -225,51 +226,49 @@ class Review(QWidget):
     def _show_thumbnail(self, button):
         """썸네일 보여주는 메서드"""
 
+        self.maya_api = MayaAPI()
         image_path = ""
         if button.text() == "PlayBlast":
             image_path = self._get_path_using_template("playblast")
         elif button.text() == "Capture":
             image_path = self._get_path_using_template("capture")
         elif button.text() == "Render":
-            ext = self.work.set_render_ext()
+            ext = self.dep_class.set_render_ext()
             image_path = self._get_path_using_template("render", ext) # 부서별로 펍할 external 입력받기
 
         path = self._check_validate(image_path)    
         files = glob.glob(f"{path}/*")
-        print (path, "---------------------------------------")
-        print (files, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-        if not files:
+        if not files: # 썸네일 파일이 없는 경우
             self.ui.label_thumbnail.setText("No Thumbnail Found")
             self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
             return
 
-        if button.text() in ["PlayBlast", "Render"]:
+        if button.text() in ["PlayBlast", "Render"]: # 플레이블라스트, 렌더를 하는 경우
             recent_image_file = max(files, key=os.path.getmtime)
             start_frame, last_frame = self._get_frame_number(files) # 프레임 넘버, 경로 정보 저장하기
             self.preview_info = {'input path' : image_path, 
                                  'start frame' : int(start_frame),
                                  'last frame' : int(last_frame)}
-        elif button.text() == "Capture":
-            parse = re.compile("[v]\d{3}")
+        else:
+            parse = re.compile("[v]\d{3}") # 캡쳐를 하는 경우
             for file in files:
                 version = parse.search(os.path.basename(file)).group()[1:]
-                print (version, self.user_data["version"])
                 if version == self.user_data["version"]:
                     recent_image_file = file
                     self.preview_info = {'input path' : image_path,
                                     'start frame' : 1,
                                     'last frame' : 1}
+                    break
+                recent_image_file = None
 
-            if not self.preview_info:
-                self.ui.label_thumbnail.setText("No Thumbnail Found")
-                self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
-                return
-
+        if not recent_image_file: 
+            return
+            
+        # ui에 썸네일 미리보여주기
         pixmap = QPixmap(recent_image_file) 
         scaled_pixmap = pixmap.scaled(288, 162) 
         self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
         self.ui.label_thumbnail.repaint()
-        print (f"420:: self.preview_info {self.preview_info}")
 
     def _get_frame_number(self, files):
         """ 플레이블라스트, 렌더, 캡처를 통해 받은 파일 경로로 프레임 넘버 가져오기 """
@@ -317,15 +316,31 @@ class Review(QWidget):
         """ (3) ffmpeg 만드는 메서드"""
         """ 예린님 코드로 연결시키기"""
         
-        if self.preview_info['last_frame'] == 1:
-            output_path = self._get_path_using_template("ffmpeg", "jpg")
-        output_path = self._get_path_using_template("ffmpeg")
-        start_frame = self.preview_info['start frame']
-        last_frame = self.preview_info['last frame']
-        print ("-----------------", input_path, output_path, project_name, start_frame, last_frame)
-        MayaAPI.make_ffmpeg(self, start_frame, last_frame, input_path, output_path, project_name)
-        self.preview_info['output_path'] = output_path
-        self.preview_info['output_path_jpg'] = self._export_slate_image(output_path)
+        print ("_____", os.path.split(input_path))
+        print ("*****", os.path.splitext(input_path)[1])
+        if self.preview_info['last frame'] == 1: # 캡쳐일때
+            print ("캡쳐 ffmpeg 파일 경로 작성합니다")
+            output_path = self._get_path_using_template("capture") # 한장 뽑는 용
+            self.preview_info['output_path'] = output_path
+            self.preview_info['output_path_jpg'] = output_path
+            
+        else: # jpg/exr sequence 일때 (mov 일때는 그냥 배제합시다)
+            print ("이미지 시퀀스 ffmpeg 파일 경로 작성합니다")
+            output_path = self._get_path_using_template("ffmpeg")
+            self.preview_info['output_path'] = output_path
+            self.preview_info['output_path_jpg'] = self._get_path_using_template("ffmpeg", "jpg")
+        
+            start_frame = self.preview_info['start frame']
+            last_frame = self.preview_info['last frame']
+            if self.tool == 'maya':
+                self.maya_api.make_ffmpeg(start_frame, last_frame, input_path, output_path, project_name)
+            elif self.tool == 'nuke':
+                print("------------------run make slate mov nuke")
+                cmd = f'''/opt/Nuke/Nuke15.1v1/Nuke15.1 --nc -t /home/rapa/baked/toolkit/config/python/make_slate_mov_nuke.py -input_path "{input_path}" -first "{self.sg.frame_start}" -last "{self.sg.frame_last}" -output_path "{self.preview_info["output_path"]}"'''
+                # print(cmd)
+                subprocess.run(cmd, shell=True)
+            self._export_slate_image(output_path)
+
         print(f"%%%%%%%%%%%%%%%%%%%%%{self.preview_info}")
 
     def _export_slate_image(self,  input_mov):
@@ -344,7 +359,8 @@ class Review(QWidget):
     def _process_review_funcs(self):
         input_path = self.preview_info['input path']
         self._apply_ffmpeg(input_path, self.user_data["project"])
-        # self._update_version_data()
+        self._update_version_data()
+        self.close()
 
     def _update_version_data(self):
 

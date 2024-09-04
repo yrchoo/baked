@@ -198,6 +198,7 @@ class MayaAPI():
         slate_size = 60
         font_path = "/home/rapa/문서/font/waltographUI.ttf"
         frame_count = int(last_frame) - int(start_frame)
+        # frame_count = 10
         font_size = 40
         text_x_padding = 10
         text_y_padding = 20
@@ -238,7 +239,6 @@ class MayaAPI():
         cmd += '"'
         # cmd += ' -c:v libx264 %s' % output_path
         cmd += ' -c:v prores_ks -profile:v 3 -colorspace bt709 %s' % output_path
-        print ()
         os.system(cmd)
         return output_path
     
@@ -348,9 +348,11 @@ class MayaAPI():
         else:
             raise ValueError(f"지원되지 않는 이미지 형식: {format_name}")
 
-    def render_file(self):
-
-        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", "<Scene>_<RenderLayer>", type="string")
+    def render_file(self, outpath):
+        output_dir = f"{os.path.dirname(outpath)}/"  # 렌더링 이미지가 저장될 경로
+        print (outpath, output_dir)
+        filename_template = "<Scene>"
+        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", output_dir + filename_template, type="string") ### 경로 설정해주기
         cmds.setAttr("defaultRenderGlobals.extensionPadding", 4)
         cmds.setAttr("defaultRenderGlobals.animation", 1)
         cmds.setAttr("defaultRenderGlobals.putFrameBeforeExt", 1)
@@ -376,13 +378,17 @@ class MayaAPI():
                 shader_dictionary[shader_name].extend(objects)
         return shader_dictionary
 
-    def export_shader(self, ma_file_path, json_file_path):
+    def export_shader(self, ma_file_path):
         """
         maya에서 오브젝트에 어싸인된 셰이더들을 ma 파일로 익스포트하고,
         그 정보들을 json 파일로 익스포트 하는 함수이다.
         """
 
         shader_dictionary = self.collect_shader_assignments()
+        ma_file_dir_path = os.path.dirname(ma_file_path)
+        json_file_name = os.path.basename(ma_file_path).replace(".ma", ".json")
+        json_file_path = f"{ma_file_dir_path}/{json_file_name}"
+        print(json_file_path)
 
         for shader, _ in shader_dictionary.items():
             cmds.select(shader, add=True)    
@@ -399,6 +405,8 @@ class MayaAPI():
         print("Shader Dictionary:")
         for shader, objects in shader_dictionary.items():
             print(f"  Shader: {shader} -> Objects: {objects}")
+
+        return json_file_name, json_file_path
 
     
     def get_custom_shader_list(self):
@@ -438,6 +446,7 @@ class MayaAPI():
             file_name = os.path.basename(file_path)
             textures.append(file_name)
         
+        textures = textures.remove("")
         print("텍스처 파일 이름 목록:", textures)
         return textures
 
@@ -766,3 +775,6 @@ class MayaAPI():
 # {'input path': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/images/jpg/Tree_RIG_v001/Tree_RIG_v001.%04d.jpg', 'start frame': 1, 'last frame': 96, 'output_path': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.mov', 'output_path_jpg': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.jpg'}
 # p = MayaAPI()
 # p.make_ffmpeg(1001, 1096, '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/images/jpg/Tree_RIG_v001/Tree_RIG_v001.%04d.jpg', '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.mov', "baked")
+
+# m = MayaAPI()
+# m.make_ffmpeg(1001, 1096, "/home/rapa/baked/show/baked/AST/Environment/Tree/LKD/pub/maya/images/exr/Tree_LKD_v001/Tree_LKD_v001.%04d.exr", "/home/rapa/again_again_test.mov", "baked")
