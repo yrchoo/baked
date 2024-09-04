@@ -376,9 +376,7 @@ class Publisher(QWidget):
             ext = self.dep_class.set_render_ext()
             image_path = self._get_path_using_template("render", ext) # 부서별로 펍할 external 입력받기
 
-        # self.preview_info = {'input path' : image_path,  # ***** 임시 추가
-        #                 'start frame' : int(self.sg.frame_start),
-        #                 'last frame' : int(self.sg.frame_last)}
+        
 
         print ("???", image_path)
 
@@ -387,6 +385,9 @@ class Publisher(QWidget):
         if not files: # 썸네일 파일이 없는 경우
             self.ui.label_thumbnail.setText("No Thumbnail Found")
             self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
+            self.preview_info = {'input path' : image_path,  # ***** 임시 추가
+                        'start frame' : int(self.sg.frame_start),
+                        'last frame' : int(self.sg.frame_last)}
             return
 
         if button.text() in ["PlayBlast", "Render"]: # 플레이블라스트, 렌더를 하는 경우
