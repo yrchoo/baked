@@ -22,6 +22,107 @@ class MayaAPI():
     def get_selected_objects(self):
         """선택한 오브젝트 리스트 가져오는 메서드"""
         return cmds.ls(sl=True)
+    
+    def save_file(self, path):
+        
+        # 현재 씬의 이름과 경로를 output_path로 설정
+        cmds.file(rename=path)
+        # Maya Binary 형식으로 씬 저장
+        cmds.file(save=True, type='mayaBinary')
+
+        print(f"Model saved as Maya Binary file to: {path}")
+    
+########################### Modeling #####################################3
+
+    @staticmethod
+    def modeling_publish_set(self):
+        # 1. 에셋 스케일 고정 (Freeze Transformations)
+        selected_objects = cmds.ls(selection=True)
+        if selected_objects:
+            cmds.makeIdentity(selected_objects, apply=True, scale=True)
+            print("선택된 오브젝트의 Scale이 1로 고정되었습니다.")
+        else:
+            print("선택된 오브젝트가 없습니다. Scale 고정 작업을 건너뜁니다.")
+
+        # 2. 히스토리 삭제 (Delete History) Edit → Delete by Type → History
+        if selected_objects:
+            cmds.delete(selected_objects, constructionHistory=True)
+            print("선택된 오브젝트의 히스토리가 삭제되었습니다.")
+        else:
+            print("선택된 오브젝트가 없습니다. 히스토리 삭제 작업을 건너뜁니다.")
+
+        # 3. 사용되지 않는 쉐이더 삭제 (Delete Unused Shaders) Rendering editor → hypershade
+        all_shaders = cmds.ls(materials=True)
+        used_shaders = cmds.ls(cmds.listConnections(cmds.ls(geometry=True)), materials=True)
+
+        unused_shaders = list(set(all_shaders) - set(used_shaders))
+
+        if unused_shaders:
+            cmds.delete(unused_shaders)
+            print(f"{len(unused_shaders)}개의 필요없는 쉐이더가 삭제되었습니다.")
+        else:
+            print("삭제할 필요없는 쉐이더가 없습니다.")
+    
+    def set_single_renderable_camera(self, camera_name):
+        """
+        지정된 카메라만 렌더러블 상태로 유지하고, 다른 모든 카메라는 비활성화합니다.
+        
+        Args:
+        camera_name (str): 렌더러블 상태로 유지할 카메라의 이름.
+        """
+        all_cameras = cmds.ls(type='camera')
+        for cam in all_cameras:
+            cmds.setAttr(f"{cam}.renderable", cam == camera_name)
+
+    def render_turntable(self, output_path_template, start_frame=1001, end_frame=1096, width=1920, height=1080, distance = 30 ):
+        # 턴테이블 애니메이션을 위한 설정
+
+        ext = os.path.splitext(output_path_template)[1]
+        self.set_image_format(ext)
+        cmds.setAttr("defaultResolution.width", width)
+        cmds.setAttr("defaultResolution.height", height)
+
+        # 기존 턴테이블 카메라가 있는지 확인
+        camera_transform = None
+        camera_name = "turntable_camera#"
+
+        existing_cameras = cmds.ls(type="camera")
+        for cam_shape in existing_cameras:
+            transform_node = cmds.listRelatives(cam_shape, parent=True)[0]
+            if camera_name in transform_node:
+                camera_transform = transform_node
+                break
+
+        # 카메라가 존재하지 않으면 새로 생성
+        if camera_transform is None:
+            camera_transform, camera_shape = cmds.camera(name=camera_name)
+            cmds.viewFit(camera_transform)  # 자동으로 카메라 위치 세팅
+            cmds.setAttr(camera_transform + ".translateZ", distance)  # 카메라 거리를 설정
+
+            # 카메라 그룹 생성 및 그룹에 카메라 추가
+            turntable_grp = cmds.group(camera_transform, name='turntable_camera_grp')
+        else:
+            # 기존 카메라 그룹 찾기
+            turntable_grp = cmds.listRelatives(camera_transform, parent=True)[0]
+
+        # 애니메이션 키프레임 설정
+        start_frame = int(cmds.playbackOptions(query=True, minTime=True))  # 시작 프레임 읽기
+        end_frame = int(cmds.playbackOptions(query=True, maxTime=True))    # 끝 프레임 읽기
+        cmds.setKeyframe(turntable_grp, attribute="rotateY", time=start_frame, value=0)
+        cmds.setKeyframe(turntable_grp, attribute="rotateY", time=end_frame, value=360)
+
+        # 키프레임을 선형으로 설정
+        cmds.keyTangent(turntable_grp, attribute="rotateY", inTangentType="linear", outTangentType="linear")
+
+        # 턴테이블 렌더링 수행
+        for frame in range(start_frame, end_frame + 1):
+            output_path = output_path_template % frame
+            cmds.currentTime(frame)
+            cmds.render(camera_transform, x=width, y=height)
+            cmds.renderWindowEditor("renderView", e=True, writeImage=output_path)
+
+
+####################### Animation #################################################33
 
     def export_alemibc(self, abc_cache_path, asset):
         """
@@ -43,55 +144,8 @@ class MayaAPI():
         abc_export_cmd = 'AbcExport -j "%s"' % " ".join(alembic_args)
         mel.eval(abc_export_cmd)
     
-    def export_shader(self, export_path):
-        """
-        maya에서 오브젝트에 어싸인된 셰이더들을 ma 파일로 익스포트하고,
-        그 정보들을 json 파일로 익스포트 하는 함수이다.
-        """
 
-        shader_dictionary = self.collect_shader_assignments()
-
-        for shader, _ in shader_dictionary.items():
-            cmds.select(shader, add=True)    
-
-        ma_file_path = f"{export_path}/shader.ma"
-        json_file_path = f"{export_path}/shader.json"
-
-        cmds.file(ma_file_path, exportSelected=True, type="mayaAscii")
-        with open(json_file_path, 'w') as f:
-            json.dump(shader_dictionary, f)
-
-        cmds.select(clear=True)
-    
-    def collect_shader_assignments(self):
-        """
-        셰이더와 오브젝트들을 컬렉션하는 함수.
-        """
-        shader_dictionary = {}
-        shading_groups = cmds.ls(type="shadingEngine")
-        for shading_group in shading_groups:
-            shader = cmds.ls(cmds.listConnections(shading_group + ".surfaceShader"), materials=True)    
-            if not shader:
-                continue
-            objects = cmds.sets(shading_group, q=True)
-            shader_name = shader[0]
-            if objects:
-                if shader_name not in shader_dictionary:
-                    shader_dictionary[shader_name] = []
-                shader_dictionary[shader_name].extend(objects)
-        return shader_dictionary
-
-    def save_file(self, path):
-        
-        # 현재 씬의 이름과 경로를 output_path로 설정
-        cmds.file(rename=path)
-        # Maya Binary 형식으로 씬 저장
-        cmds.file(save=True, type='mayaBinary')
-
-        print(f"Model saved as Maya Binary file to: {path}")
-    
-    def get_current_path(self):
-        return cmds.file(query=True, sceneName=True)
+################### 플레이블라스트, 렌더, ffmpeg ########################################
     
     def make_playblast(self, image_path):
         """
@@ -160,12 +214,16 @@ class MayaAPI():
         bot_right = frame_cmd
 
         if last_frame == 1:
-            print("캡쳐라서 jpg 메서드로")
-            bot_right = "Frame1"
-            output_path = output_path.replace('.mov', '.jpg')
-            print ("!!!", input_path, output_path)
-            print (top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
-            self.make_ffmpeg_jpg(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
+            return
+            # import test_ffmpeg
+            # bot_right = "Frame1"
+            # output_path = output_path.replace('.mov', '.jpg')
+            # self.slate = test_ffmpeg.MakeSlate()
+            # self.slate.make_ffmpeg_jpg(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
+            # print("캡쳐라서 jpg 메서드로")
+            # print ("!!!", input_path, output_path)
+            # print (top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
+            # self.make_ffmpeg_jpg(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
 
         cmd = '%s -framerate %s -y -start_number %s ' % (ffmpeg, frame_rate, first)
         cmd += '-i %s' % (input_path)
@@ -180,7 +238,7 @@ class MayaAPI():
         cmd += '"'
         # cmd += ' -c:v libx264 %s' % output_path
         cmd += ' -c:v prores_ks -profile:v 3 -colorspace bt709 %s' % output_path
-
+        print ()
         os.system(cmd)
         return output_path
     
@@ -222,9 +280,7 @@ class MayaAPI():
         vf_filter = f"{box_filter},{top_left_text},{top_center_text},{top_right_text},{bot_left_text},{bot_center_text},{bot_right_text}"
 
         # ffmpeg 명령어 문자열 구성
-        cmd = (
-            f"ffmpeg -i {input} -vf \"{vf_filter}\" -y {output}"
-        )
+        cmd = f'ffmpeg -i {input} -vf "{vf_filter}" -y {output}'
         
         # ffmpeg 명령어 실행
         os.system(cmd)
@@ -250,11 +306,17 @@ class MayaAPI():
         self.bot_Right = f"drawtext=fontfile={fontfile}: text = {bot_right}:start_number = 1001 : x=w-tw-5:y=h-th     :fontcolor=white@0.7:fontsize={font_size}"
         self.box = f"drawbox = x=0: y=0: w={self.width}: h={box_size}: color = black: t=fill,drawbox = x=0: y={self.height-box_size}: w={self.width}: h={self.height}: color = black: t=fill,"
 
+
+################################## 매치무브 ###################################3
+
     def get_undistortion_size(self):
         width = cmds.getAttr('defualtResolution.width')
         height = cmds.getAttr('defaultResolution.height')
         return width, height
     
+
+##################################################################################33
+
 
     def render_to_multiple_formats(self, output_path, width=1920, height=1080):
 
@@ -270,7 +332,7 @@ class MayaAPI():
         self.set_image_format(ext)
         cmds.render(current_camera, x=width, y=height, f=output_path)
 
-    def set_image_format(format_name):
+    def set_image_format(self, format_name):
         """이미지 형식을 설정하는 함수"""
         format_dict = {
             ".jpg": 8,
@@ -286,74 +348,99 @@ class MayaAPI():
         else:
             raise ValueError(f"지원되지 않는 이미지 형식: {format_name}")
 
-    def render_file(self, path):
-        dir_name = os.path.dirname(path)
-        base_name = os.path.basename(path)
-        file_name = base_name.split(".")[0]
-        ext = os.path.split(".")[-1]
+    def render_file(self):
 
-        if ext.lower() == "jpg":
-            ext = "jpeg"
-
-        print (dir_name, base_name, "+", file_name, ext)
-
-        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", os.path.join(dir_name, file_name), type="string")
+        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", "<Scene>_<RenderLayer>", type="string")
         cmds.setAttr("defaultRenderGlobals.extensionPadding", 4)
         cmds.setAttr("defaultRenderGlobals.animation", 1)
         cmds.setAttr("defaultRenderGlobals.putFrameBeforeExt", 1)
-
-        # 이미지 파일을 저장할 디렉토리 설정
-        cmds.workspace(fileRule=['images', dir_name])
-
-        # 파일 형식을 JPG로 설정
-        cmds.setAttr("defaultArnoldDriver.aiTranslator", ext, type="string")
-
-        # 카메라 설정 및 확인
-        cameras = cmds.ls(type='camera')
-        print(cameras)
-        for camera_ in cameras:
-            if camera_ == "renderCam":
-                cam_transform = cmds.listRelatives(camera_, parent=True)[0]
-                print(f"Checking camera transform: {cam_transform}")
-
-        # 모델 패널 설정
-        model_panels = cmds.getPanel(type="modelPanel")
-        if model_panels:
-            for panel in model_panels:
-                cmds.modelEditor(panel, e=True, displayLights="all")
-                cmds.modelEditor(panel, e=True, shadows=True)
-                cmds.modelEditor(panel, e=True, grid=False)
-                print("조명과 그림자가 활성화 되었고 그리드는 비활성화 되었습니다.")
-
-        # 특정 카메라로 보기 전환 및 Arnold 렌더링 실행
-        cmds.lookThru("renderCam")
         cmds.arnoldRender(batch=True)
+        
+###### 쉐이더 ###################################################################
 
-    def render_turntable(self, output_path, start_frame=1, end_frame=120, width=1920, height=1080):
-        # 턴테이블 애니메이션을 위한 설정
-        ext = os.path.splitext(output_path)[1]
-        print("******", ext)
-        self.set_image_format(ext)
+    def collect_shader_assignments(self):
+        """
+        셰이더와 오브젝트들을 컬렉션하는 함수.
+        """
+        shader_dictionary = {}
+        shading_groups = cmds.ls(type="shadingEngine")
+        for shading_group in shading_groups:
+            shader = cmds.ls(cmds.listConnections(shading_group + ".surfaceShader"), materials=True)    
+            if not shader:
+                continue
+            objects = cmds.sets(shading_group, q=True)
+            shader_name = shader[0]
+            if objects:
+                if shader_name not in shader_dictionary:
+                    shader_dictionary[shader_name] = []
+                shader_dictionary[shader_name].extend(objects)
+        return shader_dictionary
+
+    def export_shader(self, ma_file_path, json_file_path):
+        """
+        maya에서 오브젝트에 어싸인된 셰이더들을 ma 파일로 익스포트하고,
+        그 정보들을 json 파일로 익스포트 하는 함수이다.
+        """
+
+        shader_dictionary = self.collect_shader_assignments()
+
+        for shader, _ in shader_dictionary.items():
+            cmds.select(shader, add=True)    
         
-        cmds.setAttr("defaultResolution.width", width)
-        cmds.setAttr("defaultResolution.height", height)
+        cmds.file(ma_file_path, exportSelected=True, type="mayaAscii")
+        with open(json_file_path, 'w') as f:
+            json.dump(shader_dictionary, f)
+
+        cmds.select(clear=True)
         
-        # 카메라 설정
-        camera = cmds.camera()[0]
-        cmds.setAttr(camera + ".translateX", 0)
-        cmds.setAttr(camera + ".translateY", 0)
-        cmds.setAttr(camera + ".translateZ", 30)  # 모델에서 적절한 거리로 조정
+        # 결과 출력
+        print(f"Shaders exported to: {ma_file_path}") # ma 파일 경로
+        print(f"Shader assignment data exported to: {json_file_path}") # json 파일 경로
+        print("Shader Dictionary:")
+        for shader, objects in shader_dictionary.items():
+            print(f"  Shader: {shader} -> Objects: {objects}")
+
+    
+    def get_custom_shader_list(self):
+        """
+        Maya 씬에서 기본 쉐이더를 제외한 사용자 정의 쉐이더 목록을 가져옵니다.
         
-        # 카메라를 중심으로 360도 회전하는 애니메이션 설정
-        cmds.setKeyframe(camera, attribute="rotateY", t=start_frame, v=0)
-        cmds.setKeyframe(camera, attribute="rotateY", t=end_frame, v=360)
-        cmds.playbackOptions(min=start_frame, max=end_frame)
+        Returns:
+        list: 사용자 정의 쉐이더 이름들의 리스트
+        """
+        # 기본 쉐이더 목록 (제외할 쉐이더)
+        default_shaders = {'lambert1', 'particleCloud1', 'shaderGlow1'}
+
+        # 씬에 있는 모든 쉐이더를 가져옵니다.
+        shaders = cmds.ls(materials=True)
+
+        # 사용자 정의 쉐이더만 필터링
+        custom_shaders = [shader for shader in shaders if shader not in default_shaders]
+
+        # 사용자 정의 쉐이더 목록 출력
+        print("Custom Shader List:", custom_shaders)
         
-        # 턴테이블 렌더링 수행
-        for frame in range(start_frame, end_frame + 1):
-            cmds.currentTime(frame)
-            cmds.render(camera, x=width, y=height, f=output_path)
+        return custom_shaders
+    
+    def get_texture_list(self):
+        """
+        Maya 씬에서 사용된 텍스처 파일들의 이름을 가져옵니다.
         
+        Returns:
+        list: 텍스처 파일 이름들의 리스트
+        """
+        textures = []
+        file_nodes = cmds.ls(type="file")
+        for node in file_nodes:
+            # 텍스처 파일 경로를 가져옴
+            file_path = cmds.getAttr(f"{node}.fileTextureName")
+            # 파일 이름만 추출
+            file_name = os.path.basename(file_path)
+            textures.append(file_name)
+        
+        print("텍스처 파일 이름 목록:", textures)
+        return textures
+
     # def make_ffmpeg(self, input_path, output_path, project_name, start_frame=None, last_frame=None):
     #     print ("**********************************************************************************")
     #     print (input_path, output_path, project_name, start_frame, last_frame)
@@ -430,45 +517,6 @@ class MayaAPI():
     #     else:
     #         return output_path.replace('.mov', '.jpg')
     
-    @staticmethod
-    def modeling_publish_set(self):
-        # 1. 에셋 스케일 고정 (Freeze Transformations)
-        selected_objects = cmds.ls(selection=True)
-        if selected_objects:
-            cmds.makeIdentity(selected_objects, apply=True, scale=True)
-            print("선택된 오브젝트의 Scale이 1로 고정되었습니다.")
-        else:
-            print("선택된 오브젝트가 없습니다. Scale 고정 작업을 건너뜁니다.")
-
-        # 2. 히스토리 삭제 (Delete History) Edit → Delete by Type → History
-        if selected_objects:
-            cmds.delete(selected_objects, constructionHistory=True)
-            print("선택된 오브젝트의 히스토리가 삭제되었습니다.")
-        else:
-            print("선택된 오브젝트가 없습니다. 히스토리 삭제 작업을 건너뜁니다.")
-
-        # 3. 사용되지 않는 쉐이더 삭제 (Delete Unused Shaders) Rendering editor → hypershade
-        all_shaders = cmds.ls(materials=True)
-        used_shaders = cmds.ls(cmds.listConnections(cmds.ls(geometry=True)), materials=True)
-
-        unused_shaders = list(set(all_shaders) - set(used_shaders))
-
-        if unused_shaders:
-            cmds.delete(unused_shaders)
-            print(f"{len(unused_shaders)}개의 필요없는 쉐이더가 삭제되었습니다.")
-        else:
-            print("삭제할 필요없는 쉐이더가 없습니다.")
-    
-    def set_single_renderable_camera(self, camera_name):
-        """
-        지정된 카메라만 렌더러블 상태로 유지하고, 다른 모든 카메라는 비활성화합니다.
-        
-        Args:
-        camera_name (str): 렌더러블 상태로 유지할 카메라의 이름.
-        """
-        all_cameras = cmds.ls(type='camera')
-        for cam in all_cameras:
-            cmds.setAttr(f"{cam}.renderable", cam == camera_name)
     
     def render_exr_sequence(self, output_path):
         """
@@ -714,3 +762,7 @@ class MayaAPI():
 
         # make_mov_with_slate_data(path, first_frame, last_frame)
 
+
+# {'input path': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/images/jpg/Tree_RIG_v001/Tree_RIG_v001.%04d.jpg', 'start frame': 1, 'last frame': 96, 'output_path': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.mov', 'output_path_jpg': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.jpg'}
+p = MayaAPI()
+p.make_ffmpeg(1001, 1096, '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/images/jpg/Tree_RIG_v001/Tree_RIG_v001.%04d.jpg', '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.mov', "baked")

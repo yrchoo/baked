@@ -93,7 +93,7 @@ class DepartmentWork():
 
     def set_render_ext(self):
         """ 턴테이블 확장자 정해주는 메서드 """
-        return "mov"
+        return "jpg"
     
     def save_scene_file(self, new_path):
         if self.tool == "maya":
@@ -125,7 +125,7 @@ class MOD(DepartmentWork):
         return publish_dict
     
     def render_data(self, render_path):
-        MayaAPI.render_file(self, render_path)
+        MayaAPI.render_file(self)
 
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
@@ -155,7 +155,8 @@ class RIG(DepartmentWork):
         return publish_dict
     
     def render_data(self, render_path):
-        MayaAPI.render_to_multiple_formats(render_path)
+        self.maya_api = MayaAPI()
+        self.maya_api.render_turntable(render_path)
 
     def save_data(self, publish_dict):
         """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
@@ -165,6 +166,7 @@ class RIG(DepartmentWork):
 
 class LDV(DepartmentWork):
     """ Publish Data: mb, ma(shader), tiff(texture) """    
+
     def make_data(self):
         """ 쉐이더 텍스쳐 데이터 따로 가져오는 메서드 """
         texture_list = MayaAPI.get_texture_list()
@@ -186,22 +188,17 @@ class LDV(DepartmentWork):
         render_ext_dict = {}
         render_ext_dict["pub"] = "tiff"
         render_ext_dict["review"] = "jpg"
-        return render_ext_dict
+        return "tiff"
     
     def render_data(self, render_path):
         MayaAPI.render_to_multiple_formats(render_path)
     
-    def set_scene_ext(self): ##### 쉐이더 제이슨 경로
-        return "ma"
-    
     def save_data(self, publish_dict):
         scene_path = publish_dict[self.get_current_file_name()]['path']
-        self.save_scene_file(scene_path)
-        for file in publish_dict:
-            if file['file type'] == 'Model Cache':
-                self.save_as_alembic(file['path'])
-        return publish_dict
+        self.save_scene_file(scene_path) # mb
+        MayaAPI.export_shader(self, ) #ma, #json
 
+        return publish_dict
 
 class ANI(DepartmentWork):
     def make_data(self):

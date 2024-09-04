@@ -5,7 +5,7 @@ export PROJECT='baked'
 export SEQ=
 export SHOT=
 export ASSET='Tree'
-export TASK='MOD'
+export TASK='LDV'
 export ASSET_TYPE='Environment'
 
         
