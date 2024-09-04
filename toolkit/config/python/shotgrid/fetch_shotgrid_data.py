@@ -330,14 +330,12 @@ class ShotGridDataFetcher():
         self.sg.upload("Version", version['id'], thumbnail_file_path, field_name="sg_uploaded_movie")
 
         return version
-    
-    def update_version_for_review(self, version, task_name, review_movie_path, description, shot_code=None, asset =None):
 
-        version_ent = self.create_new_version_entity(version, task_name, review_movie_path, description, shot_code, asset)
+    def update_version_for_review(self, version, task_name, description, review_movie_path, shot_code=None, asset =None):
+
+        version_ent = self.create_new_version_entity(version, task_name, description, shot_code, asset)
         
-        data = {
-                "description": description,
-                }
+        data = {"description": description}
 
         # ShotGrid에서 Version 엔터티 업데이트
         self.sg.upload("Version", version_ent['id'], review_movie_path, field_name="sg_uploaded_movie")

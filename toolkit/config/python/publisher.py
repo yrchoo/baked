@@ -342,7 +342,15 @@ class Publisher(QWidget):
     def _load_publish_summary(self):
         """ 퍼블리쉬할 데이터 보여주는 메서드 """
 
+        # only for shader
         self.ui.textEdit.clear()
+        print (";;;", self.dep_class.lookdev_list)
+        if self.department == "LKD":
+            self.ui.textEdit.append(f'<b>{"Shader & Texture List"}</b>')
+            for item in self.dep_class.lookdev_list:
+                self.ui.textEdit.append(f"- {item}")
+            self.ui.textEdit.append("")
+
         for file, value in self.publish_dict.items(): 
             self.ui.textEdit.append(f'<b>{file}</b>')
             self.ui.textEdit.append(f"- File type: {value['file type']}")
@@ -368,9 +376,9 @@ class Publisher(QWidget):
             ext = self.dep_class.set_render_ext()
             image_path = self._get_path_using_template("render", ext) # 부서별로 펍할 external 입력받기
 
-        self.preview_info = {'input path' : image_path,  # ***** 임시 추가
-                        'start frame' : int(self.sg.frame_start),
-                        'last frame' : int(self.sg.frame_last)}
+        # self.preview_info = {'input path' : image_path,  # ***** 임시 추가
+        #                 'start frame' : int(self.sg.frame_start),
+        #                 'last frame' : int(self.sg.frame_last)}
 
         print ("???", image_path)
 
@@ -503,8 +511,6 @@ class Publisher(QWidget):
             file_info['path'] = path
             self.preview_info['output_path'] = self._get_path_using_template("ffmpeg")
             
-            
-
             print ("..........", file, ".........")
         print (f"480_________{self.publish_dict}")
         return True
@@ -519,6 +525,7 @@ class Publisher(QWidget):
             output_path = self._get_path_using_template("capture") # 한장 뽑는 용
             self.preview_info['output_path'] = output_path
             self.preview_info['output_path_jpg'] = output_path
+            
         else: # jpg/exr sequence 일때 (mov 일때는 그냥 배제합시다)
             print ("이미지 시퀀스 ffmpeg 파일 경로 작성합니다")
             output_path = self._get_path_using_template("ffmpeg")
@@ -656,5 +663,4 @@ class Publisher(QWidget):
             self.sg.sg.update("PublishedFile", pub_file['id'], {"version" : version})
 
 if __name__ == "__main__":
-
     app = QApplication(sys.argv) 

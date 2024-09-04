@@ -11,14 +11,16 @@ try:
     from work_in_maya import MayaAPI
 except:
     import work_in_nuke as NukeAPI
-import work_in_nuke as NukeAPI
-
+# from work_in_nuke import NukeAPI
+from work_in_maya import MayaAPI
 import os
 
 class DepartmentWork():
     def __init__(self, treewidget, tool):
         self.tree = treewidget
         self.tool = tool
+        self.maya = MayaAPI
+        # self.nuke = NukeAPI
         self.initial_tree_setting()
         
     def initial_tree_setting(self):
@@ -128,7 +130,7 @@ class MOD(DepartmentWork):
         return publish_dict
     
     def render_data(self, render_path):
-        MayaAPI.render_file(self)
+        MayaAPI.render_turntable(render_path)
 
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
@@ -169,38 +171,51 @@ class RIG(DepartmentWork):
 
 class LKD(DepartmentWork):
     """ Publish Data: mb, ma(shader), tiff(texture) """    
-
+    def __init__(self, treewidget, tool):
+        super().__init__(treewidget, tool)
+        texture_list = MayaAPI.get_texture_list(self)
+        shader_list = MayaAPI.get_custom_shader_list()
+        self.lookdev_list = []
+        self.lookdev_list.extend(texture_list)
+        self.lookdev_list.extend(shader_list)
+    
     def make_data(self):
         """ 쉐이더 텍스쳐 데이터 따로 가져오는 메서드 """
-        texture_list = MayaAPI.get_texture_list(self)
-        shader_list = MayaAPI.get_custom_shader_list(self)
-        lookdev_list = []
-        lookdev_list.extend(texture_list)
-        lookdev_list.extend(shader_list)
+        """ 룩뎁인 경우 디스크립션이 하나면 되는데.. """
+
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
-        try:
-            for data in lookdev_list:
-                publish_dict[data] = {'description':'', 'file type':'', 'ext': '', 'path':''}
-        except: 
-            pass
-        self.put_data_in_tree(lookdev_list)
+        ma_file = self.get_current_file_name().replace(".mb", ".ma")
+        json_file = ma_file.replace(".ma", ".json")
+        publish_dict[ma_file] = {'description':'', 'file type':'', 'ext': '', 'path':''}
+        publish_dict[json_file] = {'description':'', 'file type':'', 'ext': '', 'path':''} ### json...
+        self.put_data_in_tree(publish_dict)
         return publish_dict
 
     def set_render_ext(self): #######
         """ 렌더 확장자 정해주는 메서드 """
-        render_ext_dict = {}
-        render_ext_dict["pub"] = "tiff"
-        render_ext_dict["review"] = "jpg"
-        return "tiff"
+
+        return "exr"
     
     def render_data(self, render_path):
-        MayaAPI.render_to_multiple_formats(render_path)
+        MayaAPI.render_file(self, render_path) 
     
     def save_data(self, publish_dict):
-        scene_path = publish_dict[self.get_current_file_name()]['path']
+        self.maya_api = MayaAPI()
+        file_name = self.get_current_file_name()
+        scene_path = publish_dict[file_name]['path'].replace(".ma", ".mb")
         self.save_scene_file(scene_path) # mb
-        MayaAPI.export_shader(self, ) #ma, #json
 
+        ma_file = self.get_current_file_name().replace(".mb", ".ma")
+        ma_file_path = publish_dict[ma_file]['path']
+        json_file_name, json_file_path = self.maya_api.export_shader(ma_file_path) #ma, #json
+
+        publish_dict[json_file_name]['path'] = json_file_path # json
+        print ("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
+        print (scene_path)
+        print (publish_dict)
+        print (publish_dict[file_name]['path'])
+        publish_dict[file_name]['path'] = scene_path # mb
+        print ("~~~", publish_dict)
         return publish_dict
 
 class ANI(DepartmentWork):
@@ -286,9 +301,6 @@ class LGT(DepartmentWork):
         # 누크에서는 바로 thumbnail을 render하지 않습니다
         pass
 
-    
-
-    # 라이팅 누크쪽
 
 class MM(DepartmentWork):
     def make_data(self):
@@ -315,7 +327,6 @@ class MM(DepartmentWork):
             elif "Scene" in file['file type']:
                 self.save_scene_file(info['path'])
         return publish_dict
-    
 
 class CMP(DepartmentWork):
     def make_data(self):
@@ -335,10 +346,14 @@ class CMP(DepartmentWork):
         """데이터 저장하기"""
         scene_path = publish_dict[self.get_current_file_name()]['path']
         self.save_scene_file(scene_path) # nknc
-        # exr 
-        # mov 
-        # ... ffmpeg => mov (slate)
-     
+        for file, info in list(publish_dict.items()):
+            if 'EXR' in info['file type']: # 
+                NukeAPI.render_selected_write_nodes_with_exr(info['path'], 1001, 1096)
+            elif 'Comp' in info['file type']:
+                scene_path = publish_dict[self.get_current_file_name()]['path']
+                self.save_scene_file(scene_path)
+        return publish_dict
+    
 class FX(DepartmentWork):
     def make_data(self):
         pass
