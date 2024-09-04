@@ -101,6 +101,8 @@ class Publisher(QWidget):
         self.department = self.user_data['task']
         self.dep_class = getattr(department_publish, self.department)(self.tree, self.tool) # 부서 클래스를 인스턴스화 하기
         self.publish_dict = self.dep_class.make_data()
+        self.tree.setCurrentItem(self.tree.topLevelItem(0))
+        self._show_file_detail(self.tree.topLevelItem(0), 0)
         print (f"self.user_Data: {self.user_data}")
         print (f"self.publish_dict: {self.publish_dict}")
 
@@ -384,7 +386,9 @@ class Publisher(QWidget):
         else:
             parse = re.compile("[v]\d{3}") # 캡쳐를 하는 경우
             for file in files:
+                print (os.path.basename(file))
                 version = parse.search(os.path.basename(file)).group()[1:]
+                print (version)
                 if version == self.user_data["version"]:
                     recent_image_file = file
                     self.preview_info = {'input path' : image_path,
@@ -446,7 +450,7 @@ class Publisher(QWidget):
             image_path = self._get_path_using_template("render", ext)
             self._check_validate(image_path)
             self.dep_class.render_data(image_path)  
-            self._show_thumbnail(self.ui.radioButon_render)
+            self._show_thumbnail(self.ui.radioButton_render)
     
     ######################### PUBLISH 버튼 누르면 발생하는 이벤트 ############################
 
@@ -465,23 +469,15 @@ class Publisher(QWidget):
     
     def _save_file_pub(self):
         """ (1) pub 파일에 저장하는 메서드 (scene파일, cache만) (version 작업 파일 그대로) """
-        """ 펍할때는 무조건 scene파일 올리는거니까 scene파일 선택되어있지 않으면 versions로만 올린다는 이야기 """
-        """ 펍한다고 하면 펍한다고 체크한 데이터들로만 진행 """
+        """ pub 파일에 들어갈 내용들"""
 
         print ("----------", list(self.publish_dict.keys()))
         scene_file = list(self.publish_dict.keys())[0]
         print (f"--------451 scene_file {scene_file}---------")
         try:
-            self._get_path_for_selected_files()
+            self._get_path_for_selected_files()  # file type 선택 안 된 경우 걸러내기
         except:
             return
-        
-        for file in self.publish_dict: # publish dict에 있는 확장자를 이용해서 pub 경로 만들기
-            try:
-                ext = self.publish_dict['ext']
-            except:
-                ext = ''
-            self._get_path_using_template('pub', ext)
 
         self.publish_dict = self.dep_class.save_data(self.publish_dict)
         print (f"476: save_file_pub: {self.publish_dict}")
@@ -491,18 +487,16 @@ class Publisher(QWidget):
         self.ui.label_info_2.clear()
         for file, file_info in self.publish_dict.items():
             print ("+++", file,  file_info['file type'])
-            try:  ### check empty data
-                file_info['file type']
-            except:
+            if not file_info['file type']: 
                 self.ui.label_file_info_2.setText(f"Please select file type")
                 return False
+            
             print (3333, file_info['ext'], self.file_type_ext, self.file_type_ext[file_info['file type']])
 
             file_info['ext'] = self.file_type_ext[file_info['file type']]
             self.user_data['group'] = file
             path = self._get_path_using_template("pub", file_info['ext'])
             file_info['path'] = path
-            
             print ("..........", file, ".........")
         print (f"480_________{self.publish_dict}")
         return True
@@ -510,19 +504,23 @@ class Publisher(QWidget):
     def _apply_ffmpeg(self, input_path, project_name):
         """ (3) ffmpeg 만드는 메서드"""
         """ 예린님 코드로 연결시키기"""
-
-        if os.path.splitext(input_path)[1] == ".jpg":
-            output_path = self._get_path_using_template("ffmpeg", "jpg")
+        print ("_____", os.path.split(input_path))
+        print ("*****", os.path.splitext(input_path)[1])
+        if self.preview_info['last frame'] == 1: # 캡쳐일때
+            print ("캡쳐 ffmpeg 파일 경로 작성합니다")
+            output_path = self._get_path_using_template("capture") # 한장 뽑는 용
             self.preview_info['output_path'] = output_path
             self.preview_info['output_path_jpg'] = output_path
-        else:
+        else: # jpg/exr sequence 일때 (mov 일때는 그냥 배제합시다)
+            print ("이미지 시퀀스 ffmpeg 파일 경로 작성합니다")
             output_path = self._get_path_using_template("ffmpeg")
             self.preview_info['output_path'] = output_path
-            self.preview_info['output_path_jpg'] = self._export_slate_image(output_path)
-
-        start_frame = self.preview_info['start frame']
-        last_frame = self.preview_info['last frame']
-        self.maya_api.make_ffmpeg(start_frame, last_frame, input_path, output_path, project_name)
+            self.preview_info['output_path_jpg'] = self._get_path_using_template("ffmpeg", "jpg")
+        
+            start_frame = self.preview_info['start frame']
+            last_frame = self.preview_info['last frame']
+            self.maya_api.make_ffmpeg(start_frame, last_frame, input_path, output_path, project_name)
+            self._export_slate_image(output_path)
 
         print(f"%%%%%%%%%%%%%%%%%%%%%{self.preview_info}")
 
