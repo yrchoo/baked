@@ -8,6 +8,8 @@ import sys
 import os
 import shotgrid_total_profile
 
+import subprocess
+
 
 class UserProfile(QWidget):
     def __init__(self):
@@ -290,6 +292,8 @@ class UserProfile(QWidget):
             asset_type = self.ui.label_asset_type.text()
 
         Make_User_Data(name, project, seq, shot, asset, task, asset_type)
+        subprocess.Popen(["python3.9 /home/rapa/baked/show/toolkit/python/shotgrid/webhook_server.py &"], shell=True)
+        # JSON().publish() -> 현재까지 저장된 json들을 모두 읽어와서 각 데이터를 publish해준다
         self.close()
         
     #샷그리드가 작동하지 않을경우 새로운 로그인창 연결.
