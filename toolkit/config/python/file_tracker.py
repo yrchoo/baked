@@ -68,12 +68,13 @@ class Tracker(QWidget):
 
     def get_opened_file_list(self, open_file_path_list = None):
         if open_file_path_list :
+            print(f"!!!!!!!!!!!!!!!!!Get Open File : {open_file_path_list}")
             self.opened_file_path_list = open_file_path_list
         # 현재 내가 열고 있는 모든 파일들의 정보를 shotgrid에서 읽어와서 저장한다
         if self.opened_file_path_list :
             for data in self.opened_file_path_list:
                 file_name = os.path.basename(data)
-                if self.opened_file_dict[file_name] :
+                if file_name in self.opened_file_dict.keys() :
                     continue
                 filters = [
                     ["project", "is", self.sg.project],
@@ -95,24 +96,29 @@ class Tracker(QWidget):
     def _set_list_data(self):
         self.ui.listWidget_using.clear()
         self.ui.listWidget_not.clear()
+        using_row = 0
 
         if not self.opened_file_dict:
             self.ui.listWidget_not.addItems(self.lastest_file_dict.keys())
+            return
 
-            for file in self.lastest_file_dict.keys():
-                parse = re.compile("v\d{3}")
-                p_data = parse.search(file).group()
-                file_name = file.split(p_data)[0]
+        for file in self.lastest_file_dict.keys():
+            parse = re.compile("v\d{3}")
+            p_data = parse.search(file).group()
+            file_name = file.split(p_data)[0]
+            _, ext = os.path.splitext(file)
 
-                opened_file = next((key for key, f in self.opened_file_dict.items() if file_name in key), None)
-                if not opened_file:
-                    print(f"Put {file} in not using list.")
-                    self.ui.listWidget_not.addItem(file)
-                else:
-                    print(f"Put {opened_file} in using list.")
-                    item = self.ui.listWidget_using.addItem(opened_file)
-                    if file != opened_file :
-                        item.setBackground(QColor("yellow"))
+            opened_file = next((key for key, f in self.opened_file_dict.items() if file_name in key and ext in key), None)
+            if not opened_file:
+                print(f"Put {file} in not using list.")
+                self.ui.listWidget_not.addItem(file)
+            else:
+                print(f"Put {opened_file} in using list.")
+                self.ui.listWidget_using.addItem(opened_file)
+                item = self.ui.listWidget_using.item(using_row)
+                using_row += 1
+                if file != opened_file :
+                    item.setBackground(QColor("yellow"))
                     
 
     
@@ -213,6 +219,7 @@ class Tracker(QWidget):
         thumbnail_path = f"{thumbnail_dir}{file}_slate.jpg"
         self.cur_showing_data['movie_path'] = f"{thumbnail_dir}{file}_slate.mov"
         if os.path.exists(thumbnail_path):
+            print(f"showing thumbnail... {thumbnail_path}")
             pixmap = QPixmap(thumbnail_path)
             self.ui.label_thumbnail.setPixmap(pixmap)
             self.ui.label_thumbnail.setScaledContents(True)
@@ -249,7 +256,7 @@ class Tracker(QWidget):
             cur_path = self.opened_file_dict[reload_item.text()]
             new_v_key = next((key for key, f in self.lastest_file_dict.items() if self.opened_file_dict[reload_item.text()]['task']['id'] == f['task']['id']), None)
 
-            self.opened_file_dict.pop(key)
+            self.opened_file_dict.pop(reload_item)
             self.opened_file_dict[new_v_key] = self.lastest_file_dict[new_v_key]
 
             reload_item.setText(new_v_key)
@@ -259,7 +266,6 @@ class Tracker(QWidget):
             self._show_selected_item_data(reload_item)
             reload_item.setBackground(QColor(None))
             self.RELOAD_FILE.emit(cur_path, new_path)
-
         elif load_item:
             key = load_item.text()
             file_path = self.lastest_file_dict[key]['path']['local_path']
