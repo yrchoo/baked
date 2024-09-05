@@ -98,21 +98,23 @@ class Tracker(QWidget):
 
         if not self.opened_file_dict:
             self.ui.listWidget_not.addItems(self.lastest_file_dict.keys())
+            return
 
-            for file in self.lastest_file_dict.keys():
-                parse = re.compile("v\d{3}")
-                p_data = parse.search(file).group()
-                file_name = file.split(p_data)[0]
+        for file in self.lastest_file_dict.keys():
+            parse = re.compile("v\d{3}")
+            p_data = parse.search(file).group()
+            file_name = file.split(p_data)[0]
+            _, ext = os.path.splitext(file)
 
-                opened_file = next((key for key, f in self.opened_file_dict.items() if file_name in key), None)
-                if not opened_file:
-                    print(f"Put {file} in not using list.")
-                    self.ui.listWidget_not.addItem(file)
-                else:
-                    print(f"Put {opened_file} in using list.")
-                    item = self.ui.listWidget_using.addItem(opened_file)
-                    if file != opened_file :
-                        item.setBackground(QColor("yellow"))
+            opened_file = next((key for key, f in self.opened_file_dict.items() if file_name in key and ext in key), None)
+            if not opened_file:
+                print(f"Put {file} in not using list.")
+                self.ui.listWidget_not.addItem(file)
+            else:
+                print(f"Put {opened_file} in using list.")
+                item = self.ui.listWidget_using.addItem(opened_file)
+                if file != opened_file :
+                    item.setBackground(QColor("yellow"))
                     
 
     
@@ -213,6 +215,7 @@ class Tracker(QWidget):
         thumbnail_path = f"{thumbnail_dir}{file}_slate.jpg"
         self.cur_showing_data['movie_path'] = f"{thumbnail_dir}{file}_slate.mov"
         if os.path.exists(thumbnail_path):
+            print(f"showing thumbnail... {thumbnail_path}")
             pixmap = QPixmap(thumbnail_path)
             self.ui.label_thumbnail.setPixmap(pixmap)
             self.ui.label_thumbnail.setScaledContents(True)
@@ -259,7 +262,6 @@ class Tracker(QWidget):
             self._show_selected_item_data(reload_item)
             reload_item.setBackground(QColor(None))
             self.RELOAD_FILE.emit(cur_path, new_path)
-
         elif load_item:
             key = load_item.text()
             file_path = self.lastest_file_dict[key]['path']['local_path']

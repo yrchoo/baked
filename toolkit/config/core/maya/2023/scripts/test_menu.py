@@ -54,6 +54,7 @@ def save_func():
     save_win.save_file(path)
 
 def tracker_func():
+    tracker_win.get_opened_file_list(get_ref_file_path_list())
     tracker_win.show()
 
 def open_file(path):
@@ -83,11 +84,11 @@ def open_file(path):
             cmds.setAttr('defaultRenderGlobals.endFrame', int(sg.frame_end))
 
         else:
-            cmds.playbackOptions(min=1001, max=1050)
+            cmds.playbackOptions(min=1001, max=1096)
             # cmds.currentTime(sg.frame_start)
             
             cmds.setAttr('defaultRenderGlobals.startFrame', 1001)
-            cmds.setAttr('defaultRenderGlobals.endFrame', 1050)
+            cmds.setAttr('defaultRenderGlobals.endFrame', 1096)
 
         # 렌더 프레임 설정
         
