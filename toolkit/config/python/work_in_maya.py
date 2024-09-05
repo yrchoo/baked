@@ -93,6 +93,14 @@ class MayaAPI():
             if camera_name in transform_node:
                 camera_transform = transform_node
                 break
+        
+        # dome light 만들기
+        dome_lights = cmds.ls(type='aiSkyDomeLight')  # Arnold 돔라이트 확인
+        if dome_lights:
+            print("Dome light already exists.")
+            return True
+        else:
+            cmds.shadingNode("aiSkyDomeLight", asLight=True, name="domedome")
 
         # 카메라가 존재하지 않으면 새로 생성
         if camera_transform is None:
@@ -198,12 +206,12 @@ class MayaAPI():
         # 이 경우 ffmpeg에 사운드 파일을 추가하는 설정이 필요합니다.
         ffmpeg = "ffmpeg"
         slate_size = 60
-        font_path = "/home/rapa/문서/font/waltographUI.ttf"
+        font_path = "/home/rapa/baked/toolkit/config/core/content/font/Courier_New.ttf"
         frame_count = int(last_frame) - int(start_frame)
         # frame_count = 10
-        font_size = "min(20, ih*0.05)"  # 높이의 5%로 폰트 크기를 설정, 최대 40으로 제한
-        text_x_padding = "iw*0.01"  # 너비의 1%로 X 패딩 설정
-        text_y_padding = "ih*0.02"  # 높이의 2%로 Y 패딩 설정
+        font_size = 40
+        text_x_padding = 10
+        text_y_padding = 20
 
         # top_left = cmds.file(query=True, sn=True, shn=True)
         top_left, _ = os.path.splitext(os.path.basename(output_path))
@@ -235,81 +243,16 @@ class MayaAPI():
         os.system(cmd)
         return output_path
     
-    def make_ffmpeg_jpg(self, top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path):
-        
-        self.find_frame(input_path)
-        # self.input_jpg_slate(top_left, top_center, top_right, bot_left, bot_center, bot_right)
-        
-        self.gamma = "eq=gamma=1.4,"
-        self.render_jpg_slate(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
-        
-    def find_frame(self, input):
-        probe = ffmpeg.probe(input)
-        video_stream = next((stream for stream in probe['streams']if stream['codec_type'] == 'video'),None)
-        self.width = int(video_stream['width'])
-        self.height = int(video_stream['height'])
-
-    
-    def render_jpg_slate(self, top_left, top_center, top_right, bot_left, bot_center, bot_right, input, output):
-        font_size = self.height / 18 - 5
-        box_size = self.height / 18
-        fontfile = "/home/rapa/문서/font/waltographUI.ttf"
-        
-        # drawtext 필터를 위한 문자열 구성
-        top_left_text = f"drawtext=fontfile={fontfile}:text='{top_left}':x=5:y=2:fontcolor=white@0.7:fontsize={font_size}"
-        top_center_text = f"drawtext=fontfile={fontfile}:text='{top_center}':x=(w-tw)/2:y=2:fontcolor=white@0.7:fontsize={font_size}"
-        top_right_text = f"drawtext=fontfile={fontfile}:text='{top_right}':x=w-tw-5:y=2:fontcolor=white@0.7:fontsize={font_size}"
-        bot_left_text = f"drawtext=fontfile={fontfile}:text='{bot_left}':x=5:y=h-th:fontcolor=white@0.7:fontsize={font_size}"
-        bot_center_text = f"drawtext=fontfile={fontfile}:text='{bot_center}':x=(w-tw)/2:y=h-th:fontcolor=white@0.7:fontsize={font_size}"
-        bot_right_text = f"drawtext=fontfile={fontfile}:text='{bot_right}':x=w-tw-5:y=h-th:fontcolor=white@0.7:fontsize={font_size}"
-        
-        # drawbox 필터를 위한 문자열 구성
-        box_filter = (
-            f"drawbox=x=0:y=0:w={self.width}:h={box_size}:color=black@1:t=fill,"
-            f"drawbox=x=0:y={self.height-box_size}:w={self.width}:h={box_size}:color=black@1:t=fill"
-        )
-        
-        # 전체 필터 문자열 구성
-        vf_filter = f"{box_filter},{top_left_text},{top_center_text},{top_right_text},{bot_left_text},{bot_center_text},{bot_right_text}"
-
-        # ffmpeg 명령어 문자열 구성
-        cmd = f'ffmpeg -i {input} -vf "{vf_filter}" -y {output}'
-        
-        # ffmpeg 명령어 실행
-        os.system(cmd)
-            
-        # (
-        #     ffmpeg
-        #     .input(input)    
-        #     .output(output,vf=f"{self.box}"f"{self.gamma}"f"{self.top_Left},{self.top_Middel},{self.top_Right},{self.bot_Left},{self.bot_Middle},{self.bot_Right}")
-        #     .overwrite_output()
-        #     .run()
-        # )  
-
-    def input_jpg_slate(self, top_left, top_center, top_right, bot_left, bot_center, bot_right):
-        
-        font_size = self.height/18 - 5
-        box_size = self.height/18
-        fontfile = "/home/rapa/문서/font/waltographUI.ttf"
-        self.top_Left = f"drawtext=fontfile={fontfile}:text   = {top_left}: : x=5:y=2           :fontcolor=white@0.7:fontsize={font_size}"
-        self.top_Middel = f"drawtext=fontfile={fontfile}:text = {top_center}: : x=(w-tw)/2:y=2   :fontcolor=white@0.7:fontsize={font_size}"
-        self.top_Right = f"drawtext=fontfile={fontfile}:text  = {top_right}: : x=w-tw-5:y=2      :fontcolor=white@0.7:fontsize={font_size}"
-        self.bot_Left = f"drawtext=fontfile={fontfile}:text   = {bot_left}: : x=5:y=h-th        :fontcolor=white@0.7:fontsize={font_size}"
-        self.bot_Middle = f"drawtext=fontfile={fontfile}:text = {bot_center}: : x=(w-tw)/2:y=h-th :fontcolor=white@0.7:fontsize={font_size}"
-        self.bot_Right = f"drawtext=fontfile={fontfile}: text = {bot_right}:start_number = 1001 : x=w-tw-5:y=h-th     :fontcolor=white@0.7:fontsize={font_size}"
-        self.box = f"drawbox = x=0: y=0: w={self.width}: h={box_size}: color = black: t=fill,drawbox = x=0: y={self.height-box_size}: w={self.width}: h={self.height}: color = black: t=fill,"
-
 
 ################################## 매치무브 ###################################3
 
     def get_undistortion_size(self):
         width = cmds.getAttr('defualtResolution.width')
         height = cmds.getAttr('defaultResolution.height')
+
         return width, height
     
-
 ##################################################################################33
-
 
     def render_to_multiple_formats(self, output_path, width=1920, height=1080):
 
@@ -343,7 +286,20 @@ class MayaAPI():
 
     def render_file(self, outpath):
         output_dir = f"{os.path.dirname(outpath)}/"  # 렌더링 이미지가 저장될 경로
-        print (outpath, output_dir)
+        print ("렌더중", outpath, output_dir)
+        
+        camera_name = None
+        if cmds.objExists("aniCam"):
+            camera_name = "aniCam"
+        elif cmds.objExists("mmCam"):
+            camera_name = "mmCam"
+        
+        if not camera_name:
+            print("Error: Neither 'aniCam' nor 'mmCam' exists in the scene.")
+            return
+        
+        self.set_single_renderable_camera(camera_name)
+
         filename_template = "<Scene>"
         cmds.setAttr("defaultRenderGlobals.imageFilePrefix", output_dir + filename_template, type="string") ### 경로 설정해주기
         cmds.setAttr("defaultRenderGlobals.extensionPadding", 4)
@@ -354,7 +310,7 @@ class MayaAPI():
         return thumbnail_path
         
     def convert_exr_into_jpg(self, input_file):
-        output_file = input_file.replace(".%04d.exr", ".jpg")
+        output_file = input_file.replace(".####.exr", ".jpg")
         files = glob.glob(f"{os.path.dirname(output_file)}/*")
         input_file = max(files, key=os.path.getmtime)
         print (input_file, output_file)
@@ -396,7 +352,7 @@ class MayaAPI():
                 shader_dictionary[shader_name].extend(objects)
         return shader_dictionary
 
-    def export_shader(self, ma_file_path):
+    def export_shader(self, ma_file_path, json_file_path):
         """
         maya에서 오브젝트에 어싸인된 셰이더들을 ma 파일로 익스포트하고,
         그 정보들을 json 파일로 익스포트 하는 함수이다.
@@ -426,7 +382,7 @@ class MayaAPI():
 
         return json_file_name, json_file_path
 
-    
+    @staticmethod
     def get_custom_shader_list(self):
         """
         Maya 씬에서 기본 쉐이더를 제외한 사용자 정의 쉐이더 목록을 가져옵니다.
@@ -467,83 +423,6 @@ class MayaAPI():
         textures = textures.remove("")
         print("텍스처 파일 이름 목록:", textures)
         return textures
-
-    # def make_ffmpeg(self, input_path, output_path, project_name, start_frame=None, last_frame=None):
-    #     print ("**********************************************************************************")
-    #     print (input_path, output_path, project_name, start_frame, last_frame)
-    #     ## 플레이블라스트로 렌더링한 이미지를 FFMPEG 라이브러리를 이용해서 동영상을 인코딩한다.
-    #     first = 1001
-    #     frame_rate = 24 
-    #     # 사운드가 있는 경우 23.976 으로 합니다.
-    #     # 이 경우 ffmpeg에 사운드 파일을 추가하는 설정이 필요합니다.
-    #     ffmpeg = "ffmpeg"
-    #     slate_size = 60
-    #     font_path = "/home/rapa/문서/font/waltographUI.ttf"
-    #     font_size = 40
-    #     text_x_padding = 10
-    #     text_y_padding = 20
-
-    #     # top_left = cmds.file(query=True, sn=True, shn=True)
-    #     top_left = os.path.splitext(output_path)[0].split('/')[-1]
-    #     top_center = project_name
-    #     top_right = datetime.date.today().strftime("%Y/%m/%d")
-    #     bot_left = "SIZE : 1920x1080"
-    #     bot_center = ""
-
-    #     cmd = f'{ffmpeg}'
-    #     bot_right = "Frame 1"
-    #     cmd += ' -i %s ' % (input_path)
-
-    #     if last_frame is None:
-    #         bot_right = "Frame 1"
-    #         cmd = f'{ffmpeg}'
-    #         cmd += ' -i %s ' % (input_path)
-    #         cmd += ' -vf "drawbox=y=0 :color=black :width=iw: height=%s :t=fill, ' % (slate_size)
-        #     cmd += 'drawbox=y=ih-%s :color=black :width=iw: height=%s :t=fill, ' % (slate_size, slate_size)
-        #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=%s :y=%s,' % (font_path, font_size, top_left, text_x_padding, text_y_padding)
-        #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=(w-text_w)/2 :y=%s,' % (font_path, font_size, top_center, text_y_padding)
-        #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=w-tw-%s :y=%s,' % (font_path, font_size, top_right, text_x_padding, text_y_padding)
-        #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=%s :y=h-th-%s,' % (font_path, font_size, bot_left, text_x_padding, text_y_padding)
-        #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=(w-text_w)/2 :y=h-th-%s,' % (font_path, font_size, bot_center, text_y_padding)
-        #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=w-tw-%s :y=h-th-%s' % (font_path, font_size, bot_right, text_x_padding, text_y_padding)
-        #     cmd += '"'`
-        #     cmd += f' -frames:v 1 {output_path.replace(".mov", ".jpg")}
-        #     os.system(cmd)
-        #     return output_path.replace('.mov', '.jpg')
-    
-
-              
-    #     else:
-    #         frame_count = int(last_frame) - int(start_frame)
-    #         frame_cmd = "'Frame \: %{eif\:n+"
-    #         frame_cmd += "%s\:d}' (%s)"  % (first, frame_count+1)
-    #         bot_right = frame_cmd
-    #         cmd += ' -framerate %s -y -start_number %s ' % (frame_rate, first)
-        
-    #     cmd += '-i %s' % (input_path)
-    #     cmd += ' -vf "drawbox=y=0 :color=black :width=iw: height=%s :t=fill, ' % (slate_size)
-    #     cmd += 'drawbox=y=ih-%s :color=black :width=iw: height=%s :t=fill, ' % (slate_size, slate_size)
-    #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=%s :y=%s,' % (font_path, font_size, top_left, text_x_padding, text_y_padding)
-    #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=(w-text_w)/2 :y=%s,' % (font_path, font_size, top_center, text_y_padding)
-    #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=w-tw-%s :y=%s,' % (font_path, font_size, top_right, text_x_padding, text_y_padding)
-    #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=%s :y=h-th-%s,' % (font_path, font_size, bot_left, text_x_padding, text_y_padding)
-    #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=(w-text_w)/2 :y=h-th-%s,' % (font_path, font_size, bot_center, text_y_padding)
-    #     cmd += 'drawtext=fontfile=%s :fontsize=%s :fontcolor=white@0.7 :text=%s :x=w-tw-%s :y=h-th-%s' % (font_path, font_size, bot_right, text_x_padding, text_y_padding)
-    #     cmd += '"'
-    #     # cmd += ' -c:v libx264 %s' % output_path
-    #     if last_frame:
-    #         cmd += ' -c:v prores_ks -profile:v 3 -colorspace bt709 %s' % output_path
-    #     elif last_frame == None:
-    #         cmd += f' -frames:v 1 {output_path.replace(".mov", ".jpg")}'
-    #     try:
-    #         os.system(cmd)
-    #     except:
-    #         print ("Ffmpeg doesn't work")
-    #     if last_frame:
-    #         return output_path
-    #     else:
-    #         return output_path.replace('.mov', '.jpg')
-    
     
     def render_exr_sequence(self, output_path):
         """
@@ -557,13 +436,13 @@ class MayaAPI():
         """
 
         camera_name = None
-        if cmds.objExists("anicam"):
-            camera_name = "anicam"
-        elif cmds.objExists("mmcam"):
-            camera_name = "mmcam"
+        if cmds.objExists("aniCam"):
+            camera_name = "aniCam"
+        elif cmds.objExists("mmCam"):
+            camera_name = "mmCam"
         
         if not camera_name:
-            print("Error: Neither 'anicam' nor 'mmcam' exists in the scene.")
+            print("Error: Neither 'aniCam' nor 'mmCam' exists in the scene.")
             return
         
         print(f"Using camera: {camera_name}")
@@ -716,6 +595,21 @@ class MayaAPI():
         Args:
             output_dir (str): 렌더링된 이미지가 저장될 디렉토리 경로.
         """
+
+        camera_name = None
+        if cmds.objExists("aniCam"):
+            camera_name = "aniCam"
+        elif cmds.objExists("mmCam"):
+            camera_name = "mmCam"
+        
+        if not camera_name:
+            print("Error: Neither 'aniCam' nor 'mmCam' exists in the scene.")
+            return
+        
+        print(f"Using camera: {camera_name}")
+        
+        # 지정된 카메라만 렌더러블 상태로 유지
+        self.set_single_renderable_camera(camera_name)
         path = publish_dict[layer]["path"]
         output_dir = '/'.join(path.split('/')[:-1])
 
@@ -749,50 +643,3 @@ class MayaAPI():
             cmds.arnoldRender(batch=True)
             print(f"{layer} 레이어의 EXR 렌더링이 완료되었습니다.")
     
-        # import nuke
-        # import os
-
-        # path = "/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/CMP/pub/nuke/images/ABC_0010_CMP_v001/ABC_0010_CMP_v001.####.exr"
-        # first_frame = 1001
-        # last_frame = 1096
-
-
-        # def make_mov_with_slate_data(path, first_frame, last_frame):
-        #     """nuke? lighting? """
-        #     read_node = nuke.nodes.Read()
-        #     read_node.knob("file").setValue(path)
-        #     read_node.knob("first").setValue(first_frame)
-        #     read_node.knob("last").setValue(last_frame)
-            
-        #     slate_node = nuke.createNode("slate_baked")
-        #     slate_node.setInput(0, read_node)
-        #     slate_node.knob("top_center").setValue("BAKED") # 후에 Shotgrid에서 가져온 데이터로 수정
-        #     slate_node.knob("bottom_center").setValue("추예린")
-
-        #     dirname = os.path.dirname(path)
-        #     basename = os.path.basename(path)
-        #     file_name = basename.split('.')[0] + ".mov"
-        #     new_path = f"/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/CMP/pub/nuke/mov/"
-        #     if not os.path.exists(new_path):
-        #         os.makedirs(new_path)
-        #     new_path += file_name
-        #     print(new_path)
-
-        #     write_node = nuke.createNode("Write")
-        #     write_node.setInput(0, slate_node)
-        #     write_node.knob("file_type").setValue("mov")
-        #     write_node.knob("file").setValue(new_path)
-
-        #     nuke.execute(write_node, start=first_frame, end=last_frame, incr=1)
-        
-
-
-        # make_mov_with_slate_data(path, first_frame, last_frame)
-
-
-# {'input path': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/images/jpg/Tree_RIG_v001/Tree_RIG_v001.%04d.jpg', 'start frame': 1, 'last frame': 96, 'output_path': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.mov', 'output_path_jpg': '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.jpg'}
-# p = MayaAPI()
-# p.make_ffmpeg(1001, 1096, '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/images/jpg/Tree_RIG_v001/Tree_RIG_v001.%04d.jpg', '/home/rapa/baked/show/baked/AST/Environment/Tree/RIG/pub/maya/movies/ffmpeg/Tree_RIG_v001_slate.mov', "baked")
-
-# m = MayaAPI()
-# m.make_ffmpeg(1001, 1096, "/home/rapa/baked/show/baked/AST/Environment/Tree/LKD/pub/maya/images/exr/Tree_LKD_v001/Tree_LKD_v001.%04d.exr", "/home/rapa/again_again_test.mov", "baked")

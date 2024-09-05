@@ -1,6 +1,6 @@
 #!/bin/sh
  
-export NAME='Yerin Choo'
+export NAME='JAEYOUN KIM'
 export PROJECT='baked'
 export SEQ=
 export SHOT=

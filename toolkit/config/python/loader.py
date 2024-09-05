@@ -178,15 +178,11 @@ class Loader(QWidget):
         my_task_path = self._get_path()
         self._add_to_tree_widget_by_path_recursive(work_item, my_task_path)
 
-    def set_content_tree_widget_by_shotgrid(self, new_content_data=None):
+    def set_content_tree_widget_by_shotgrid(self):
         """
         현재 작업에서 불러와야하는 pub된 자료들을 띄워주는 treeWidget_content에
         Shotgrid에서 읽어온 데이터를 넣어주는 메서드
         """
-        if new_content_data:
-            self.content_files_data = new_content_data
-            return
-
         self.ui.treeWidget_content.clear()
         
         content_tree = self.ui.treeWidget_content

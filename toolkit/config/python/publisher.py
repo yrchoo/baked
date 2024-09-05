@@ -13,10 +13,10 @@ except:
 
 from shotgun_api3 import shotgun
 import department_publish
-from department_publish import DepartmentWork, MOD, RIG
+from department_publish import DepartmentWork
 import shotgrid.fetch_shotgrid_data
 from importlib import reload
-from capture_module import SubWindow_Open, MakeScreenCapture
+from capture_module import SubWindow_Open
 
 from shotgrid.shotgridserver_json_new import PubDataJsonCreator
 
@@ -104,8 +104,6 @@ class Publisher(QWidget):
         self.publish_dict = self.dep_class.make_data()
         self.tree.setCurrentItem(self.tree.topLevelItem(0))
         self._show_file_detail(self.tree.topLevelItem(0), 0)
-        print (f"self.user_Data: {self.user_data}")
-        print (f"self.publish_dict: {self.publish_dict}")
 
     def _get_user_info(self, user_data):
         """ 유저에 대한 정보 가저오는 메서드 """ # 임시 설정 
@@ -424,25 +422,29 @@ class Publisher(QWidget):
             return
         self._thumbnail_pixmap(recent_image_file)
 
+
+        
     def _thumbnail_pixmap(self, recent_image_file):
         """썸네일 비율 맞춰서 보여주기"""
 
         # ui에 썸네일 미리보여주기
         pixmap = QPixmap(recent_image_file) 
-    
+        print (recent_image_file)
         # 원본 이미지의 너비와 높이 가져오기
         original_width = pixmap.width()
         original_height = pixmap.height()
         
-        # 비율을 유지하면서 주어진 높이에 맞게 너비를 계산
-        scale_factor_height = 162 / original_height
-        scale_factor_width = 288 / original_width
-        new_width = int(original_width * scale_factor_width)
-        new_height = int(original_height * scale_factor_height)
+        try:# 비율을 유지하면서 주어진 높이에 맞게 너비를 계산
+            scale_factor_height = 162 / original_height
+            scale_factor_width = 288 / original_width
+            new_width = int(original_width * scale_factor_width)
+            new_height = int(original_height * scale_factor_height)
     
-        # 이미지 크기 조정 (비율 유지, 고정 높이)
-        scaled_pixmap = pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
-        self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
+            # 이미지 크기 조정 (비율 유지, 고정 높이)
+            scaled_pixmap = pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
+            self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
+        except:
+            print("dpfj qkftod")
         print (f"420:: self.preview_info {self.preview_info}")
 
     def _get_frame_number(self, files):
@@ -713,17 +715,18 @@ class Publisher(QWidget):
             publish = self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
 
             if not publish :
-                self.backup_data.update({"PublishedFile" : 
-                                        {
-                                            "code" : os.path.basename(file_path),
-                                            "file_path" : file_path, 
-                                            "description" : description,
-                                            "preview_path" : preview_path,
-                                            "published_file_type" : published_file_type
-                                    }
-                                })
-                PubDataJsonCreator().save_to_json(self.back_up_data)
-                self.back_up_data = None
+                pass
+                # self.backup_data.update({"PublishedFile" : 
+                #                         {
+                #                             "code" : os.path.basename(file_path),
+                #                             "file_path" : file_path, 
+                #                             "description" : description,
+                #                             "preview_path" : preview_path,
+                #                             "published_file_type" : published_file_type
+                #                     }
+                #                 })
+                # PubDataJsonCreator().save_to_json(self.back_up_data)
+                # self.back_up_data = None
 
         for pub_file in pub_files_list.values():
             # 새로운 값이 create되지 않은 파일들은 새로운 version을 version field에 업데이트 해준다
