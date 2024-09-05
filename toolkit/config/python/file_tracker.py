@@ -42,7 +42,7 @@ class Tracker(QWidget):
         # 샷그리드 데이터가 연결되지 않으니 tracker를 사용할 수 없다고 pop하기!
         self.sg.observer.NEW_FILE_OCCUR.connect(self._check_new_data_type)
 
-        self.pub_file_fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"]
+        self.pub_file_fields = ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description", "image"]
         self.opened_file_path_list = open_file_data
         self.lastest_file_dict = latest_file_dict
         self.opened_file_dict = {}
@@ -157,7 +157,7 @@ class Tracker(QWidget):
                     self.related_tasks.append(task)
 
         for shot_task in task_level[my_task]['shot']:
-            task = self.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',shot_task]])
+            task = self.sg.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',shot_task]])
             self.related_tasks.append(task)
 
         # 각 task에서 가장 최근에 pub된 version의 pub_files를 가져온다
@@ -211,20 +211,42 @@ class Tracker(QWidget):
         self.ui.label_task.setText(self.cur_showing_data['task']['name'])
         self.ui.label_type.setText(self.cur_showing_data['published_file_type']['name'])
         self.ui.plainTextEdit_comment.clear()
+        self.ui.label_thumbnail.setText("")
         self.ui.plainTextEdit_comment.insertPlainText(self.cur_showing_data['description'])
 
         path = self.cur_showing_data['path']['local_path']
-        thumbnail_dir = os.path.dirname(path).replace("/scenes/", "/movies/ffmpeg/")
+        dir_path = os.path.dirname(path).split("/maya/")[0]
         file, _ = os.path.splitext(os.path.basename(path))
-        thumbnail_path = f"{thumbnail_dir}{file}_slate.jpg"
-        self.cur_showing_data['movie_path'] = f"{thumbnail_dir}{file}_slate.mov"
-        if os.path.exists(thumbnail_path):
+
+        ffmpeg_img_dir = f"{dir_path}/maya/movies/ffmpeg/"
+        ffmpeg_img_path = f"{ffmpeg_img_dir}{file}_slate.jpg"
+        print(f"*********{ffmpeg_img_path}")
+        capture_img_dir = dir_path.replace("/pub", "/dev")
+        print(f"!!!!!!!{capture_img_dir}")
+        capture_img_path = f"{capture_img_dir}/maya/images/captures/{file}_capture.jpg"
+        print(f"%%%%%%%%%%%{capture_img_path}")
+
+        thumbnail_path = None
+
+        if os.path.exists(ffmpeg_img_path):
+            thumbnail_path = ffmpeg_img_path
+            
+        elif os.path.exists(capture_img_path):
+            thumbnail_path = capture_img_path
+
+        print(f"$$$$$$$$$${thumbnail_path}")
+        if thumbnail_path:
+            self.cur_showing_data['movie_path'] = thumbnail_path.replace(".jpg", ".mov")
             print(f"showing thumbnail... {thumbnail_path}")
             pixmap = QPixmap(thumbnail_path)
             self.ui.label_thumbnail.setPixmap(pixmap)
             self.ui.label_thumbnail.setScaledContents(True)
 
-        self.ui.pushButton_movie.setEnabled(os.path.exists(self.cur_showing_data['movie_path']))
+            self.ui.pushButton_movie.setEnabled(os.path.exists(self.cur_showing_data['movie_path']))
+
+        else :
+            self.ui.pushButton_movie.setEnabled(False)
+        
 
 
     def _check_new_data_type(self, data : dict):
