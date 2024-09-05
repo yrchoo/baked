@@ -145,7 +145,7 @@ class Tracker(QWidget):
             # shot 작업자라면 shot에 link되어있는 asset엔티티를 찾아서 task 엔티티를 저장한다
             elif self.sg.user_info['shot']:
                 # shot에 링크된 asset들을 찾는다
-                assets = self.sg.sg.find_one("Shot", [['code', 'is', self.sg.work['code']]], ['assets'])['assets']    
+                assets = self.sg.sg.find_one("Shot", [['id', 'is', self.sg.work['id']]], ['assets'])['assets']    
                 for asset in assets:
                     task = self.sg.sg.find_one("Task", [['entity', 'is', asset], ['content','is',ast_task]])
                     self.related_tasks.append(task)

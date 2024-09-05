@@ -237,13 +237,13 @@ class Loader(QWidget):
             # shot 작업자라면 shot에 link되어있는 asset엔티티를 찾아서 task 엔티티를 저장한다
             elif self.sg.user_info['shot']:
                 # shot에 링크된 asset들을 찾는다
-                assets = self.sg.sg.find_one("Shot", [['code', 'is', self.sg.work['code']]], ['assets'])['assets']    
+                assets = self.sg.sg.find_one("Shot", [['id', 'is', self.sg.work['id']]], ['assets'])['assets']    
                 for asset in assets:
                     task = self.sg.sg.find_one("Task", [['entity', 'is', asset], ['content','is',ast_task]])
                     self.related_tasks.append(task)
 
         for shot_task in task_level[my_task]['shot']:
-            task = self.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',shot_task]])
+            task = self.sg.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',shot_task]])
             self.related_tasks.append(task)
 
         # 각 task에서 가장 최근에 pub된 version의 pub_files를 가져온다

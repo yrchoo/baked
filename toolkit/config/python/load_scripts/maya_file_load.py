@@ -34,12 +34,13 @@ class LoadMayaFile():
         # 뭔가.. 내가 불러온 shader를 자동으로 mod에 매핑해주는 일을 해야됨!!
         # 자동으로 shader를 mapping해주기 위해서 maya ascii로 저장했읍니다
         file_path = os.path.dirname(path)
+        json_path = f"{file_path.split("/maya/")[0]}/maya/data/"
         file_name, _ = os.path.splitext(os.path.basename(path))
         name_space = self._make_group_name(path)
         cmds.file(path, i=True, type="mayaAscii", mergeNamespacesOnClash=False, namespace=name_space)
 
 
-        with open(f"{file_path}{file_name}.json", "r") as f:
+        with open(f"{json_path}{file_name}.json", "r") as f:
             shader_data = json.load(f)
 
         object_list = cmds.ls(type="mesh")
