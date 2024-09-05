@@ -106,13 +106,13 @@ def setup_nuke_project():
     nuke.root().knob("OCIO_config").setValue("fn-nuke_cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
 
     if sg.frame_start :
-            nuke.root().knob("first_frame").setValue(sg.frame_start)
+            nuke.root().knob("first_frame").setValue(int(sg.frame_start))
     else:
         nuke.root().knob("first_frame").setValue(1001)
     first_frame = nuke.root().knob("first_frame").value()
     print(f"Set Start Frame to {first_frame}")
     if sg.frame_last:
-        nuke.root().knob("last_frame").setValue(sg.frame_last)
+        nuke.root().knob("last_frame").setValue(int(sg.frame_last))
     else:
         nuke.root().knob("last_frame").setValue(nuke.root().knob("first_frame").value() + 100)
     last_frame = nuke.root().knob("last_frame").value()
