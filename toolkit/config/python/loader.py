@@ -71,6 +71,7 @@ class Loader(QWidget):
         self.project_path = f"{self.home_path}/show/{self.project_name}" # shotgrid가 실행되지 않을 때를 위한 기본 경로값 (추후 제거?)
         self.tool = tool # 현재 loader가 tool 프로그램을 통해서 실행되었을 때 값이 들어가는 변수
         self.content_files_data = {} # 현재 작업에서 사용되는 파일들의 정보들이 들어가는 dict
+        self.related_tasks = {}
 
     def _set_ui(self):
         """
@@ -121,6 +122,7 @@ class Loader(QWidget):
         Loader에서 tabWidget의 현재 tab이 변경되는 경우
         변경된 tab의 index를 받아와서 해당 탭에 맞는 데이터를 tableWidget에 띄우도록 하는 메서드
         """
+        self.ui.tableWidget_files.clear()
         if index == 0:
             self._set_my_task_table_widget()
         elif index == 1:
@@ -154,7 +156,7 @@ class Loader(QWidget):
             self._set_seq_tree_widget_by_shotgrid()
             self._set_asset_tree_widget_by_shotgrid()
             self._set_task_tree_widget_by_shotgrid()
-            self._set_content_tree_widget_by_shotgrid()
+            self.set_content_tree_widget_by_shotgrid()
 
 
     ###### Shotgrid에서 데이터를 가져오는 경우
@@ -176,11 +178,13 @@ class Loader(QWidget):
         my_task_path = self._get_path()
         self._add_to_tree_widget_by_path_recursive(work_item, my_task_path)
 
-    def _set_content_tree_widget_by_shotgrid(self):
+    def set_content_tree_widget_by_shotgrid(self):
         """
         현재 작업에서 불러와야하는 pub된 자료들을 띄워주는 treeWidget_content에
         Shotgrid에서 읽어온 데이터를 넣어주는 메서드
         """
+        self.ui.treeWidget_content.clear()
+        
         content_tree = self.ui.treeWidget_content
         my_task = self.sg.user_info["task"]
         task_level = {
@@ -195,7 +199,7 @@ class Loader(QWidget):
         }
         file_types = {}
 
-        # 현재 Task에서 필요한 값을 가져오도록 하는 for문
+        # 현재 Task에서 필요한 File Type을 가져오도록 하는 for문
         for i in task_level[my_task]:
             filters = [['sg_level', 'is', f'{i}']]
             fields = ['code', 'id', 'sg_level']
@@ -209,49 +213,73 @@ class Loader(QWidget):
         for f_type in file_types.keys():
             self._add_tree_item(content_tree, f_type)
 
-        if task_level[my_task][-1] < 2 : # Asset 작업자일 경우
-            working = [self.sg.user_info['asset']]
-        else : 
-            working = [self.sg.user_info['shot']]
-            assets = self.sg.get_assets_used_at_shot() # 현재 shot에서 사용되는 asset들을 추가해줌
-            for asset in assets:
-                working.append(asset['code'])
+        # tracker가 실행될 때 최초 한 번만 실행됨
+        my_task = self.sg.user_info["task"]
+        """
+        현재 내 작업에서 필요한 선행 작업의 최신 version에 링크된 publishedFiles 값을 가져오는 메서드
+        """
+        task_level = {
+            # 각 task에서 필요한 선행 TASK들을 저장해둔 것
+            "MOD" : {'asset' : [], 'shot' : []},
+            "RIG" : {'asset' : ['MOD'], 'shot' : []},
+            "LKD" : {'asset' : ['MOD'], 'shot' : []},
+            "ANI" : {'asset' : ['RIG'], 'shot' : ['MM']},
+            "LGT" : {'asset' : ['LKD'], 'shot' : ['ANI', 'LKD', 'MM']},
+            "CMP" : {'asset' : [], 'shot' : ['LGT', 'MM']},
+        }
+        pub_files = {}
+        self.related_tasks = []
+        for ast_task in task_level[my_task]['asset']:
+            # asset 작업자라면 해당 asset의 task 엔티티를 찾아서 저장하고
+            if self.sg.user_info['asset']:
+                task = self.sg.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',ast_task]])
+                self.related_tasks.append(task)
+            # shot 작업자라면 shot에 link되어있는 asset엔티티를 찾아서 task 엔티티를 저장한다
+            elif self.sg.user_info['shot']:
+                # shot에 링크된 asset들을 찾는다
+                assets = self.sg.sg.find_one("Shot", [['id', 'is', self.sg.work['id']]], ['assets'])['assets']    
+                for asset in assets:
+                    task = self.sg.sg.find_one("Task", [['entity', 'is', asset], ['content','is',ast_task]])
+                    self.related_tasks.append(task)
 
-        self.content_files_data = {}
+        for shot_task in task_level[my_task]['shot']:
+            task = self.sg.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',shot_task]])
+            self.related_tasks.append(task)
 
-        for w in working: # 현재 작업에 필요한 shot, asset 데이터들을 하나씩 가져와서
-            for t in task_level.keys():
-                filters = [
-                    ["project", "is", self.sg.project],
-                    ["code", "contains", t],
-                    ["code", "contains", w],
-                ]
-                fields = ["id", "code", "path", "version", "published_file_type"]
-                file_data = self.sg.sg.find_one("PublishedFile", filters, fields, order=[{'field_name': 'created_at', 'direction': 'desc'}])
-                if not file_data:
-                    continue
-                version = self.sg.sg.find_one("Version", [['id','is',file_data['version']['id']]], ['id', 'code', 'published_files'])
-                for file in version['published_files']:
-                    file_data = self.sg.sg.find_one("PublishedFile", [['id','is',file['id']]], fields)
-                    self.content_files_data[file_data['code']] = file_data # 내 작업에 필요한 데이터를 가져옴
-                # print(file_data)
+        # 각 task에서 가장 최근에 pub된 version의 pub_files를 가져온다
+        for task in self.related_tasks:
+            version = self.sg.sg.find_one("Version", 
+                                          [['sg_task','is',task]], 
+                                          ['published_files'],
+                                          order=[{'field_name': 'created_at', 'direction': 'desc'}])
+            if not version or not version['published_files']:
+                continue
 
-                """
-                file_data의 출력 결과
+            for file in version['published_files']:
+                file = self.sg.sg.find_one("PublishedFile", 
+                                           [['id','is',file['id']]], 
+                                           ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"])
+                pub_files[file['code']] = file
+        
+        # pprint(pub_files)
+        self.content_files_data = pub_files
 
-                {'type': 'PublishedFile', 'id': 337, 'code': 'ABC_0010_LGT_v001.####.exr', 
-                'path': {
-                    'content_type': 'image/exr', 'link_type': 'local', 'name': 'ABC_0010_LGT_v001.####.exr', 
-                    'local_storage': {'type': 'LocalStorage', 'id': 3, 'name': 'show'}, 
-                    'local_path_mac': None, 
-                    'local_path_linux': '/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr', 
-                    'local_path_windows': 'D:\\show\\baked\\show\\baked\\SEQ\\ABC\\ABC_0010\\LGT\\pub\\nuke\\images\\ABC_0010_LGT_v001\\ABC_0010_LGT_v001.####.exr', 
-                    'type': 'Attachment', 'id': 1154, 
-                    'local_path': '/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr', 
-                    'url': 'file:///home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr'
-                    }, 
-                'published_file_type': {'id': 185, 'name': 'EXR Image', 'type': 'PublishedFileType'}}
-                """    
+        """
+        file_data의 출력 결과
+
+        {'type': 'PublishedFile', 'id': 337, 'code': 'ABC_0010_LGT_v001.####.exr', 
+        'path': {
+            'content_type': 'image/exr', 'link_type': 'local', 'name': 'ABC_0010_LGT_v001.####.exr', 
+            'local_storage': {'type': 'LocalStorage', 'id': 3, 'name': 'show'}, 
+            'local_path_mac': None, 
+            'local_path_linux': '/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr', 
+            'local_path_windows': 'D:\\show\\baked\\show\\baked\\SEQ\\ABC\\ABC_0010\\LGT\\pub\\nuke\\images\\ABC_0010_LGT_v001\\ABC_0010_LGT_v001.####.exr', 
+            'type': 'Attachment', 'id': 1154, 
+            'local_path': '/home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr', 
+            'url': 'file:///home/rapa/baked/show/baked/SEQ/ABC/ABC_0010/LGT/pub/nuke/images/ABC_0010_LGT_v001/ABC_0010_LGT_v001.####.exr'
+            }, 
+        'published_file_type': {'id': 185, 'name': 'EXR Image', 'type': 'PublishedFileType'}}
+        """    
 
     def _set_seq_tree_widget_by_shotgrid(self):
         """
