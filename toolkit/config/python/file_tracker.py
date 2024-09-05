@@ -157,7 +157,7 @@ class Tracker(QWidget):
                     self.related_tasks.append(task)
 
         for shot_task in task_level[my_task]['shot']:
-            task = self.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',shot_task]])
+            task = self.sg.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',shot_task]])
             self.related_tasks.append(task)
 
         # 각 task에서 가장 최근에 pub된 version의 pub_files를 가져온다

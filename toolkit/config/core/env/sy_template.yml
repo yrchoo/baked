@@ -167,7 +167,7 @@ paths:
   maya_asset_render_mov:
       definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/movies/mov/{asset}_{task}_v{version}.mov'
   maya_asset_render_exr:
-      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/exr/{asset}_{task}_v{version}/{asset}_{task}_v{version}.%04d.exr'
+      definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/exr/{asset}_{task}_v{version}/{asset}_{task}_v{version}.####.exr'
   maya_asset_render_jpg:
       definition: '@asset_root/{asset_type}/{asset}/{task}/pub/maya/images/jpg/{asset}_{task}_v{version}/{asset}_{task}_v{version}.%04d.jpg'
   maya_asset_render_png:

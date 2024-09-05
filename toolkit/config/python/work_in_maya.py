@@ -93,6 +93,14 @@ class MayaAPI():
             if camera_name in transform_node:
                 camera_transform = transform_node
                 break
+        
+        # dome light 만들기
+        dome_lights = cmds.ls(type='aiSkyDomeLight')  # Arnold 돔라이트 확인
+        if dome_lights:
+            print("Dome light already exists.")
+            return True
+        else:
+            cmds.shadingNode("aiSkyDomeLight", asLight=True, name="domedome")
 
         # 카메라가 존재하지 않으면 새로 생성
         if camera_transform is None:
@@ -278,7 +286,20 @@ class MayaAPI():
 
     def render_file(self, outpath):
         output_dir = f"{os.path.dirname(outpath)}/"  # 렌더링 이미지가 저장될 경로
-        print (outpath, output_dir)
+        print ("렌더중", outpath, output_dir)
+        
+        camera_name = None
+        if cmds.objExists("aniCam"):
+            camera_name = "aniCam"
+        elif cmds.objExists("mmCam"):
+            camera_name = "mmCam"
+        
+        if not camera_name:
+            print("Error: Neither 'aniCam' nor 'mmCam' exists in the scene.")
+            return
+        
+        self.set_single_renderable_camera(camera_name)
+
         filename_template = "<Scene>"
         cmds.setAttr("defaultRenderGlobals.imageFilePrefix", output_dir + filename_template, type="string") ### 경로 설정해주기
         cmds.setAttr("defaultRenderGlobals.extensionPadding", 4)
@@ -289,7 +310,7 @@ class MayaAPI():
         return thumbnail_path
         
     def convert_exr_into_jpg(self, input_file):
-        output_file = input_file.replace(".%04d.exr", ".jpg")
+        output_file = input_file.replace(".####.exr", ".jpg")
         files = glob.glob(f"{os.path.dirname(output_file)}/*")
         input_file = max(files, key=os.path.getmtime)
         print (input_file, output_file)

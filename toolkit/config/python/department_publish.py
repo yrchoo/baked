@@ -16,6 +16,12 @@ from work_in_maya import MayaAPI
 import os
 
 class DepartmentWork():
+    """
+    DepartmentWork
+    1. 각 부서별로 공통되는 메서드를 구현하기 위한 부모 클래스입니다.
+    2. 기능:
+        - 트리위젯으로 부서별로 필요한 정보들을 구성합니다.
+        -  """
     def __init__(self, treewidget, tool):
         print (treewidget)
         self.tree = treewidget
@@ -77,7 +83,7 @@ class DepartmentWork():
     def check_selection(self):
         """ 선택한 object/node 확인하는 메서드 """
         if self.tool == "maya":
-            selected_data = self.maya.get_selected_objects(self)
+            selected_data = self.maya.get_selected_objects()
         elif self.tool == "nuke":
             selected_data = NukeAPI.get_selected_write_nodes()
         if selected_data:
@@ -199,8 +205,8 @@ class LKD(DepartmentWork):
 
         return "exr"
     
-    def render_data(self, render_path):
-        thumbnail_path = self.maya.render_file(render_path) 
+    def render_data(self, render_path): #################################### exr rendering
+        thumbnail_path = self.maya.render_turntable(render_path) 
         return thumbnail_path
     
     def save_data(self, publish_dict):
@@ -224,7 +230,7 @@ class LKD(DepartmentWork):
         print ("~~~", publish_dict)
         return publish_dict
 
-class ANI(DepartmentWork):
+class ANI(DepartmentWork): 
     def make_data(self):
         """ 선택된 object/node 가져오는 메서드 """
         selected_data = self.check_selection()
@@ -241,8 +247,8 @@ class ANI(DepartmentWork):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
     
-    def render_data(self, path):
-        self.maya.render_to_multiple_formats(path)
+    def render_data(self, path): ###################################### 카메라 설정..?
+        self.maya.render_file(path)
     
     def save_data(self, publish_dict):
         scene_path = publish_dict[self.get_current_file_name()]['path']
