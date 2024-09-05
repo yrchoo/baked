@@ -37,6 +37,8 @@ def init():
     load_win.OPEN_FILE.connect(open_file)
     save_win.SAVE_FILE.connect(save_file)
     tracker_win.RELOAD_FILE.connect(reload_file)
+    tracker_win.LOAD_FILE.connect(open_file)
+    tracker_win.RELATED_FILE_DATA_CHANGED.connect(load_win.set_content_tree_widget_by_shotgrid)
     pass
 
 def loader_func():
@@ -108,11 +110,13 @@ def get_ref_file_path_list():
     path_list = []
 
     ref_nodes = cmds.ls(type='reference')
-    ref_nodes = [ref for ref in ref_nodes if not ref.endswith("RN")]
+    # ref_nodes = [ref for ref in ref_nodes if not ref.endswith("RN")]
 
     for ref in ref_nodes:
-        ref_path = cmds.referenceQuery(ref, filename=True)
-        path_list.append(ref_path)
+        if ref == 'sharedReferenceNode':
+            continue
+        reference_file_path = cmds.referenceQuery(ref, filename=True)
+        path_list.append(reference_file_path)
     return path_list
         
 
@@ -186,7 +190,5 @@ def _check_dir(external_path):
 tracker_win = file_tracker.Tracker(sg, get_ref_file_path_list())
 save_win = save.SaveFile()
 load_win = loader.Loader(sg, "maya")
-tracker_win.RELATED_FILE_DATA_CHANGED.connect(load_win.set_content_tree_widget_by_shotgrid)
-
 
 init()

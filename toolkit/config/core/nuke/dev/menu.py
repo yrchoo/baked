@@ -17,13 +17,12 @@ baked_menu.addCommand("Loader", baked_pipeline_script.show_loader, "Alt+L")
 baked_menu.addCommand("Save File", baked_pipeline_script.pop_save_file_ui, "Alt+S")
 baked_menu.addCommand("Publisher", baked_pipeline_script.show_publisher)
 baked_menu.addCommand("Upload Review", baked_pipeline_script.show_review)
-# baked_menu.addCommand("Tracker", baked_pipeline_script.show_tracker, "Alt+T")
+baked_menu.addCommand("Tracker", baked_pipeline_script.show_tracker, "Alt+T")
 
 ############## 노드를 생성해주는 메뉴
 
 menu_bar = nuke.menu("Nuke")
 node_menu = menu_bar.addMenu("Nodes")
-
 node_menu.addCommand("Lens Distortion Node", baked_pipeline_script.create_undistortion_node)
 
 

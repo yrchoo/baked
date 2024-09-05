@@ -68,12 +68,13 @@ class Tracker(QWidget):
 
     def get_opened_file_list(self, open_file_path_list = None):
         if open_file_path_list :
+            print(f"!!!!!!!!!!!!!!!!!Get Open File : {open_file_path_list}")
             self.opened_file_path_list = open_file_path_list
         # 현재 내가 열고 있는 모든 파일들의 정보를 shotgrid에서 읽어와서 저장한다
         if self.opened_file_path_list :
             for data in self.opened_file_path_list:
                 file_name = os.path.basename(data)
-                if self.opened_file_dict[file_name] :
+                if file_name in self.opened_file_dict.keys() :
                     continue
                 filters = [
                     ["project", "is", self.sg.project],
@@ -95,6 +96,7 @@ class Tracker(QWidget):
     def _set_list_data(self):
         self.ui.listWidget_using.clear()
         self.ui.listWidget_not.clear()
+        using_row = 0
 
         if not self.opened_file_dict:
             self.ui.listWidget_not.addItems(self.lastest_file_dict.keys())
@@ -112,7 +114,9 @@ class Tracker(QWidget):
                 self.ui.listWidget_not.addItem(file)
             else:
                 print(f"Put {opened_file} in using list.")
-                item = self.ui.listWidget_using.addItem(opened_file)
+                self.ui.listWidget_using.addItem(opened_file)
+                item = self.ui.listWidget_using.item(using_row)
+                using_row += 1
                 if file != opened_file :
                     item.setBackground(QColor("yellow"))
                     
@@ -252,7 +256,7 @@ class Tracker(QWidget):
             cur_path = self.opened_file_dict[reload_item.text()]
             new_v_key = next((key for key, f in self.lastest_file_dict.items() if self.opened_file_dict[reload_item.text()]['task']['id'] == f['task']['id']), None)
 
-            self.opened_file_dict.pop(key)
+            self.opened_file_dict.pop(reload_item)
             self.opened_file_dict[new_v_key] = self.lastest_file_dict[new_v_key]
 
             reload_item.setText(new_v_key)
