@@ -45,7 +45,10 @@ def make_mov_with_slate_data(input_path, output_path, first_frame, last_frame):
     color_node.knob("in_colorspace").setValue("ACEScg")
     color_node.knob("out_colorspace").setValue("data")
     
-    slate_node = nuke.createNode("slate_baked")
+    try:
+        slate_node = nuke.createNode("slate_baked")
+    except:
+        slate_node = nuke.createNode("slate_baked_bbb")
     slate_node.setInput(0, read_node)
     slate_node.knob("top_center").setValue("BAKED") # 후에 Shotgrid에서 가져온 데이터로 수정
     slate_node.knob("bottom_center").setValue("추예린")
