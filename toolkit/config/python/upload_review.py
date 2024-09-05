@@ -241,6 +241,9 @@ class Review(QWidget):
         if not files: # 썸네일 파일이 없는 경우
             self.ui.label_thumbnail.setText("No Thumbnail Found")
             self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
+            self.preview_info = {'input path' : image_path, 
+                                 'start frame' : int(start_frame),
+                                 'last frame' : int(last_frame)}
             return
 
         if button.text() in ["PlayBlast", "Render"]: # 플레이블라스트, 렌더를 하는 경우

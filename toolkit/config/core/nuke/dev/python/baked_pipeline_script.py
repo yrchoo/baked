@@ -13,7 +13,7 @@ import os
 import loader
 from fetch_shotgrid_data import ShotGridDataFetcher
 import save
-import file_tracker
+# import file_tracker
 from load_scripts.nuke_file_load import LoadNukeFile
 import publisher
 import upload_review
@@ -24,14 +24,14 @@ from importlib import reload
 def init():
     load_win.OPEN_FILE.connect(open_file)
     save_win.SAVE_FILE.connect(save_file)
-    tracker_win.RELOAD_FILE.connect(reload_file)
-    tracker_win.LOAD_FILE.connect(LoadNukeFile().load_file_with_read_node)
+    # tracker_win.RELOAD_FILE.connect(reload_file)
+    # tracker_win.LOAD_FILE.connect(LoadNukeFile().load_file_with_read_node)
 
 def show_loader():
     load_win.show()
 
-def show_tracker():
-    tracker_win.show()
+# def show_tracker():
+#     tracker_win.show()
 
 def show_publisher():
     reload(publisher)
@@ -106,13 +106,13 @@ def setup_nuke_project():
     nuke.root().knob("OCIO_config").setValue("fn-nuke_cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
 
     if sg.frame_start :
-            nuke.root().knob("first_frame").setValue(sg.frame_start)
+            nuke.root().knob("first_frame").setValue(int(sg.frame_start))
     else:
         nuke.root().knob("first_frame").setValue(1001)
     first_frame = nuke.root().knob("first_frame").value()
     print(f"Set Start Frame to {first_frame}")
     if sg.frame_last:
-        nuke.root().knob("last_frame").setValue(sg.frame_last)
+        nuke.root().knob("last_frame").setValue(int(sg.frame_last))
     else:
         nuke.root().knob("last_frame").setValue(nuke.root().knob("first_frame").value() + 100)
     last_frame = nuke.root().knob("last_frame").value()
@@ -128,7 +128,7 @@ def setup_nuke_project():
 sg = ShotGridDataFetcher()
 load_win = loader.Loader(sg, "nuke")
 save_win = save.SaveFile()
-tracker_win = file_tracker.Tracker(sg, read_node_file_list())
+# tracker_win = file_tracker.Tracker(sg, read_node_file_list())
 
 init()
 if nuke.root().knob("name").value() == "" : 
