@@ -37,6 +37,8 @@ def init():
     load_win.OPEN_FILE.connect(open_file)
     save_win.SAVE_FILE.connect(save_file)
     tracker_win.RELOAD_FILE.connect(reload_file)
+    tracker_win.LOAD_FILE.connect(open_file)
+    tracker_win.RELATED_FILE_DATA_CHANGED.connect(load_win.set_content_tree_widget_by_shotgrid)
     pass
 
 def loader_func():
@@ -54,6 +56,7 @@ def save_func():
     save_win.save_file(path)
 
 def tracker_func():
+    tracker_win.get_opened_file_list(get_ref_file_path_list())
     tracker_win.show()
 
 def open_file(path):
@@ -83,11 +86,11 @@ def open_file(path):
             cmds.setAttr('defaultRenderGlobals.endFrame', int(sg.frame_end))
 
         else:
-            cmds.playbackOptions(min=1001, max=1050)
+            cmds.playbackOptions(min=1001, max=1096)
             # cmds.currentTime(sg.frame_start)
             
             cmds.setAttr('defaultRenderGlobals.startFrame', 1001)
-            cmds.setAttr('defaultRenderGlobals.endFrame', 1050)
+            cmds.setAttr('defaultRenderGlobals.endFrame', 1096)
 
         # 렌더 프레임 설정
         
@@ -107,11 +110,13 @@ def get_ref_file_path_list():
     path_list = []
 
     ref_nodes = cmds.ls(type='reference')
-    ref_nodes = [ref for ref in ref_nodes if not ref.endswith("RN")]
+    # ref_nodes = [ref for ref in ref_nodes if not ref.endswith("RN")]
 
     for ref in ref_nodes:
-        ref_path = cmds.referenceQuery(ref, filename=True)
-        path_list.append(ref_path)
+        if ref == 'sharedReferenceNode':
+            continue
+        reference_file_path = cmds.referenceQuery(ref, filename=True)
+        path_list.append(reference_file_path)
     return path_list
         
 
@@ -185,7 +190,5 @@ def _check_dir(external_path):
 tracker_win = file_tracker.Tracker(sg, get_ref_file_path_list())
 save_win = save.SaveFile()
 load_win = loader.Loader(sg, "maya")
-tracker_win.RELATED_FILE_DATA_CHANGED.connect(load_win.set_content_tree_widget_by_shotgrid)
-
 
 init()
