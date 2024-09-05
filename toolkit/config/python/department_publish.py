@@ -77,7 +77,7 @@ class DepartmentWork():
     def check_selection(self):
         """ 선택한 object/node 확인하는 메서드 """
         if self.tool == "maya":
-            selected_data = MayaAPI.get_selected_objects(self)
+            selected_data = self.maya.get_selected_objects(self)
         elif self.tool == "nuke":
             selected_data = NukeAPI.get_selected_write_nodes()
         if selected_data:
@@ -86,7 +86,7 @@ class DepartmentWork():
     def get_current_file_name(self):
         """ 현재 작업하고 있는 파일 이름을 가져오는 메서드"""  ### 이런 if문 너무 별로
         if self.tool == "maya":
-            return MayaAPI.get_file_name(self)
+            return self.maya.get_file_name()
         elif self.tool == "nuke":
             return NukeAPI.get_file_name()
         
@@ -103,19 +103,19 @@ class DepartmentWork():
     
     def save_scene_file(self, new_path):
         if self.tool == "maya":
-            MayaAPI.save_file(self, new_path)
+            self.maya.save_file( new_path)
         elif self.tool == "nuke":
             NukeAPI.save_file(new_path)
         print (f"&&&&&&&&&&&&&&&&& {new_path}")
     
     def save_as_alembic(self, alembic_path, file):
-        MayaAPI.export_alemibc(self, alembic_path, file)
+        self.maya.export_alemibc(alembic_path, file)
 
     def save_camera_as_alembic(self, alembic_path, file):
-        MayaAPI.export_alemibc(self, alembic_path, file)
+        self.maya.export_alemibc(alembic_path, file)
     
     def render_as_exr(self, path):
-        MayaAPI.render_exr_sequence(path)
+        self.maya.render_exr_sequence(path)
 
 class MOD(DepartmentWork):
     def make_data(self):
@@ -138,7 +138,7 @@ class MOD(DepartmentWork):
 
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
-        MayaAPI.modeling_publish_set(self)
+        self.maya.modeling_publish_set()
     
     def save_data(self, publish_dict):
         """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
@@ -176,8 +176,8 @@ class LKD(DepartmentWork):
     """ Publish Data: mb, ma(shader), tiff(texture) """    
     def __init__(self, treewidget, tool):
         super().__init__(treewidget, tool)
-        texture_list = MayaAPI.get_texture_list(self)
-        shader_list = MayaAPI.get_custom_shader_list()
+        texture_list = self.maya.get_texture_list()
+        shader_list = self.maya.get_custom_shader_list()
         self.lookdev_list = []
         self.lookdev_list.extend(texture_list)
         self.lookdev_list.extend(shader_list)
@@ -204,20 +204,23 @@ class LKD(DepartmentWork):
         return thumbnail_path
     
     def save_data(self, publish_dict):
-        file_name = self.get_current_file_name()
-        scene_path = publish_dict[file_name]['path'].replace(".ma", ".mb")
+        scene_file = self.get_current_file_name()
+        scene_path = publish_dict[scene_file]['path'].replace(".ma", ".mb")
         self.save_scene_file(scene_path) # mb
 
         ma_file = self.get_current_file_name().replace(".mb", ".ma")
+        json_file = self.get_current_file_name().replace(".mb", ".json")
         ma_file_path = publish_dict[ma_file]['path']
-        json_file_name, json_file_path = self.maya.export_shader(ma_file_path) #ma, #json
+        json_file_path = publish_dict[json_file]['path'].replace(".ma", ".json")
 
-        publish_dict[json_file_name]['path'] = json_file_path # json
+        publish_dict[json_file]['path'] = json_file
+        publish_dict[scene_file]['path'] = scene_path # mb
+
+        self.maya.export_shader(ma_file_path, json_file_path) #ma, #json
         print ("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
         print (scene_path)
         print (publish_dict)
-        print (publish_dict[file_name]['path'])
-        publish_dict[file_name]['path'] = scene_path # mb
+        print (publish_dict[scene_file]['path'])
         print ("~~~", publish_dict)
         return publish_dict
 
@@ -239,7 +242,7 @@ class ANI(DepartmentWork):
         return "exr"
     
     def render_data(self, path):
-        MayaAPI.render_to_multiple_formats(self, path)
+        self.maya.render_to_multiple_formats(path)
     
     def save_data(self, publish_dict):
         scene_path = publish_dict[self.get_current_file_name()]['path']
@@ -257,7 +260,7 @@ class LGT(DepartmentWork):
     """
     def make_data(self):
         if self.tool == 'maya':
-            selected_data = MayaAPI._get_lighting_layers(self)
+            selected_data = self.maya._get_lighting_layers()
             publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
             try:
                 for data in selected_data:
@@ -291,7 +294,7 @@ class LGT(DepartmentWork):
             elif 'EXR' in info['file type']: # 
                 if self.tool == "maya":
                     print ("##", info['path'])
-                    publish_dict = MayaAPI.render_all_layers_to_exr(file, publish_dict)
+                    publish_dict = self.maya.render_all_layers_to_exr(file, publish_dict)
                 elif self.tool == "nuke":
                     NukeAPI.render_selected_write_nodes_with_exr(info['path'], 1001, 1096)
                     # os.system(f'''nuke -t make_slate_mov_nuke.py -path "{info['path']}" -first "1001" -last "1096"''')
