@@ -262,7 +262,7 @@ class Loader(QWidget):
             for file in version['published_files']:
                 file = self.sg.sg.find_one("PublishedFile", 
                                            [['id','is',file['id']]], 
-                                           ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description"])
+                                           ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description",])
                 pub_files[file['code']] = file
         
         # pprint(pub_files)
@@ -831,11 +831,28 @@ class Loader(QWidget):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignCenter)
 
-        dir_path = self._get_current_item_path("asset")
-        thumbnail_dir_path = dir_path.replace("/scenes/", "/movies/")
-
         name, ext = os.path.splitext(file_name)
-        thumbnail_path = f"{thumbnail_dir_path}{name}_slate.jpg"
+        
+        if self.ui.tabWidget_task.currentIndex() == 1:
+            dir_path = os.path.dirname(self.content_files_data[file_name]['path']['local_path'])
+            ffmpeg_img_dir = dir_path.replace("/scenes/", "/movies/ffmpeg/")
+            ffmpeg_img_path = f"{ffmpeg_img_dir}{name}_slate.jpg"
+            capture_img_dir = (dir_path.replace("/pub/", "/dev/")).replace("/scenes/", "/images/captures/")
+            capture_img_path = f"{capture_img_dir}{name}_capture.jpg"
+
+        else :
+            dir_path = self._get_current_item_path("asset")
+            ffmpeg_img_dir = dir_path.replace("/scenes/", "/movies/ffmpeg/")
+            ffmpeg_img_path = f"{ffmpeg_img_dir}{name}_slate.jpg"
+            capture_img_dir = dir_path.replace("/pub/", "/dev/").replace("/scenes/", "/images/captures/")
+            capture_img_path = f"{capture_img_dir}{name}_capture.jpg"
+
+        if ext in [".jpg"]:
+            thumbnail_path = f"{dir_path}/{file_name}"
+        elif os.path.exists(ffmpeg_img_path):
+            thumbnail_path = ffmpeg_img_path
+        elif os.path.exists(capture_img_path):
+            thumbnail_path = capture_img_path
 
         if os.path.exists(thumbnail_path) :
             print(thumbnail_path)

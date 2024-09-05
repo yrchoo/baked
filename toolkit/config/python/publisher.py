@@ -17,6 +17,9 @@ from department_publish import DepartmentWork, MOD, RIG
 import shotgrid.fetch_shotgrid_data
 from importlib import reload
 from capture_module import SubWindow_Open, MakeScreenCapture
+
+from shotgrid.shotgridserver_json_new import PubDataJsonCreator
+
 try:
     from work_in_maya import MayaAPI
 except:
@@ -644,6 +647,25 @@ class Publisher(QWidget):
         print(version, task, description, preview_path, shot, asset)
         version = self.sg.create_new_version_entity(version, task, description, preview_path, shot, asset)
         # 호출 JSON().save_json(pub_data)
+
+        if not version :
+            self.back_up_data = {
+                "version" : {
+                    "code" : version,
+                    "task" : task,
+                    "description" : description,
+                    "thumbnail_file_path" : preview_path,
+                    "shot_code" : shot,
+                    "asset" : asset,
+                },
+                "project" : {
+                    "name" : self.sg.user_info['project']
+                },
+                "HumanUser" : {
+                    "name" : self.sg.user_info['name'],
+                },
+            } 
+            
         return version
 
     def _create_published_file(self, version):
@@ -688,15 +710,19 @@ class Publisher(QWidget):
             published_file_type = detail['file type']
             preview_path = self.preview_info['output_path_jpg']
 
-            self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
+            publish = self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
 
-            backup_data = {
-                            "version" : version,
-                            "file_path" : file_path, 
-                            "description" : description,
-                            "preview_path" : preview_path,
-                            "published_file_type" : published_file_type
-                            }
+            if not publish :
+                self.backup_data.update({"PublishedFile" : 
+                                        {
+                                            "code" : os.path.basename(file_path),
+                                            "file_path" : file_path, 
+                                            "description" : description,
+                                            "preview_path" : preview_path,
+                                            "published_file_type" : published_file_type
+                                    }
+                                })
+                PubDataJsonCreator().save_to_json(self.back_up_data)
 
         for pub_file in pub_files_list.values():
             # 새로운 값이 create되지 않은 파일들은 새로운 version을 version field에 업데이트 해준다
