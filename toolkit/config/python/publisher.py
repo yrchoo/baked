@@ -424,25 +424,29 @@ class Publisher(QWidget):
             return
         self._thumbnail_pixmap(recent_image_file)
 
+
+        
     def _thumbnail_pixmap(self, recent_image_file):
         """썸네일 비율 맞춰서 보여주기"""
 
         # ui에 썸네일 미리보여주기
         pixmap = QPixmap(recent_image_file) 
-    
+        print (recent_image_file)
         # 원본 이미지의 너비와 높이 가져오기
         original_width = pixmap.width()
         original_height = pixmap.height()
         
-        # 비율을 유지하면서 주어진 높이에 맞게 너비를 계산
-        scale_factor_height = 162 / original_height
-        scale_factor_width = 288 / original_width
-        new_width = int(original_width * scale_factor_width)
-        new_height = int(original_height * scale_factor_height)
+        try:# 비율을 유지하면서 주어진 높이에 맞게 너비를 계산
+            scale_factor_height = 162 / original_height
+            scale_factor_width = 288 / original_width
+            new_width = int(original_width * scale_factor_width)
+            new_height = int(original_height * scale_factor_height)
     
-        # 이미지 크기 조정 (비율 유지, 고정 높이)
-        scaled_pixmap = pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
-        self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
+            # 이미지 크기 조정 (비율 유지, 고정 높이)
+            scaled_pixmap = pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
+            self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
+        except:
+            print("dpfj qkftod")
         print (f"420:: self.preview_info {self.preview_info}")
 
     def _get_frame_number(self, files):

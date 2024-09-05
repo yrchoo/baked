@@ -206,7 +206,7 @@ class MayaAPI():
         # 이 경우 ffmpeg에 사운드 파일을 추가하는 설정이 필요합니다.
         ffmpeg = "ffmpeg"
         slate_size = 60
-        font_path = "/home/rapa/문서/font/waltographUI.ttf"
+        font_path = "/home/rapa/baked/toolkit/config/core/content/font/Courier_New.ttf"
         frame_count = int(last_frame) - int(start_frame)
         # frame_count = 10
         font_size = 40
