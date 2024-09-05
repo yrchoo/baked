@@ -726,6 +726,7 @@ class Publisher(QWidget):
                 #                     }
                 #                 })
                 # PubDataJsonCreator().save_to_json(self.back_up_data)
+                # self.back_up_data = None
 
         for pub_file in pub_files_list.values():
             # 새로운 값이 create되지 않은 파일들은 새로운 version을 version field에 업데이트 해준다
