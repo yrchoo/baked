@@ -8,6 +8,7 @@ import json
 import subprocess
 import datetime
 import ffmpeg
+import glob
 
 class MayaAPI():
     def __init__(self):
@@ -100,7 +101,8 @@ class MayaAPI():
             cmds.setAttr(camera_transform + ".translateZ", distance)  # 카메라 거리를 설정
 
             # 카메라 그룹 생성 및 그룹에 카메라 추가
-            turntable_grp = cmds.group(camera_transform, name='turntable_camera_grp')
+            turntable_grp = cmds.group(empty=True, name='turntable_camera_grp')
+            cmds.parent(camera_transform, turntable_grp)
         else:
             # 기존 카메라 그룹 찾기
             turntable_grp = cmds.listRelatives(camera_transform, parent=True)[0]
@@ -357,7 +359,32 @@ class MayaAPI():
         cmds.setAttr("defaultRenderGlobals.animation", 1)
         cmds.setAttr("defaultRenderGlobals.putFrameBeforeExt", 1)
         cmds.arnoldRender(batch=True)
+        thumbnail_path = self.convert_exr_into_jpg(outpath)
+        return thumbnail_path
         
+    def convert_exr_into_jpg(self, input_file):
+        output_file = input_file.replace(".%04d.exr", ".jpg")
+        files = glob.glob(f"{os.path.dirname(output_file)}/*")
+        input_file = max(files, key=os.path.getmtime)
+        print (input_file, output_file)
+        try:
+            # FFmpeg 명령어 구성
+            command = [
+                'ffmpeg',
+                '-i', input_file,   # 입력 파일 (EXR)
+                '-q:v', "2",  # 품질 설정
+                output_file          # 출력 파일 (JPG)
+            ]
+        
+            # FFmpeg 명령 실행
+            subprocess.run(command, check=True)
+            print(f"변환 성공: {output_file}")
+    
+        except subprocess.CalledProcessError as e:
+            print(f"변환 실패: {e}")
+        
+        return output_file
+            
 ###### 쉐이더 ###################################################################
 
     def collect_shader_assignments(self):

@@ -11,7 +11,7 @@ try:
     from work_in_maya import MayaAPI
 except:
     import work_in_nuke as NukeAPI
-# from work_in_nuke import NukeAPI
+import work_in_nuke as NukeAPI
 from work_in_maya import MayaAPI
 import os
 
@@ -21,7 +21,6 @@ class DepartmentWork():
         self.tree = treewidget
         self.tool = tool
         self.maya = MayaAPI()
-        # self.nuke = NukeAPI
         if treewidget:
             self.initial_tree_setting()
         
@@ -80,7 +79,7 @@ class DepartmentWork():
         if self.tool == "maya":
             selected_data = MayaAPI.get_selected_objects(self)
         elif self.tool == "nuke":
-            selected_data = NukeAPI.get_selected_write_nodes(self)
+            selected_data = NukeAPI.get_selected_write_nodes()
         if selected_data:
             return selected_data
     
@@ -201,7 +200,8 @@ class LKD(DepartmentWork):
         return "exr"
     
     def render_data(self, render_path):
-        MayaAPI.render_file(self, render_path) 
+        thumbnail_path = self.maya.render_file(render_path) 
+        return thumbnail_path
     
     def save_data(self, publish_dict):
         file_name = self.get_current_file_name()
@@ -291,7 +291,7 @@ class LGT(DepartmentWork):
             elif 'EXR' in info['file type']: # 
                 if self.tool == "maya":
                     print ("##", info['path'])
-                    publish_dict = MayaAPI.render_all_layers_to_exr(self, file, publish_dict)
+                    publish_dict = MayaAPI.render_all_layers_to_exr(file, publish_dict)
                 elif self.tool == "nuke":
                     NukeAPI.render_selected_write_nodes_with_exr(info['path'], 1001, 1096)
                     # os.system(f'''nuke -t make_slate_mov_nuke.py -path "{info['path']}" -first "1001" -last "1096"''')
