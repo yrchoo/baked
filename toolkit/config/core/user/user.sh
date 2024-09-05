@@ -2,8 +2,9 @@
  
 export NAME='Yerin Choo'
 export PROJECT='baked'
-export SEQ='ABC'
-export SHOT='ABC_0010'
-export ASSET= # 'Choo'
-export TASK='LGT'
-export ASSET_TYPE= #'Character'
+export SEQ=
+export SHOT=
+export ASSET='Choo'
+export TASK='LKD'
+export ASSET_TYPE='Character'
+

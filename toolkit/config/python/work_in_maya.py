@@ -201,9 +201,9 @@ class MayaAPI():
         font_path = "/home/rapa/문서/font/waltographUI.ttf"
         frame_count = int(last_frame) - int(start_frame)
         # frame_count = 10
-        font_size = 40
-        text_x_padding = 10
-        text_y_padding = 20
+        font_size = "min(20, ih*0.05)"  # 높이의 5%로 폰트 크기를 설정, 최대 40으로 제한
+        text_x_padding = "iw*0.01"  # 너비의 1%로 X 패딩 설정
+        text_y_padding = "ih*0.02"  # 높이의 2%로 Y 패딩 설정
 
         # top_left = cmds.file(query=True, sn=True, shn=True)
         top_left, _ = os.path.splitext(os.path.basename(output_path))
@@ -218,16 +218,7 @@ class MayaAPI():
 
         if last_frame == 1:
             return
-            # import test_ffmpeg
-            # bot_right = "Frame1"
-            # output_path = output_path.replace('.mov', '.jpg')
-            # self.slate = test_ffmpeg.MakeSlate()
-            # self.slate.make_ffmpeg_jpg(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
-            # print("캡쳐라서 jpg 메서드로")
-            # print ("!!!", input_path, output_path)
-            # print (top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
-            # self.make_ffmpeg_jpg(top_left, top_center, top_right, bot_left, bot_center, bot_right, input_path, output_path)
-
+        print ("~!~!~!~", font_size, text_x_padding, text_y_padding)
         cmd = '%s -framerate %s -y -start_number %s ' % (ffmpeg, frame_rate, first)
         cmd += '-i %s' % (input_path)
         cmd += ' -vf "drawbox=y=0 :color=black :width=iw: height=%s :t=fill, ' % (slate_size)
