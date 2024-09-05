@@ -18,10 +18,10 @@ import os
 class DepartmentWork():
     """
     DepartmentWork
-    1. 각 부서별로 공통되는 메서드를 구현하기 위한 부모 클래스입니다.
-    2. 기능:
-        - 트리위젯으로 부서별로 필요한 정보들을 구성합니다.
-        -  """
+    - 각 부서별로 공통되는 메서드를 구현하기 위한 부모 클래스입니다.
+    - 부서별로 필요한 퍼블리쉬할 정보들을 테이블 위젯을 구성합니다.
+    """
+
     def __init__(self, treewidget, tool):
         print (treewidget)
         self.tree = treewidget
@@ -31,27 +31,28 @@ class DepartmentWork():
             self.initial_tree_setting()
         
     def initial_tree_setting(self):
-        """트리위젯 초기 설정"""
+        """
+        트리위젯 초기 설정하는 메서드입니다.
+        """
         self.tree.setColumnCount(2)
         self.tree.setColumnWidth(0,250)
         self.tree.setColumnWidth(1,10)
 
     def put_data_in_tree(self, publish_dict):
-        """아이템을 트리위젯에 넣는 메서드"""
+        """
+        아이템을 트리위젯에 넣는 메서드입니다.
+        """
+        # 현재 사용하고 있는 파일을 트리 최상단에 위치하게 합니다.
         file_name = self.get_current_file_name()
         file_parent = QTreeWidgetItem(self.tree)
         file_parent.setText(0, file_name)
         file_parent.setText(1, "ㅡ")
         file_parent.setForeground(1, QBrush(QColor("sky blue")))
         self._set_text_bold(file_parent)
-        # publish_dict = self.make_data()
-        print (publish_dict)
 
-        # 데이터가 없는 경우에도 오류없이 import 되게끔
-        if not publish_dict:
-            return
-        for item in publish_dict: # 파일 (mb) 가장 앞에 있어서 빼주기
-            if item == file_name:
+        # 퍼블리쉬할 데이터들을 자식 아이템으로 넣어줍니다.
+        for item in publish_dict: 
+            if item == file_name: # 메인 파일 (mb/ nknc) 은 제외하고 넣어줍니다.
                 continue
             parent = QTreeWidgetItem(file_parent)
             parent.setText(0, item)
@@ -60,9 +61,10 @@ class DepartmentWork():
             self._set_text_bold(parent)    
         self.tree.expandAll()
   
-
     def _make_tree_item(self, text, parent):
-        """ 트리 위젯 아이템 만드는 메서드 """
+        """ 
+        트리 위젯 아이템 만드는 메서드입니다. 공통적으로 수행하는 작업으로 하나의 메서드로 묶어둡니다. 
+        """
         self.tree.setStyleSheet("QTreeWidget {font-size:12px}")
         item = QTreeWidgetItem(parent, [f"{text}", ""])
         item.setFlags(parent.flags() | Qt.ItemIsUserCheckable)
@@ -70,18 +72,19 @@ class DepartmentWork():
         font = QFont()
         font.setPointSize(10)
         item.setFont(0, font)
-        if parent.text(0) == self.get_current_file_name() and 'review' in text:
-            item.setCheckState(1, Qt.Unchecked)
-            item.setDisabled(1)
 
     def _set_text_bold(self, item):
-        """ 선택된 아이템의 텍스트를 볼드체로 바꾸는 메서드"""
+        """ 
+        선택된 아이템의 텍스트를 볼드체로 바꾸는 메서드입니다.
+        """
         font = QFont()
         font.setBold(True)
         item.setFont(0, font)
 
-    def check_selection(self):
-        """ 선택한 object/node 확인하는 메서드 """
+    def _check_selection(self):
+        """ 
+        선택한 object/node 확인하는 메서드입니다.
+        """
         if self.tool == "maya":
             selected_data = self.maya.get_selected_objects()
         elif self.tool == "nuke":
@@ -90,7 +93,9 @@ class DepartmentWork():
             return selected_data
     
     def get_current_file_name(self):
-        """ 현재 작업하고 있는 파일 이름을 가져오는 메서드"""  ### 이런 if문 너무 별로
+        """ 
+        현재 작업하고 있는 파일 이름을 가져오는 메서드입니다. 
+        """  ### 이런 if문 너무 별로
         if self.tool == "maya":
             return self.maya.get_file_name()
         elif self.tool == "nuke":
@@ -98,21 +103,25 @@ class DepartmentWork():
         
     """ 부모클래스에 디폴트 값으로 렌더, 캡쳐, 플레이블라스트 확장자를 선언하고, 
         만약 부서별로 다른 확장자로 렌더/플레이블라스트를 export 하고 싶을 때 
-        부서별 자식 클래스에서 오버라이드를 통해 확장자를 수정해준다 
-        eg) pub을 하기위해 modeling은 렌더할때 턴테이블 (mov) 로 하지만 lighting은 렌더할때 (exr)로 하기 때문에"""
+        부서별 자식 클래스에서 오버라이드를 통해 확장자를 수정해줍니다.
+        eg) pub을 하기위해 modeling은 렌더할때 턴테이블 (mov) 로 하지만 lighting은 렌더할때 (exr) 렌더"""
 
-    """렌더 확장자는 다양하기 때문에 파이프라인으로 확장자를 정해서 자동으로 렌더되게 구조화함"""
+    """ 렌더 확장자는 다양하기 때문에 파이프라인으로 확장자를 정해서 자동으로 렌더되게 구조화했습니다. """
 
     def set_render_ext(self):
-        """ 턴테이블 확장자 정해주는 메서드 """
+        """ 
+        턴테이블 확장자 정해주는 메서드입니다.
+        """
         return "jpg"
     
     def save_scene_file(self, new_path):
+        """
+        scene 파일 저장하는 메서드입니다.
+        """
         if self.tool == "maya":
-            self.maya.save_file( new_path)
+            self.maya.save_file(new_path)
         elif self.tool == "nuke":
             NukeAPI.save_file(new_path)
-        print (f"&&&&&&&&&&&&&&&&& {new_path}")
     
     def save_as_alembic(self, alembic_path, file):
         self.maya.export_alemibc(alembic_path, file)
@@ -123,10 +132,11 @@ class DepartmentWork():
     def render_as_exr(self, path):
         self.maya.render_exr_sequence(path)
 
+
 class MOD(DepartmentWork):
     def make_data(self):
         """ 선택된 object/node 가져오는 메서드 """
-        selected_data = self.check_selection()
+        selected_data = self._check_selection()
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         try:
             for data in selected_data:
@@ -144,7 +154,7 @@ class MOD(DepartmentWork):
 
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
-        self.maya.modeling_publish_set()
+        self.maya.modeling_publish_set(self)
     
     def save_data(self, publish_dict):
         """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
@@ -159,7 +169,7 @@ class MOD(DepartmentWork):
 class RIG(DepartmentWork):
     def make_data(self):
         """ 선택된 object/node 가져오는 메서드 """
-        selected_data = self.check_selection()
+        selected_data = self._check_selection()
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         try:
             for data in selected_data:
@@ -233,7 +243,7 @@ class LKD(DepartmentWork):
 class ANI(DepartmentWork): 
     def make_data(self):
         """ 선택된 object/node 가져오는 메서드 """
-        selected_data = self.check_selection()
+        selected_data = self._check_selection()
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         try:
             for data in selected_data:
@@ -247,7 +257,7 @@ class ANI(DepartmentWork):
         """ 렌더 확장자 정해주는 메서드 """
         return "exr"
     
-    def render_data(self, path): ###################################### 카메라 설정..?
+    def render_data(self, path):
         self.maya.render_file(path)
     
     def save_data(self, publish_dict):
@@ -313,10 +323,9 @@ class LGT(DepartmentWork):
         # 누크에서는 바로 thumbnail을 render하지 않습니다
         pass
 
-
 class MM(DepartmentWork):
     def make_data(self):
-        selected_data = self.check_selection()
+        selected_data = self._check_selection()
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         try:
             for data in selected_data:
@@ -358,15 +367,14 @@ class CMP(DepartmentWork):
         """데이터 저장하기"""
         scene_path = publish_dict[self.get_current_file_name()]['path']
         self.save_scene_file(scene_path) # nknc
-        for file, info in list(publish_dict.items()):
+        for file, info in list(publish_dict.items()): # 딕셔너리 내용이 달라지는 것을 방지하기 위해 list화 합니다.
             if 'EXR' in info['file type']: # 
                 NukeAPI.render_selected_write_nodes_with_exr(info['path'], 1001, 1096)
             elif 'Comp' in info['file type']:
                 scene_path = publish_dict[self.get_current_file_name()]['path']
                 self.save_scene_file(scene_path)
         return publish_dict
-    
+
 class FX(DepartmentWork):
     def make_data(self):
         pass
-

@@ -13,6 +13,7 @@ except:
     from PySide2.QtGui import QBrush, QColor, QIcon
     from PySide2.QtGui import QPixmap, QTextCursor
 
+from department_publish import DepartmentWork
 from shotgun_api3 import shotgun
 import department_publish 
 import shotgrid.fetch_shotgrid_data
@@ -80,7 +81,7 @@ class Review(QWidget):
     def _initial_ui_setting(self):
         """초기 ui 세팅하는 메서드"""
         self.show()
-
+        self.work = DepartmentWork(None, self.tool)
         user_data = self.sg.user_info
         self.user_data = self._get_user_info(user_data) ## 현재 유저 정보, 작업 파일 딕셔너리로 저장
         print("**************************************")
@@ -223,7 +224,7 @@ class Review(QWidget):
 
     ############################# Flow: publish/versions에 올리기 ########################################
     
-    def _show_thumbnail(self, button):
+    def _show_thumbnail(self, button, jpg_path=None):
         """썸네일 보여주는 메서드"""
 
         self.maya_api = MayaAPI()
@@ -241,9 +242,14 @@ class Review(QWidget):
         if not files: # 썸네일 파일이 없는 경우
             self.ui.label_thumbnail.setText("No Thumbnail Found")
             self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
-            self.preview_info = {'input path' : image_path, 
-                                 'start frame' : int(start_frame),
-                                 'last frame' : int(last_frame)}
+            try:
+                self.preview_info = {'input path' : image_path,  # ***** 임시 추가
+                                    'start frame' : int(self.sg.frame_start),
+                                    'last frame' : int(self.sg.frame_last)}
+            except:
+                self.preview_info = {'input path' : image_path,  # ***** 임시 추가
+                                    'start frame' : 1001,
+                                    'last frame' : 1096}
             return
 
         if button.text() in ["PlayBlast", "Render"]: # 플레이블라스트, 렌더를 하는 경우
@@ -252,6 +258,8 @@ class Review(QWidget):
             self.preview_info = {'input path' : image_path, 
                                  'start frame' : int(start_frame),
                                  'last frame' : int(last_frame)}
+            if jpg_path:
+                recent_image_file = jpg_path
         else:
             parse = re.compile("[v]\d{3}") # 캡쳐를 하는 경우
             for file in files:
@@ -266,12 +274,31 @@ class Review(QWidget):
 
         if not recent_image_file: 
             return
-            
+        self._thumbnail_pixmap(recent_image_file)
+        
+    def _thumbnail_pixmap(self, recent_image_file):
+        """썸네일 비율 맞춰서 보여주기"""
+
         # ui에 썸네일 미리보여주기
         pixmap = QPixmap(recent_image_file) 
-        scaled_pixmap = pixmap.scaled(288, 162) 
-        self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
-        self.ui.label_thumbnail.repaint()
+        print (recent_image_file)
+        # 원본 이미지의 너비와 높이 가져오기
+        original_width = pixmap.width()
+        original_height = pixmap.height()
+        
+        try:# 비율을 유지하면서 주어진 높이에 맞게 너비를 계산
+            scale_factor_height = 162 / original_height
+            scale_factor_width = 288 / original_width
+            new_width = int(original_width * scale_factor_width)
+            new_height = int(original_height * scale_factor_height)
+    
+            # 이미지 크기 조정 (비율 유지, 고정 높이)
+            scaled_pixmap = pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
+            self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
+        except:
+            print("오류 발생 - pixmap 298")
+        print (f"420:: self.preview_info {self.preview_info}")
+
 
     def _get_frame_number(self, files):
         """ 플레이블라스트, 렌더, 캡처를 통해 받은 파일 경로로 프레임 넘버 가져오기 """
@@ -279,17 +306,24 @@ class Review(QWidget):
         if len(files) == 1:
             return 1, None
         
+        print ("++++++++++++++++++++++++++++++++++++++", files)
         files = sorted(files)
-        start_image = files[0]
-        last_image = files[-1]
-        p = re.compile("[.]\d{4}[.]")      
-        p_start = p.search(start_image)  
-        p_last = p.search(last_image)
+        for index, file in enumerate(files):
+            print (file)
+            p = re.compile("[.]\d{4}[.]")
+            frame = p.search(file)
+            if frame:
+                frame = frame.group()[1:5]
+                files[index] = frame
+            else:
+                files.remove(file)
 
-        if p_start and p_last:
-            start_frame = p_start.group()[1:5]
-            last_frame = p_last.group()[1:5]        
-        return start_frame, last_frame
+        print (files)
+        p_start = min(files)
+        p_last = max(files)
+        
+        print (p_start, p_last)      
+        return p_start, p_last
         
     def _make_thumbnail(self): 
         """ 썸네일 새로 만들어주는 메서드 """
@@ -311,9 +345,11 @@ class Review(QWidget):
             self._show_thumbnail(self.ui.radioButton_capture)
 
         elif self.ui.radioButton_render.isChecked():
-            image_path = self._get_path_using_template("render")
+            ext = self.dep_class.set_render_ext()
+            image_path = self._get_path_using_template("render", ext)
             self._check_validate(image_path)  
-            self._show_thumbnail(self.ui.radioButon_render)
+            thumbnail_path = self.dep_class.render_data(image_path)  
+            self._show_thumbnail(self.ui.radioButton_render, thumbnail_path)
 
     def _apply_ffmpeg(self, input_path, project_name):
         """ (3) ffmpeg 만드는 메서드"""
@@ -340,12 +376,16 @@ class Review(QWidget):
             elif self.tool == 'nuke':
                 print("------------------run make slate mov nuke")
                 cmd = f'''/opt/Nuke/Nuke15.1v1/Nuke15.1 --nc -t /home/rapa/baked/toolkit/config/python/make_slate_mov_nuke.py -input_path "{input_path}" -first "{self.sg.frame_start}" -last "{self.sg.frame_last}" -output_path "{self.preview_info["output_path"]}"'''
-                # print(cmd)
-                subprocess.run(cmd, shell=True)
+                print(cmd)
+                try :
+                    subprocess.run(cmd, shell=True, check=True)
+                except subprocess.CalledProcessError as e:
+                    print (f"Error : {e}")
+
             self._export_slate_image(output_path)
 
         print(f"%%%%%%%%%%%%%%%%%%%%%{self.preview_info}")
-
+        
     def _export_slate_image(self,  input_mov):
         """ffmpeg 이미지로 한장 가져오기"""
         mov_dir = os.path.dirname(input_mov)

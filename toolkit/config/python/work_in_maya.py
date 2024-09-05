@@ -352,7 +352,7 @@ class MayaAPI():
                 shader_dictionary[shader_name].extend(objects)
         return shader_dictionary
 
-    def export_shader(self, ma_file_path):
+    def export_shader(self, ma_file_path, json_file_path):
         """
         maya에서 오브젝트에 어싸인된 셰이더들을 ma 파일로 익스포트하고,
         그 정보들을 json 파일로 익스포트 하는 함수이다.
@@ -382,7 +382,7 @@ class MayaAPI():
 
         return json_file_name, json_file_path
 
-    
+    @staticmethod
     def get_custom_shader_list(self):
         """
         Maya 씬에서 기본 쉐이더를 제외한 사용자 정의 쉐이더 목록을 가져옵니다.

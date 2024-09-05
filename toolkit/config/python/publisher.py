@@ -13,10 +13,10 @@ except:
 
 from shotgun_api3 import shotgun
 import department_publish
-from department_publish import DepartmentWork, MOD, RIG
+from department_publish import DepartmentWork
 import shotgrid.fetch_shotgrid_data
 from importlib import reload
-from capture_module import SubWindow_Open, MakeScreenCapture
+from capture_module import SubWindow_Open
 
 from shotgrid.shotgridserver_json_new import PubDataJsonCreator
 
@@ -104,8 +104,6 @@ class Publisher(QWidget):
         self.publish_dict = self.dep_class.make_data()
         self.tree.setCurrentItem(self.tree.topLevelItem(0))
         self._show_file_detail(self.tree.topLevelItem(0), 0)
-        print (f"self.user_Data: {self.user_data}")
-        print (f"self.publish_dict: {self.publish_dict}")
 
     def _get_user_info(self, user_data):
         """ 유저에 대한 정보 가저오는 메서드 """ # 임시 설정 
@@ -717,16 +715,17 @@ class Publisher(QWidget):
             publish = self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
 
             if not publish :
-                self.backup_data.update({"PublishedFile" : 
-                                        {
-                                            "code" : os.path.basename(file_path),
-                                            "file_path" : file_path, 
-                                            "description" : description,
-                                            "preview_path" : preview_path,
-                                            "published_file_type" : published_file_type
-                                    }
-                                })
-                PubDataJsonCreator().save_to_json(self.back_up_data)
+                pass
+                # self.backup_data.update({"PublishedFile" : 
+                #                         {
+                #                             "code" : os.path.basename(file_path),
+                #                             "file_path" : file_path, 
+                #                             "description" : description,
+                #                             "preview_path" : preview_path,
+                #                             "published_file_type" : published_file_type
+                #                     }
+                #                 })
+                # PubDataJsonCreator().save_to_json(self.back_up_data)
 
         for pub_file in pub_files_list.values():
             # 새로운 값이 create되지 않은 파일들은 새로운 version을 version field에 업데이트 해준다
