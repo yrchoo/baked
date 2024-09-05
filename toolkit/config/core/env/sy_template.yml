@@ -94,7 +94,7 @@ paths:
       definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/ffmpeg/{shot}_{task}_v{version}_slate.mov'
   # Ffmpeg_output
   maya_sequence_ffmpeg_jpg:
-      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/images/{shot}_{task}_v{version}_slate.jpg'
+      definition: '@sequence_root/{sequence}/{shot}/{task}/pub/maya/movies/ffmpeg/{shot}_{task}_v{version}_slate.jpg'
 
   
 

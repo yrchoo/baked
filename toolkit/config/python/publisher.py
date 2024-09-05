@@ -4,8 +4,6 @@ try:
     from PySide6.QtCore import QFile, Qt
     from PySide6.QtGui import QBrush, QColor, QIcon
     from PySide6.QtGui import QPixmap, QTextCursor
-    from PySide6.QtMultimedia import QMediaPlayer, QMediaContent
-    from PySide6.QtMultimediaWidgets import QVideoWidget
 except:
     from PySide2.QtWidgets import QApplication, QWidget, QButtonGroup
     from PySide2.QtUiTools import QUiLoader
@@ -113,6 +111,11 @@ class Publisher(QWidget):
         if self.tool == 'maya':
             _, yaml_key = self._import_yaml_template()
             user_data['maya_extension'] = yaml_key['maya_extension']['default']
+        elif self.tool == 'nuke':
+            self.ui.radioButton_playblast.setEnabled(False)
+            self.ui.radioButton_capture.setEnabled(False)
+            self.ui.radioButton_render.toggle()
+
 
         user_data['tool'] = self.tool
         current_file_name = self.work.get_current_file_name()
@@ -361,7 +364,7 @@ class Publisher(QWidget):
 
     ############################# Flow: publish/versions에 올리기 ########################################
     
-    def _show_thumbnail(self, button):
+    def _show_thumbnail(self, button, jpg_path=None):
         """
         썸네일 보여주는 메서드
         """
@@ -375,8 +378,6 @@ class Publisher(QWidget):
             ext = self.dep_class.set_render_ext()
             image_path = self._get_path_using_template("render", ext) # 부서별로 펍할 external 입력받기
 
-        
-
         print ("???", image_path)
 
         path = self._check_validate(image_path)    
@@ -385,8 +386,8 @@ class Publisher(QWidget):
             self.ui.label_thumbnail.setText("No Thumbnail Found")
             self.ui.label_thumbnail.setAlignment(Qt.AlignCenter)
             self.preview_info = {'input path' : image_path,  # ***** 임시 추가
-                        'start frame' : int(self.sg.frame_start),
-                        'last frame' : int(self.sg.frame_last)}
+                                'start frame' : int(self.sg.frame_start),
+                                'last frame' : int(self.sg.frame_last)}
             return
 
         if button.text() in ["PlayBlast", "Render"]: # 플레이블라스트, 렌더를 하는 경우
@@ -395,6 +396,8 @@ class Publisher(QWidget):
             self.preview_info = {'input path' : image_path, 
                                  'start frame' : int(start_frame),
                                  'last frame' : int(last_frame)}
+            if jpg_path:
+                recent_image_file = jpg_path
         else:
             parse = re.compile("[v]\d{3}") # 캡쳐를 하는 경우
             for file in files:
@@ -411,30 +414,51 @@ class Publisher(QWidget):
 
         if not recent_image_file: 
             return
-            
+        self._thumbnail_pixmap(recent_image_file)
+
+    def _thumbnail_pixmap(self, recent_image_file):
+        """썸네일 비율 맞춰서 보여주기"""
+
         # ui에 썸네일 미리보여주기
         pixmap = QPixmap(recent_image_file) 
-        scaled_pixmap = pixmap.scaled(288, 162) 
+    
+        # 원본 이미지의 너비와 높이 가져오기
+        original_width = pixmap.width()
+        original_height = pixmap.height()
+        
+        # 비율을 유지하면서 주어진 높이에 맞게 너비를 계산
+        scale_factor_height = 162 / original_height
+        scale_factor_width = 288 / original_width
+        new_width = int(original_width * scale_factor_width)
+        new_height = int(original_height * scale_factor_height)
+    
+        # 이미지 크기 조정 (비율 유지, 고정 높이)
+        scaled_pixmap = pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
         self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
-        self.ui.label_thumbnail.repaint()
         print (f"420:: self.preview_info {self.preview_info}")
 
     def _get_frame_number(self, files):
         """ 
         플레이블라스트, 렌더, 캡처를 통해 받은 파일 경로로 프레임 넘버 가져오기 
         """
-
+        print ("++++++++++++++++++++++++++++++++++++++", files)
         files = sorted(files)
-        start_image = files[0]
-        last_image = files[-1]
-        p = re.compile("[.]\d{4}[.]")      
-        p_start = p.search(start_image)  
-        p_last = p.search(last_image)
+        for index, file in enumerate(files):
+            print (file)
+            p = re.compile("[.]\d{4}[.]")
+            frame = p.search(file)
+            if frame:
+                frame = frame.group()[1:5]
+                files[index] = frame
+            else:
+                files.remove(file)
 
-        if p_start and p_last:
-            start_frame = p_start.group()[1:5]
-            last_frame = p_last.group()[1:5]        
-        return start_frame, last_frame
+        print (files)
+        p_start = min(files)
+        p_last = max(files)
+        
+        print (p_start, p_last)      
+        return p_start, p_last
         
     def _make_thumbnail(self): 
         """ 
@@ -461,8 +485,8 @@ class Publisher(QWidget):
             ext = self.dep_class.set_render_ext()
             image_path = self._get_path_using_template("render", ext)
             self._check_validate(image_path)
-            self.dep_class.render_data(image_path)  
-            self._show_thumbnail(self.ui.radioButton_render)
+            thumbnail_path = self.dep_class.render_data(image_path)  
+            self._show_thumbnail(self.ui.radioButton_render, thumbnail_path)
 
     ######################### PUBLISH 버튼 누르면 발생하는 이벤트 ############################
 
@@ -539,8 +563,12 @@ class Publisher(QWidget):
             elif self.tool == 'nuke':
                 print("------------------run make slate mov nuke")
                 cmd = f'''/opt/Nuke/Nuke15.1v1/Nuke15.1 --nc -t /home/rapa/baked/toolkit/config/python/make_slate_mov_nuke.py -input_path "{input_path}" -first "{self.sg.frame_start}" -last "{self.sg.frame_last}" -output_path "{self.preview_info["output_path"]}"'''
-                # print(cmd)
-                subprocess.run(cmd, shell=True)
+                print(cmd)
+                try :
+                    subprocess.run(cmd, shell=True, check=True)
+                except subprocess.CalledProcessError as e:
+                    print (f"Error : {e}")
+
             self._export_slate_image(output_path)
 
         print(f"%%%%%%%%%%%%%%%%%%%%%{self.preview_info}")
