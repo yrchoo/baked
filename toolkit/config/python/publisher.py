@@ -681,7 +681,7 @@ class Publisher(QWidget):
         # 현재 나와 버전 code를 가진 version을 가져온다
         last_version = self.sg.sg.find_one("Version", 
                                            [['code', 'is_not', f"v{self.user_data['version']}"], ['sg_task', 'is', version['sg_task']], ['entity', 'is', version['entity']]],
-                                           ['published_files', 'code'], 
+                                           ['id', 'published_files', 'code',], 
                                            order=[{'field_name': 'created_at', 'direction': 'desc'}])
         print ("****", last_version)
         print("****", self.publish_dict)
@@ -713,7 +713,6 @@ class Publisher(QWidget):
             preview_path = self.preview_info['output_path_jpg']
 
             publish = self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
-
             if not publish :
                 pass
                 # self.backup_data.update({"PublishedFile" : 
@@ -732,6 +731,8 @@ class Publisher(QWidget):
             # 새로운 값이 create되지 않은 파일들은 새로운 version을 version field에 업데이트 해준다
             print (f"res = {pub_file}")
             self.sg.sg.update("PublishedFile", pub_file['id'], {"version" : version})
+
+        self.sg.add_new_version_to_playlist(last_version, version)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv) 
