@@ -78,7 +78,9 @@ class MayaAPI():
 
     def render_turntable(self, output_path_template, start_frame=1001, end_frame=1096, width=1920, height=1080, distance = 5, department=None):
         # 턴테이블 애니메이션을 위한 설정
-
+        start_frame = int(cmds.playbackOptions(query=True, minTime=True))  # 시작 프레임 읽기
+        end_frame = int(cmds.playbackOptions(query=True, maxTime=True))    # 끝 프레임 읽기
+        
         ext = os.path.splitext(output_path_template)[1]
         output_path = output_path_template.replace('.####.exr', '')
         print ("=============", output_path)
@@ -103,9 +105,10 @@ class MayaAPI():
             # DomeLight의 color 속성과 파일 텍스처의 outColor 속성 연결
             cmds.connectAttr(f"{file_node}.outColor", f"{dome_light}.color", force=True)
 
-        camera_transform, camera_shape = cmds.camera(name='turntable_camera_pub')
+        camera_transform, camera_shape = cmds.camera(name='turntable_camrea_pub')
         # cmds.viewFit(camera_transform)  # 자동으로 카메라 위치 세팅
-        cmds.setAttr(camera_transform + ".translateZ", distance)  # 카메라 거리를 설정
+        cmds.setAttr(camera_transform + ".translateZ", 8)  # 카메라 거리를 설정
+        cmds.setAttr(camera_transform + ".translateY", 2)  # 카메라 거리를 설정
         # 카메라 그룹 생성 및 그룹에 카메라 추가
         turntable_grp = cmds.group(empty=True, name='turntable_camera_grp')
         cmds.parent(camera_transform, turntable_grp)
