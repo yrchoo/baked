@@ -176,10 +176,8 @@ class MayaAPI():
         print (f"proxy path :{proxy_path}")
         print (f"proxy format :{proxy_format}")
 
-        # start_frame = int(cmds.playbackOptions(query=True, min=True))
-        # last_frame = int(cmds.playbackOptions(query=True, max=True))
-        start_frame = 1001
-        last_frame = 1096
+        start_frame = int(cmds.playbackOptions(query=True, min=True))
+        last_frame = int(cmds.playbackOptions(query=True, max=True))
         render_width = 1920
         render_height = 1080
 
