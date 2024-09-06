@@ -454,7 +454,6 @@ class Publisher(QWidget):
         print ("++++++++++++++++++++++++++++++++++++++", files)
         files = sorted(files)
         for index, file in enumerate(files):
-            print (file)
             p = re.compile("[.]\d{4}[.]")
             frame = p.search(file)
             if frame:
@@ -462,8 +461,7 @@ class Publisher(QWidget):
                 files[index] = frame
             else:
                 files.remove(file)
-
-        print (files)
+                
         p_start = min(files)
         p_last = max(files)
         

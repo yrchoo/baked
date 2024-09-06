@@ -75,10 +75,12 @@ class MayaAPI():
         for cam in all_cameras:
             cmds.setAttr(f"{cam}.renderable", cam == camera_name)
 
-    def render_turntable(self, output_path_template, start_frame=1001, end_frame=1096, width=1920, height=1080, distance = 30 ):
+    def render_turntable(self, output_path_template, start_frame=1001, end_frame=1096, width=1920, height=1080, distance = 30, department=None):
         # 턴테이블 애니메이션을 위한 설정
 
         ext = os.path.splitext(output_path_template)[1]
+        output_path = output_path_template.replace('.####.exr', '')
+        print ("=============", output_path)
         self.set_image_format(ext)
         cmds.setAttr("defaultResolution.width", width)
         cmds.setAttr("defaultResolution.height", height)
@@ -86,6 +88,8 @@ class MayaAPI():
         # 기존 턴테이블 카메라가 있는지 확인
         camera_transform = None
         camera_name = "turntable_camera#"
+
+        # if not cmds.ls("turntable_camera_grp*"):
 
         existing_cameras = cmds.ls(type="camera")
         for cam_shape in existing_cameras:
@@ -98,9 +102,22 @@ class MayaAPI():
         dome_lights = cmds.ls(type='aiSkyDomeLight')  # Arnold 돔라이트 확인
         if dome_lights:
             print("Dome light already exists.")
-            return True
         else:
-            cmds.shadingNode("aiSkyDomeLight", asLight=True, name="domedome")
+            dome_light = cmds.shadingNode("aiSkyDomeLight", asLight=True, name="domedome")
+        
+        if department == 'LKD':
+            hdri_path = "/home/rapa/baked/show/baked/ONSET/rosendal_plains_2_2k.exr"
+            file_node = cmds.shadingNode('file', asTexture=True)
+
+
+            # 파일 텍스처의 경로 설정
+            cmds.setAttr(f"{file_node}.fileTextureName", hdri_path, type="string")
+
+            # DomeLight의 color 속성과 파일 텍스처의 outColor 속성 연결
+            cmds.connectAttr(f"{file_node}.outColor", f"{dome_light}.color", force=True)
+
+            # # Arnold 노드를 활성화하여 조명 결과 확인
+            # cmds.setAttr(f"{dome_light}.camera", 1)
 
         # 카메라가 존재하지 않으면 새로 생성
         if camera_transform is None:
@@ -125,11 +142,20 @@ class MayaAPI():
         cmds.keyTangent(turntable_grp, attribute="rotateY", inTangentType="linear", outTangentType="linear")
 
         # 턴테이블 렌더링 수행
-        for frame in range(start_frame, end_frame + 1):
-            output_path = output_path_template % frame
-            cmds.currentTime(frame)
-            cmds.render(camera_transform, x=width, y=height)
-            cmds.renderWindowEditor("renderView", e=True, writeImage=output_path)
+        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", output_path, type="string")
+        print("nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn")
+        print (output_path)
+        output_path = output_path.replace(".####.", ".%04d.")
+        # for frame in range(start_frame, end_frame + 1):
+        #     output_path = output_path % frame
+        #     cmds.currentTime(frame)
+        #     cmds.render(camera_transform, x=width, y=height)
+        #     cmds.renderWindowEditor("renderView", e=True, writeImage=output_path)
+
+        cmds.arnoldRender(batch=True)
+
+        print ("exr 을 jpg로 바꿔주기")
+        return output_path_template
 
 
 ####################### Animation #################################################33
@@ -223,10 +249,16 @@ class MayaAPI():
         frame_cmd = "'Frame \: %{eif\:n+"
         frame_cmd += "%s\:d}' (%s)"  % (first, frame_count+1)
         bot_right = frame_cmd
+        
+        try:
+            input_path = input_path.replace(".####.", ".%04d.")
+        except:
+            pass
 
         if last_frame == 1:
             return
         print ("~!~!~!~", font_size, text_x_padding, text_y_padding)
+        print (output_path)
         cmd = '%s -framerate %s -y -start_number %s ' % (ffmpeg, frame_rate, first)
         cmd += '-i %s' % (input_path)
         cmd += ' -vf "drawbox=y=0 :color=black :width=iw: height=%s :t=fill, ' % (slate_size)
@@ -308,12 +340,13 @@ class MayaAPI():
         cmds.arnoldRender(batch=True)
         thumbnail_path = self.convert_exr_into_jpg(outpath)
         return thumbnail_path
+
         
     def convert_exr_into_jpg(self, input_file):
         output_file = input_file.replace(".####.exr", ".jpg")
         files = glob.glob(f"{os.path.dirname(output_file)}/*")
         input_file = max(files, key=os.path.getmtime)
-        print (input_file, output_file)
+        print ("kkkk", input_file, output_file)
         try:
             # FFmpeg 명령어 구성
             command = [
@@ -382,7 +415,6 @@ class MayaAPI():
 
         return json_file_name, json_file_path
 
-    @staticmethod
     def get_custom_shader_list(self):
         """
         Maya 씬에서 기본 쉐이더를 제외한 사용자 정의 쉐이더 목록을 가져옵니다.
@@ -486,7 +518,7 @@ class MayaAPI():
         print("텍스처 파일 이름 목록:", textures)
         return textures
 
-    def get_custom_shader_list():
+    def get_custom_shader_list(self):
         """
         Maya에서 새로 생성된 쉐이더 목록을 가져옵니다.
         
