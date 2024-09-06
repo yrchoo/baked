@@ -219,7 +219,7 @@ class Tracker(QWidget):
 
     def _reset_showing_data(self):
         self.ui.label_file.clear()
-        self.ui.label_path.clear()
+        # self.ui.label_path.clear()
         self.ui.label_user.clear()
         self.ui.label_task.clear()
         self.ui.label_type.clear()
