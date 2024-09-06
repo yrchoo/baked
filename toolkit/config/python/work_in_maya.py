@@ -195,6 +195,20 @@ class MayaAPI():
         viewer = 렌더링 완료시 플레이어로 재생할지를 설정하는데.. False 하셈
         offScreen = 테스트중
         """
+        cameras = cmds.ls(type='camera')
+        for camera_ in cameras:
+            if "aniCam" in camera_:
+                cam_transform = cmds.listRelatives(camera_, parent=True)[0]
+                print(f"Checking camera transform: {cam_transform}")
+        model_panels = cmds.getPanel(type="modelPanel")
+        if model_panels:
+            for panel in model_panels:
+                cmds.modelEditor(panel, e=True, displayLights="all")
+                cmds.modelEditor(panel, e=True, shadows=True)
+                cmds.modelEditor(panel, e=True, grid=False)
+                print("조명과 그림자가 활성화 되었고 그리드는 비활성화 되었습니다.")
+
+        cmds.lookThru(cam_transform)
 
         cmds.playblast(filename=proxy_path, format='image', compression=proxy_format,
                         startTime=start_frame, endTime=last_frame, forceOverwrite=True,

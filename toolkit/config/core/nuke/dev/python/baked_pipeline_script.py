@@ -42,6 +42,7 @@ def show_publisher():
 
 def show_review():
     reload(upload_review)
+    global review_win
     review_win = upload_review.Review(sg, "nuke")
     review_win.show()
 

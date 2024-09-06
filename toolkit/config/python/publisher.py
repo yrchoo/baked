@@ -104,6 +104,7 @@ class Publisher(QWidget):
         self.publish_dict = self.dep_class.make_data()
         self.tree.setCurrentItem(self.tree.topLevelItem(0))
         self._show_file_detail(self.tree.topLevelItem(0), 0)
+        print ("****************************************************** initial ui setting")
 
     def _get_user_info(self, user_data):
         """ 유저에 대한 정보 가저오는 메서드 """ # 임시 설정 
