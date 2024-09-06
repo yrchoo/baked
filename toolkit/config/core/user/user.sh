@@ -1,10 +1,9 @@
 #!/bin/sh
  
-export NAME='추예린'
+export NAME='김재윤'
 export PROJECT='baked'
-export SEQ='CYR'
-export SHOT='CYR_0010'
-export ASSET=''
-export TASK='ANI'
-export ASSET_TYPE=''
-        
+export SEQ=
+export SHOT=
+export ASSET='Choo'
+export TASK='LKD'
+export ASSET_TYPE='Character'
