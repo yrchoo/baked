@@ -31,6 +31,7 @@ import subprocess
 reload(department_publish)
 reload(work_in_maya)
 reload(shotgrid.fetch_shotgrid_data)
+import work_in_nuke as NukeAPI
 
 
 from shotgrid.fetch_shotgrid_data import ShotGridDataFetcher
@@ -47,10 +48,12 @@ class Review(QWidget):
         self._link_setting()
         self._connect_department()
         self._set_event()
+        print ("hello")
 
     def _set_initial_val(self, sg, tool):
         self.sg : ShotGridDataFetcher = sg # login 시에 지정된 userdata를 가지고 Shotgrid에서 정보를 가져오는 Shotgrid_Data() 클래스
         self.tool = tool
+        self.maya = MayaAPI()
 
     def _set_event(self):
         """이벤트 발생 메서드"""
@@ -80,7 +83,6 @@ class Review(QWidget):
 
     def _initial_ui_setting(self):
         """초기 ui 세팅하는 메서드"""
-        self.show()
         self.work = DepartmentWork(None, self.tool)
         user_data = self.sg.user_info
         self.user_data = self._get_user_info(user_data) ## 현재 유저 정보, 작업 파일 딕셔너리로 저장
@@ -101,6 +103,11 @@ class Review(QWidget):
             self.ui.comboBox_link.setCurrentText(self.user_data['shot'])
 
     def _task_setting(self):
+        if self.user_data['shot']:  # 현재 link 타입 설정하기
+            self.ui.comboBox_link.setCurrentText(self.user_data['shot'])
+        elif self.user_data['asset']:
+            self.ui.comboBox_link.setCurrentText(self.user_data['asset'])
+
         if self.user_data['task'].lower() in self.asset_steps_dict:
             self.ui.comboBox_task.setCurrentText(self.asset_steps_dict[self.user_data['task'].lower()])
         else:
@@ -108,9 +115,9 @@ class Review(QWidget):
 
     def _get_user_info(self, user_data):
         if self.tool == "maya":
-            current_file = MayaAPI.get_file_name(self)
+            current_file = self.maya.get_file_name()
         elif self.tool == "nuke":
-            current_file = NukeAPI.get_file_name(self)
+            current_file = NukeAPI.get_file_name()
 
         version = self._get_version_from_current_file(current_file)
         user_data['version'] = version
@@ -227,7 +234,6 @@ class Review(QWidget):
     def _show_thumbnail(self, button, jpg_path=None):
         """썸네일 보여주는 메서드"""
 
-        self.maya_api = MayaAPI()
         image_path = ""
         if button.text() == "PlayBlast":
             image_path = self._get_path_using_template("playblast")
@@ -333,7 +339,7 @@ class Review(QWidget):
             image_path = self._get_path_using_template("playblast")
             print (f"image_path : {image_path}")
             self._check_validate(image_path)
-            MayaAPI.make_playblast(self, image_path)
+            self.maya.make_playblast(image_path)
             self._show_thumbnail(self.ui.radioButton_playblast)
 
         elif self.ui.radioButton_capture.isChecked():
@@ -372,7 +378,7 @@ class Review(QWidget):
             start_frame = self.preview_info['start frame']
             last_frame = self.preview_info['last frame']
             if self.tool == 'maya':
-                self.maya_api.make_ffmpeg(start_frame, last_frame, input_path, output_path, project_name)
+                self.maya.make_ffmpeg(start_frame, last_frame, input_path, output_path, project_name)
             elif self.tool == 'nuke':
                 print("------------------run make slate mov nuke")
                 cmd = f'''/opt/Nuke/Nuke15.1v1/Nuke15.1 --nc -t /home/rapa/baked/toolkit/config/python/make_slate_mov_nuke.py -input_path "{input_path}" -first "{self.sg.frame_start}" -last "{self.sg.frame_last}" -output_path "{self.preview_info["output_path"]}"'''
@@ -448,3 +454,6 @@ class Review(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv) 
+    win = Review()
+    win.show()
+    app.exec()

@@ -42,6 +42,7 @@ def show_publisher():
 
 def show_review():
     reload(upload_review)
+    global review_win
     review_win = upload_review.Review(sg, "nuke")
     review_win.show()
 
@@ -52,6 +53,7 @@ def open_file(path):
         LoadNukeFile().load_file_with_read_node(path)
         tracker_win.opened_file_path_list.append(path)
         tracker_win.get_opened_file_list()
+        load_win.set_content_tree_widget_by_shotgrid()
     else : 
         nuke.scriptOpen(path)
         setup_nuke_project()
@@ -79,6 +81,7 @@ def pop_save_file_ui():
 def save_file(path):
     print("save file method")
     nuke.scriptSaveAs(path)
+    load_win.change_table_data()
 
 def read_node_file_list():
     open_file_list = []

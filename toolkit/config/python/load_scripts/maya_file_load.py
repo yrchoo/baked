@@ -30,6 +30,25 @@ class LoadMayaFile():
         name_space = self._make_group_name(path)
         cmds.file(path, reference=True, type=file_type, mergeNamespacesOnClash=False, namespace=name_space)
 
+        if file_type == "Alembic":
+            file_name = os.path.basename(path)
+            if "aniCam" in file_name:
+                cameras = cmds.ls(type='camera')
+                for camera_ in cameras:
+                    if "aniCam" in camera_:
+                        cam_transform = cmds.listRelatives(camera_, parent=True)[0]
+                        print(f"Checking camera transform: {cam_transform}")
+                        model_panels = cmds.getPanel(type="modelPanel")
+                        break
+                if model_panels:
+                    for panel in model_panels:
+                        cmds.modelEditor(panel, e=True, displayLights="all")
+                        cmds.modelEditor(panel, e=True, shadows=True)
+                        cmds.modelEditor(panel, e=True, grid=False)
+                        print("조명과 그림자가 활성화 되었고 그리드는 비활성화 되었습니다.")
+                cmds.lookThru(cam_transform)
+
+
     def _get_shader_file(self, path):
         # 뭔가.. 내가 불러온 shader를 자동으로 mod에 매핑해주는 일을 해야됨!!
         # 자동으로 shader를 mapping해주기 위해서 maya ascii로 저장했읍니다
