@@ -382,21 +382,25 @@ class ShotGridDataFetcher():
             print("Webhook Server Data sending failed")
 
 
-    def add_new_version_to_playlist(self, version):
-        playlist_code = datetime.today().strftime("%Y-%M-%d") # '2024-08-30'
-        playlist = self.sg.find_one('Playlist', [['code', 'is', playlist_code]], ['versions'])
+    def add_new_version_to_playlist(self, old_version, new_version):
+        playlist_code = datetime.today().strftime("%Y-%m-%d") # '2024-08-30'
+        playlist = self.sg.find_one('Playlist', [['code', 'is', playlist_code]], ['id', 'versions'])
         if playlist:
+            # Playlist의 Versions에 들어가는 값은 각 Task에 최신 Version 하나가 되도록 한다
             versions = playlist['versions']
-            versions.append(version)
+            old_version = next((ver for ver in versions if old_version['id'] == ver['id']), None)
+            if old_version:
+                versions.remove(old_version)
+            versions.append(new_version)
         else :
             playlist_data = {
                 'project' : self.project,
                 'code' : playlist_code,
             }
             playlist = self.sg.create("Playlist", playlist_data)
-            versions = [version]
+            versions = [new_version]
         
-        self.sg.update('Playlist', playlist, { 'versions': versions })
+        self.sg.update('Playlist', playlist['id'], { 'versions': versions })
 
 
 if __name__ == "__main__":

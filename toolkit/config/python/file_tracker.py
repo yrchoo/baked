@@ -255,10 +255,11 @@ class Tracker(QWidget):
         last version에 넣고 리스트의 정보를 업데이트 해준다
         """
         print(data) # 새로 들어오는 정보는 version entity가 생성되었을 때의 것이다
-        version = data.get('entity')
-        version = self.sg.find_one("Version", [['id', 'is', version['id']]], ['task', 'published_files'])
+        version = data['data']['deliveries'][0]['entity']
+        pprint(f"*@&#$^*@&#^$*@&#$^*@&#$^*@&#^*&#$^*@&#^$*@&^#$*\n{version}")
+        version = self.sg.sg.find_one("Version", [['id', 'is', version['id']]], ['sg_task', 'published_files'])
 
-        if version['task'] not in self.related_tasks:
+        if version['sg_task'] not in self.related_tasks:
             return
         
         changed_file = []
