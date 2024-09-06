@@ -388,9 +388,10 @@ class ShotGridDataFetcher():
         if playlist:
             # Playlist의 Versions에 들어가는 값은 각 Task에 최신 Version 하나가 되도록 한다
             versions = playlist['versions']
-            old_version = next((ver for ver in versions if old_version['id'] == ver['id']), None)
             if old_version:
-                versions.remove(old_version)
+                old_version = next((ver for ver in versions if old_version['id'] == ver['id']), None)
+                if old_version:
+                    versions.remove(old_version)
             versions.append(new_version)
         else :
             playlist_data = {

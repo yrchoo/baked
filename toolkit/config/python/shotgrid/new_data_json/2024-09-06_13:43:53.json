@@ -1,0 +1,34 @@
+{
+    "data": {
+        "deliveries": [
+            {
+                "id": "14672.1615.0",
+                "event_log_entry_id": 533202,
+                "event_type": "Shotgun_Version_New",
+                "operation": "create",
+                "user": {
+                    "type": "HumanUser",
+                    "id": 89
+                },
+                "entity": {
+                    "type": "Version",
+                    "id": 8889
+                },
+                "project": {
+                    "type": "Project",
+                    "id": 155
+                },
+                "meta": {
+                    "type": "new_entity",
+                    "entity_type": "Version",
+                    "entity_id": 8889
+                },
+                "created_at": "2024-09-06 04:43:52.598257",
+                "attribute_name": null,
+                "session_uuid": "8b4ea65e-6c0a-11ef-86f5-0a58a9feac02",
+                "delivery_id": "3294da39-16e3-43ff-8f6e-4d8cf823679f"
+            }
+        ]
+    },
+    "timestamp": "2024-09-06T04:43:53Z"
+}

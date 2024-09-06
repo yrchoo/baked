@@ -129,7 +129,7 @@ def setup_nuke_project():
 sg = ShotGridDataFetcher()
 load_win = loader.Loader(sg, "nuke")
 save_win = save.SaveFile()
-tracker_win = file_tracker.Tracker(sg, read_node_file_list())
+tracker_win = file_tracker.Tracker(sg, read_node_file_list(), load_win.related_tasks)
 
 init()
 if nuke.root().knob("name").value() == "" : 

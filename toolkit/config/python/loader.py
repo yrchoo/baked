@@ -224,7 +224,7 @@ class Loader(QWidget):
             "RIG" : {'asset' : ['MOD'], 'shot' : []},
             "LKD" : {'asset' : ['MOD'], 'shot' : []},
             "ANI" : {'asset' : ['RIG'], 'shot' : ['MM']},
-            "LGT" : {'asset' : ['LKD'], 'shot' : ['ANI', 'LKD', 'MM']},
+            "LGT" : {'asset' : ['LKD'], 'shot' : ['ANI', 'MM']},
             "CMP" : {'asset' : [], 'shot' : ['LGT', 'MM']},
         }
         pub_files = {}
@@ -237,14 +237,17 @@ class Loader(QWidget):
             # shot 작업자라면 shot에 link되어있는 asset엔티티를 찾아서 task 엔티티를 저장한다
             elif self.sg.user_info['shot']:
                 # shot에 링크된 asset들을 찾는다
-                assets = self.sg.sg.find_one("Shot", [['id', 'is', self.sg.work['id']]], ['assets'])['assets']    
+                assets = self.sg.sg.find_one("Shot", [['id', 'is', self.sg.work['id']]], ['assets'])['assets'] 
                 for asset in assets:
-                    task = self.sg.sg.find_one("Task", [['entity', 'is', asset], ['content','is',ast_task]])
+                    task = self.sg.sg.find_one("Task", [['entity', 'is', asset], ['content','is', ast_task]])
                     self.related_tasks.append(task)
 
         for shot_task in task_level[my_task]['shot']:
             task = self.sg.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',shot_task]])
-            self.related_tasks.append(task)
+            if task :
+                self.related_tasks.append(task)
+
+        print(self.related_tasks)
 
         # 각 task에서 가장 최근에 pub된 version의 pub_files를 가져온다
         for task in self.related_tasks:
@@ -252,8 +255,16 @@ class Loader(QWidget):
                                           [['sg_task','is',task]], 
                                           ['published_files'],
                                           order=[{'field_name': 'created_at', 'direction': 'desc'}])
-            if not version or not version['published_files']:
+    
+            print(task, " : ", version)
+            if not version:
                 continue
+
+            if not version['published_files']:
+                version = self.sg.sg.find_one("Version", 
+                                          [['sg_task','is',task], ['id', 'is_not', version['id']]], 
+                                          ['published_files'],
+                                          order=[{'field_name': 'created_at', 'direction': 'desc'}])
 
             for file in version['published_files']:
                 file = self.sg.sg.find_one("PublishedFile", 
@@ -261,8 +272,8 @@ class Loader(QWidget):
                                            ["id", "code", "path", "created_by", "task", "version", "published_file_type", "description",])
                 pub_files[file['code']] = file
         
-        # pprint(pub_files)
         self.content_files_data = pub_files
+        print(self.content_files_data)
 
         """
         file_data의 출력 결과
