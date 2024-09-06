@@ -176,6 +176,7 @@ class TotalProfile(QWidget):
     def assign_selected_items_to_user(self):
         user_name = self.ui.lineEdit_name.text()
         user_id = self.get_user_id_from_name(user_name)
+        
         if not user_id:
             print("사용자가 없습니다.")
             return
@@ -183,7 +184,7 @@ class TotalProfile(QWidget):
             print("Task 가 없습니다.")
             return
 
-        # 선택된 Task와 매칭되는 Shot,Asset 찾기
+        # 선택된 Task와 매칭되는 Shot, Asset 찾기
         matching_task = None
         for task_info in self.task_mapping[self.selected_task_name]:
             if self.selected_shot_id and task_info["entity_type"] == "Shot" and task_info["entity_id"] == self.selected_shot_id:
@@ -196,7 +197,7 @@ class TotalProfile(QWidget):
         if matching_task:
             task_id = matching_task["task_id"]
 
-            #Task에 기존의 할당된 사용자 목록 가져오기
+            # Task에 기존의 할당된 사용자 목록 가져오기
             task_data = self.sg.find_one("Task", [["id", "is", task_id]], ["task_assignees"])
             current_assignees = task_data.get("task_assignees", [])
 
@@ -208,18 +209,30 @@ class TotalProfile(QWidget):
                 self.sg.update("Task", task_id, {"task_assignees": current_assignees})
                 print(f"User ID : {user_id}, Task ID : {task_id}")
 
-            # Task에 Shot , Asset 연결
+            # Task에 Shot, Asset 연결
             entity_id = matching_task["entity_id"]
             entity_type = matching_task["entity_type"]
             
-            #새로운 사용자의 데이터가 존재할경우 프로젝트에 추가 업데이트.
+            # 새로운 사용자의 데이터가 존재할 경우 프로젝트에 추가 업데이트
             if entity_id and entity_type:
                 self.sg.update("Task", task_id, {"entity": {"type": entity_type, "id": entity_id}})
                 print(f"Task ID : {task_id} with {entity_type} ID {entity_id}")
             else:
                 print("")
+                
+            #새로운 사용자의 유저데이터를 baked 프로젝트 명단에 추가.
+            user_data = self.sg.find_one("HumanUser", [["id", "is", user_id]], ["projects"])
+            current_projects = user_data.get("projects", [])
+        
+            if not any(proj["id"] == self.project_id for proj in current_projects):
+                current_projects.append({"type": "Project", "id": self.project_id})
+                self.sg.update("HumanUser", user_id, {"projects": current_projects})
+                print(f"User ID: {user_id} added to Project ID: {self.project_id}")
+
         else:
             print("error")
+
+          
 
 
     def setup_ui(self):

@@ -8,8 +8,6 @@ import sys
 import os
 import shotgrid_total_profile
 
-import subprocess
-
 
 class UserProfile(QWidget):
     def __init__(self):
@@ -120,7 +118,7 @@ class UserProfile(QWidget):
         user_data = self.project_user_dict.get(selected_name)
         if not user_data:
             return []
-        filters = [["task_assignees", "is", user_data]]
+        filters = [["task_assignees", "is", user_data],["project", "is", {"type": "Project", "id": self.project_id}]]
         fields = ["content", "sg_status_list", "entity"]
         self.user_tasks = self.sg.find("Task", filters, fields)
         return self.user_tasks
@@ -175,6 +173,7 @@ class UserProfile(QWidget):
             filters = [["code", "is", selected_asset], ["project", "is", {"type": "Project", "id": self.project_id}]]
             fields = ["sg_asset_type"]
             data = self.sg.find("Asset", filters, fields)
+
             if data and data[0].get("sg_asset_type"):
                 asset_type = data[0]["sg_asset_type"]
                 self.ui.label_asset_type.setText(f"Type: {asset_type}")
@@ -288,12 +287,11 @@ class UserProfile(QWidget):
         else :
             seq = ""
             shot = ""
-            asset =self.ui.comboBox_shot_asset.text()
-            asset_type = self.ui.label_asset_type.text()
+            asset =self.ui.comboBox_shot_asset.currentText()
+            asset_type = self.ui.label_asset_type.text().split(":")[-1].strip()
+            
 
         Make_User_Data(name, project, seq, shot, asset, task, asset_type)
-        subprocess.Popen(["python3.9 /home/rapa/baked/show/toolkit/python/shotgrid/webhook_server.py &"], shell=True)
-        # JSON().publish() -> 현재까지 저장된 json들을 모두 읽어와서 각 데이터를 publish해준다
         self.close()
         
     #샷그리드가 작동하지 않을경우 새로운 로그인창 연결.
