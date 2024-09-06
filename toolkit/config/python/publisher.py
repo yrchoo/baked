@@ -581,7 +581,7 @@ class Publisher(QWidget):
 
         print(f"%%%%%%%%%%%%%%%%%%%%%{self.preview_info}")
 
-    def _export_slate_image(self,  input_mov):
+    def _export_slate_image(self, input_mov):
         """ffmpeg 이미지로 한장 가져오기"""
         mov_dir = os.path.dirname(input_mov)
         mov_name = os.path.basename(input_mov)
@@ -729,8 +729,12 @@ class Publisher(QWidget):
             # 새로운 값이 create되지 않은 파일들은 새로운 version을 version field에 업데이트 해준다
             print (f"res = {pub_file}")
             self.sg.sg.update("PublishedFile", pub_file['id'], {"version" : version})
+        print ("****************************************************************************")
+        print (last_version)
+        print (version)
 
         self.sg.add_new_version_to_playlist(last_version, version)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv) 

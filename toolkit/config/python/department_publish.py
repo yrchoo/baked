@@ -148,9 +148,16 @@ class MOD(DepartmentWork):
     
     def render_data(self, render_path):
         # self.maya_api = 
-        print (render_path)
-        print (os.path.splitext(render_path))
-        self.maya.render_turntable(render_path)
+        input_path = self.maya.render_turntable(render_path) 
+        thumbnail_path = self.maya.convert_exr_into_jpg(input_path)
+        print (thumbnail_path, "thumbnail path입니당")
+        
+        return thumbnail_path
+
+    def set_render_ext(self): #######
+        """ 렌더 확장자 정해주는 메서드 """
+
+        return "exr"
 
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
