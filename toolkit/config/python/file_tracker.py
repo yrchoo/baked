@@ -26,17 +26,17 @@ class Tracker(QWidget):
     RELOAD_FILE = Signal(str, str)
     LOAD_FILE = Signal(str)
 
-    def __init__(self, sg : ShotGridDataFetcher, open_file_data = None, latest_file_dict = None):
+    def __init__(self, sg : ShotGridDataFetcher, open_file_data = None, related_tasks = None, latest_file_dict = None):
         super().__init__()
         print("Tracker __init__()")
-        self._set_instance_val(sg, open_file_data, latest_file_dict)
+        self._set_instance_val(sg, open_file_data, related_tasks, latest_file_dict)
         self._set_ui()
         self._set_event()
         self._get_file_list_related_to_my_work() # 이거 수정해야됨
         self.get_opened_file_list()
 
 
-    def _set_instance_val(self, sg, open_file_data, latest_file_dict):
+    def _set_instance_val(self, sg, open_file_data, related_task, latest_file_dict):
         self.py_file_path = os.path.dirname(__file__)
         self.sg = sg
         # 샷그리드 데이터가 연결되지 않으니 tracker를 사용할 수 없다고 pop하기!
@@ -47,7 +47,7 @@ class Tracker(QWidget):
         self.lastest_file_dict = latest_file_dict
         self.opened_file_dict = {}
         self.cur_showing_data = {}
-        self.related_tasks = []
+        self.related_tasks = related_task
 
     def _set_ui(self):
         ui_file_path = f"{self.py_file_path}/ui_files/tracker.ui"
@@ -96,6 +96,7 @@ class Tracker(QWidget):
     def _set_list_data(self):
         self.ui.listWidget_using.clear()
         self.ui.listWidget_not.clear()
+        self._reset_showing_data()
         using_row = 0
 
         if not self.opened_file_dict:
@@ -127,6 +128,7 @@ class Tracker(QWidget):
             self._set_list_data()
             return
         
+        print ("get lastest_file_data from shotgrid...")
         # tracker가 실행될 때 최초 한 번만 실행됨
         my_task = self.sg.user_info["task"]
         """
@@ -145,8 +147,10 @@ class Tracker(QWidget):
         self.related_tasks = []
         for ast_task in task_level[my_task]['asset']:
             # asset 작업자라면 해당 asset의 task 엔티티를 찾아서 저장하고
+            print(f"Get {ast_task} Data...")
             if self.sg.user_info['asset']:
                 task = self.sg.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',ast_task]])
+                print(f"Find {self.sg.user_info['asset']} {ast_task} : {task} Data...")
                 self.related_tasks.append(task)
             # shot 작업자라면 shot에 link되어있는 asset엔티티를 찾아서 task 엔티티를 저장한다
             elif self.sg.user_info['shot']:
@@ -154,10 +158,12 @@ class Tracker(QWidget):
                 assets = self.sg.sg.find_one("Shot", [['id', 'is', self.sg.work['id']]], ['assets'])['assets']    
                 for asset in assets:
                     task = self.sg.sg.find_one("Task", [['entity', 'is', asset], ['content','is',ast_task]])
+                    print(f"Find {self.sg.user_info['asset']} {ast_task} : {task} Data...")
                     self.related_tasks.append(task)
 
         for shot_task in task_level[my_task]['shot']:
             task = self.sg.sg.find_one("Task", [['entity', 'is', self.sg.work], ['content','is',shot_task]])
+            print(f"Find {self.sg.user_info['shot']} {shot_task} : {task} Data...")
             self.related_tasks.append(task)
 
         # 각 task에서 가장 최근에 pub된 version의 pub_files를 가져온다
@@ -166,14 +172,22 @@ class Tracker(QWidget):
                                           [['sg_task','is',task]], 
                                           ['published_files'],
                                           order=[{'field_name': 'created_at', 'direction': 'desc'}])
-            if not version or not version['published_files']:
+            if not version:
+                print(f"Task : {task} 에서 publish된 version이 없음...")
                 continue
+
+            if not version['published_files']:
+                version = self.sg.sg.find_one("Version", 
+                                          [['sg_task','is',task], ['id', 'is_not', version['id']]], 
+                                          ['published_files'],
+                                          order=[{'field_name': 'created_at', 'direction': 'desc'}])
 
             for file in version['published_files']:
                 file = self.sg.sg.find_one("PublishedFile", 
                                            [['id','is',file['id']]], 
                                            self.pub_file_fields)
                 pub_files[file['code']] = file
+                print(f"Task : {task} 에서 {file}을 찾았습니다...")
         
         pprint(pub_files)
 
@@ -203,6 +217,17 @@ class Tracker(QWidget):
             self.ui.label_version.setText("You didn't open this file yet")
             self.ui.pushButton_load.setEnabled(True)
 
+    def _reset_showing_data(self):
+        self.ui.label_file.clear()
+        self.ui.label_path.clear()
+        self.ui.label_user.clear()
+        self.ui.label_task.clear()
+        self.ui.label_type.clear()
+        self.ui.plainTextEdit_comment.clear()
+        self.ui.label_thumbnail.clear()
+
+        self.ui.pushButton_load.setEnabled(False)
+        self.ui.pushButton_movie.setEnabled(False)
 
     def _show_selected_item_data(self, key, list_name):
         self.ui.label_file.setText(key)
@@ -255,24 +280,36 @@ class Tracker(QWidget):
         last version에 넣고 리스트의 정보를 업데이트 해준다
         """
         print(data) # 새로 들어오는 정보는 version entity가 생성되었을 때의 것이다
-        version = data['data']['deliveries'][0]['entity']
-        pprint(f"*@&#$^*@&#^$*@&#$^*@&#$^*@&#^*&#$^*@&#^$*@&^#$*\n{version}")
-        version = self.sg.sg.find_one("Version", [['id', 'is', version['id']]], ['sg_task', 'published_files'])
+        pub_file = data['data']['deliveries'][0]['entity']
+        pub_file = self.sg.sg.find_one("PublishedFile", [['id', 'is', pub_file['id']]], self.pub_file_fields)
+        print(f"*@&#$^*@&#^$*@&#$^*@&#$^*@&#^*&#$^*@&#^$*@&^#$*{pub_file}")
+        print(self.related_tasks)
 
-        if version['sg_task'] not in self.related_tasks:
+        task = next((task for task in self.related_tasks if task['id'] == pub_file['task']['id']), None)
+
+        if not task:
+            print (f"New PUbfile is not for your work updated version : {task['id']}...")
             return
         
-        changed_file = []
-        for pub_file in version['published_files']:
-            old_data_key = next((key for key, f in self.lastest_file_dict.items() if f['task']['id'] == version['task']['id']))
-            self.lastest_file_dict.pop(old_data_key)
-            changed_file.append(old_data_key)
-            self.lastest_file_dict[pub_file['code']] = pub_file
+        new_file_name = pub_file['code']
+        parse = re.compile("v\d{3}")
+        p_data = parse.search(new_file_name).group()
+        file_name = new_file_name.split(p_data)[0]
+        _, ext = os.path.splitext(new_file_name)
 
+        old_data_key = next((key for key in self.lastest_file_dict.keys() if file_name in key and ext in key), None)
+        if old_data_key:
+            print(old_data_key)
+            self.lastest_file_dict.pop(old_data_key)
+            notify_cmd = f"""notify-send 'Content File Update' 'File Version is changed : {old_data_key}'"""
+            subprocess.run(notify_cmd, shell=True)
+
+        self.lastest_file_dict[pub_file['code']] = pub_file
         self._set_list_data()
-        self._show_selected_item_data()
         self.RELATED_FILE_DATA_CHANGED.emit(self.lastest_file_dict)
-        os.system(f"notify-send 'Content File Update' 'File Version is changed : {changed_file}'")
+
+        
+        
 
     def _load_new_version(self):
         reload_item = self.ui.listWidget_using.currentItem()

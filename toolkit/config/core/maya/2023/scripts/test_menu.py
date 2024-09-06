@@ -187,8 +187,8 @@ def _check_dir(external_path):
             print(f"Directory already exists: {dir_path}")
 
 
-tracker_win = file_tracker.Tracker(sg, get_ref_file_path_list())
 save_win = save.SaveFile()
 load_win = loader.Loader(sg, "maya")
+tracker_win = file_tracker.Tracker(sg, get_ref_file_path_list(), load_win.related_tasks)
 
 init()
