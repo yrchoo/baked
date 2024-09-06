@@ -7,4 +7,3 @@ export SHOT=
 export ASSET='Chiikawa'
 export TASK='LKD'
 export ASSET_TYPE='Character'
-

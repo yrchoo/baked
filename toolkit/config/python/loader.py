@@ -110,19 +110,23 @@ class Loader(QWidget):
         self.ui.treeWidget_content.currentItemChanged.connect(self._set_content_table_widget)
         self.ui.treeWidget_content.itemClicked.connect(self._set_content_table_widget)
 
-        self.ui.tabWidget_task.currentChanged.connect(self._change_table_data)
+        self.ui.tabWidget_task.currentChanged.connect(self.change_table_data)
 
 #####################################################################################################
 
 
 #################### tabWidget 연관 메서드 ##########################################################
 
-    def _change_table_data(self, index):
+    def change_table_data(self, index=None):
         """
         Loader에서 tabWidget의 현재 tab이 변경되는 경우
         변경된 tab의 index를 받아와서 해당 탭에 맞는 데이터를 tableWidget에 띄우도록 하는 메서드
         """
         self.ui.tableWidget_files.clear()
+
+        if not index:
+            index = self.ui.tabWidget_task.currentIndex()
+
         if index == 0:
             self._set_my_task_table_widget()
         elif index == 1:
@@ -501,6 +505,7 @@ class Loader(QWidget):
         treeWidget_task가 ui에 띄워진 treeWidget이라면
         해당 값에 대한 파일 데이터들을 tableWidget_files에 띄워주는 메서드
         """
+        self.ui.tableWidget_files.clear()
         self.my_path = self._get_path() # 경로에 존재하는 파일들을 tableWidget에 출력해야하므로 경로를 가져온다
         item = self.ui.treeWidget_task.currentItem() 
         sub_path = ""
@@ -559,6 +564,7 @@ class Loader(QWidget):
         treeWidget_seq의 아이템이 선택되었을 때 tableWidget_files에
         이에 해당하는 파일들을 보여주는 메서드
         """
+        self.ui.tableWidget_files.clear()
         self.my_path = self._get_current_item_path("sequence")
         dirs = os.listdir(self.my_path)
         row = 0
@@ -591,6 +597,7 @@ class Loader(QWidget):
         treeWidget_asset의 아이템이 선택되었을 때 tableWidget_files에
         이에 해당하는 파일들을 보여주는 메서드
         """
+        self.ui.tableWidget_files.clear()
         self.my_path = self._get_current_item_path("asset")
         dirs = os.listdir(self.my_path)
         col = 0
@@ -618,6 +625,7 @@ class Loader(QWidget):
         treeWidget_content의 아이템이 선택되었을 때 tableWidget_files에
         이에 해당하는 파일들을 보여주는 메서드
         """
+        self.ui.tableWidget_files.clear()
         cur_item = self.ui.treeWidget_content.currentItem()
 
         if cur_item == None:

@@ -54,6 +54,7 @@ def loader_func():
 def save_func():
     path = cmds.file(query=True, sceneName=True)
     save_win.save_file(path)
+    load_win.change_table_data()
 
 def tracker_func():
     tracker_win.get_opened_file_list(get_ref_file_path_list())
@@ -64,6 +65,7 @@ def open_file(path):
     if current_file_path :
         LoadMayaFile().load_file(path)
         tracker_win.get_opened_file_list(get_ref_file_path_list())
+        load_win.set_content_tree_widget_by_shotgrid()
         
     else :
         current_file_path = path
@@ -163,7 +165,7 @@ def _check_dir(external_path):
         "scenes", 
         "images", 
         "sourceimages", 
-        "assets", 
+        # "assets", 
         # "renderData", 
         # "clips", 
         # "sound", 
@@ -172,7 +174,7 @@ def _check_dir(external_path):
         "movies", 
         # "data", 
         # "Time Editor", 
-        "autosave", 
+        # "autosave", 
         # "sceneAssembly"
     ]
 
@@ -180,7 +182,6 @@ def _check_dir(external_path):
         dir_path = os.path.join(maya_project_dir, subdir)
         if not os.path.exists(dir_path):
             print(f"Checking directory: {dir_path}")  # 각 디렉토리 경로를 확인
-
             os.makedirs(dir_path)
             print(f"Created directory: {dir_path}")
         else:

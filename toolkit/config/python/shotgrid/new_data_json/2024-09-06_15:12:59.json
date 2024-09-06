@@ -1,0 +1,34 @@
+{
+    "data": {
+        "deliveries": [
+            {
+                "id": "15116.1642.0",
+                "event_log_entry_id": 534705,
+                "event_type": "Shotgun_PublishedFile_New",
+                "operation": "create",
+                "user": {
+                    "type": "ApiUser",
+                    "id": 99
+                },
+                "entity": {
+                    "type": "PublishedFile",
+                    "id": 1115
+                },
+                "project": {
+                    "type": "Project",
+                    "id": 155
+                },
+                "meta": {
+                    "type": "new_entity",
+                    "entity_type": "PublishedFile",
+                    "entity_id": 1115
+                },
+                "created_at": "2024-09-06 06:12:57.124061",
+                "attribute_name": null,
+                "session_uuid": null,
+                "delivery_id": "05b804f8-2719-4a9e-80ea-e9c19784e128"
+            }
+        ]
+    },
+    "timestamp": "2024-09-06T06:12:58Z"
+}
