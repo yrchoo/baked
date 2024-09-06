@@ -1,13 +1,13 @@
 try :
     from PySide6.QtWidgets import QApplication, QWidget
     from PySide6.QtUiTools import QUiLoader
-    from PySide6.QtCore import QFile, Signal
+    from PySide6.QtCore import QFile, Signal, Slot
     from PySide6.QtGui import QPixmap, QColor
 
 except:
     from PySide2.QtWidgets import QApplication, QWidget
     from PySide2.QtUiTools import QUiLoader
-    from PySide2.QtCore import QFile, Signal
+    from PySide2.QtCore import QFile, Signal, Slot
     from PySide2.QtGui import QPixmap, QColor
 
 import os
@@ -248,27 +248,31 @@ class Tracker(QWidget):
             self.ui.pushButton_movie.setEnabled(False)
         
 
-
+    @ Slot ()
     def _check_new_data_type(self, data : dict):
         """
         flask 서버에서 받아온 data로 원하는 entity 값을 뽑아내서
         last version에 넣고 리스트의 정보를 업데이트 해준다
         """
         print(data) # 새로 들어오는 정보는 version entity가 생성되었을 때의 것이다
-        version = data.get('entity')
-        version = self.sg.find_one("Version", [['id', 'is', version['id']]], ['task', 'published_files'])
+        version = data['data']['deliveries'][0]['entity']
+        pprint(f"*@&#$^*@&#^$*@&#$^*@&#$^*@&#^*&#$^*@&#^$*@&^#$*\n{version}")
+        version = self.sg.sg.find_one("Version", [['id', 'is', version['id']]], ['sg_task', 'published_files'])
 
-        if version['task'] not in self.related_tasks:
+        if version['sg_task'] not in self.related_tasks:
             return
         
+        changed_file = []
         for pub_file in version['published_files']:
             old_data_key = next((key for key, f in self.lastest_file_dict.items() if f['task']['id'] == version['task']['id']))
             self.lastest_file_dict.pop(old_data_key)
+            changed_file.append(old_data_key)
             self.lastest_file_dict[pub_file['code']] = pub_file
 
         self._set_list_data()
         self._show_selected_item_data()
         self.RELATED_FILE_DATA_CHANGED.emit(self.lastest_file_dict)
+        os.system(f"notify-send 'Content File Update' 'File Version is changed : {changed_file}'")
 
     def _load_new_version(self):
         reload_item = self.ui.listWidget_using.currentItem()
