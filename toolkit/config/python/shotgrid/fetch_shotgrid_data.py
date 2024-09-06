@@ -382,7 +382,8 @@ class ShotGridDataFetcher():
             print("Webhook Server Data sending failed")
 
 
-    def add_new_version_to_playlist(self, old_version, new_version):
+    def add_new_version_to_playlist(self, old_version, new_version, etc = None):
+        print(etc)
         playlist_code = datetime.today().strftime("%Y-%m-%d") # '2024-08-30'
         playlist = self.sg.find_one('Playlist', [['code', 'is', playlist_code]], ['id', 'versions'])
         if playlist:

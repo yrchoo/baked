@@ -402,7 +402,8 @@ class Review(QWidget):
     def _process_review_funcs(self):
         input_path = self.preview_info['input path']
         self._apply_ffmpeg(input_path, self.user_data["project"])
-        self._update_version_data()
+        version = self._update_version_data()
+        self._update_playlist(version)
         self.close()
 
     def _update_version_data(self):
@@ -434,6 +435,16 @@ class Review(QWidget):
 
         version = self.sg.update_version_for_review(version, task, description, preview_path, shot, asset)
         return version
+    
+    def _update_playlist(self, version):
+        pass
+        # last_version = self.sg.sg.find_one("Version", 
+        #                                    [['code', 'is_not', f"v{self.user_data['version']}"], ['sg_task', 'is', version['sg_task']], ['entity', 'is', version['entity']]],
+        #                                    ['id', 'published_files', 'code',], 
+        #                                    order=[{'field_name': 'created_at', 'direction': 'desc'}])
+        # print ("****", last_version)
+        # self.sg.add_new_version_to_playlist(last_version, version)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv) 

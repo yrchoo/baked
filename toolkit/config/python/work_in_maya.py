@@ -9,6 +9,7 @@ import subprocess
 import datetime
 import ffmpeg
 import glob
+import re
 
 class MayaAPI():
     def __init__(self):
@@ -75,61 +76,65 @@ class MayaAPI():
         for cam in all_cameras:
             cmds.setAttr(f"{cam}.renderable", cam == camera_name)
 
-    def render_turntable(self, output_path_template, start_frame=1001, end_frame=1096, width=1920, height=1080, distance = 30 ):
+    def render_turntable(self, output_path_template, start_frame=1001, end_frame=1096, width=1920, height=1080, distance = 5, department=None):
         # 턴테이블 애니메이션을 위한 설정
 
         ext = os.path.splitext(output_path_template)[1]
+        output_path = output_path_template.replace('.####.exr', '')
+        print ("=============", output_path)
         self.set_image_format(ext)
         cmds.setAttr("defaultResolution.width", width)
         cmds.setAttr("defaultResolution.height", height)
 
-        # 기존 턴테이블 카메라가 있는지 확인
-        camera_transform = None
-        camera_name = "turntable_camera#"
-
-        existing_cameras = cmds.ls(type="camera")
-        for cam_shape in existing_cameras:
-            transform_node = cmds.listRelatives(cam_shape, parent=True)[0]
-            if camera_name in transform_node:
-                camera_transform = transform_node
-                break
-        
         # dome light 만들기
         dome_lights = cmds.ls(type='aiSkyDomeLight')  # Arnold 돔라이트 확인
         if dome_lights:
             print("Dome light already exists.")
-            return True
         else:
-            cmds.shadingNode("aiSkyDomeLight", asLight=True, name="domedome")
+            dome_light = cmds.shadingNode("aiSkyDomeLight", asLight=True, name="domedome")
+        
+        if department == 'LKD':
+            print ("it's shader time")
+            hdri_path = "/home/rapa/baked/show/baked/ONSET/rosendal_plains_2_2k.exr"
+            file_node = cmds.shadingNode('file', asTexture=True)
 
-        # 카메라가 존재하지 않으면 새로 생성
-        if camera_transform is None:
-            camera_transform, camera_shape = cmds.camera(name=camera_name)
-            cmds.viewFit(camera_transform)  # 자동으로 카메라 위치 세팅
-            cmds.setAttr(camera_transform + ".translateZ", distance)  # 카메라 거리를 설정
+            # 파일 텍스처의 경로 설정
+            cmds.setAttr(f"{file_node}.fileTextureName", hdri_path, type="string")
+            # DomeLight의 color 속성과 파일 텍스처의 outColor 속성 연결
+            cmds.connectAttr(f"{file_node}.outColor", f"{dome_light}.color", force=True)
 
-            # 카메라 그룹 생성 및 그룹에 카메라 추가
-            turntable_grp = cmds.group(empty=True, name='turntable_camera_grp')
-            cmds.parent(camera_transform, turntable_grp)
-        else:
-            # 기존 카메라 그룹 찾기
-            turntable_grp = cmds.listRelatives(camera_transform, parent=True)[0]
+        camera_transform, camera_shape = cmds.camera(name='turntable_camera_pub')
+        # cmds.viewFit(camera_transform)  # 자동으로 카메라 위치 세팅
+        cmds.setAttr(camera_transform + ".translateZ", distance)  # 카메라 거리를 설정
+        # 카메라 그룹 생성 및 그룹에 카메라 추가
+        turntable_grp = cmds.group(empty=True, name='turntable_camera_grp')
+        cmds.parent(camera_transform, turntable_grp)
 
         # 애니메이션 키프레임 설정
         start_frame = int(cmds.playbackOptions(query=True, minTime=True))  # 시작 프레임 읽기
         end_frame = int(cmds.playbackOptions(query=True, maxTime=True))    # 끝 프레임 읽기
         cmds.setKeyframe(turntable_grp, attribute="rotateY", time=start_frame, value=0)
         cmds.setKeyframe(turntable_grp, attribute="rotateY", time=end_frame, value=360)
+        cmds.setAttr(f"{camera_shape}.renderable", True)
 
         # 키프레임을 선형으로 설정
         cmds.keyTangent(turntable_grp, attribute="rotateY", inTangentType="linear", outTangentType="linear")
 
         # 턴테이블 렌더링 수행
-        for frame in range(start_frame, end_frame + 1):
-            output_path = output_path_template % frame
-            cmds.currentTime(frame)
-            cmds.render(camera_transform, x=width, y=height)
-            cmds.renderWindowEditor("renderView", e=True, writeImage=output_path)
+        cmds.setAttr("defaultRenderGlobals.imageFilePrefix", output_path, type="string")
+        # cmds.setAttr("defaultRenderGlobals.renderableCamera", camera_shape, type="string")  # 해당 카메라의 Shape 노드를 렌더 카메라로 설정
+        print("nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn")
+        print (output_path)
+        output_path = output_path.replace(".####.", ".%04d.")
+        # for frame in range(start_frame, end_frame + 1):
+        #     output_path = output_path % frame
+        #     cmds.currentTime(frame)
+        #     cmds.render(camera_transform, x=width, y=height)
+        #     cmds.renderWindowEditor("renderView", e=True, writeImage=output_path)
+        cmds.arnoldRender(batch=True)
+
+        print ("exr 을 jpg로 바꿔주기")
+        return output_path_template
 
 
 ####################### Animation #################################################33
@@ -200,6 +205,7 @@ class MayaAPI():
     
     def make_ffmpeg(self, start_frame, last_frame, input_path, output_path, project_name):
         ## 플레이블라스트로 렌더링한 이미지를 FFMPEG 라이브러리를 이용해서 동영상을 인코딩한다.
+
         first = 1001
         frame_rate = 24 
         # 사운드가 있는 경우 23.976 으로 합니다.
@@ -207,6 +213,7 @@ class MayaAPI():
         ffmpeg = "ffmpeg"
         slate_size = 60
         font_path = "/home/rapa/baked/toolkit/config/core/content/font/Courier_New.ttf"
+        start_frame, last_frame = self.get_frame_number(input_path)
         frame_count = int(last_frame) - int(start_frame)
         # frame_count = 10
         font_size = 40
@@ -221,13 +228,21 @@ class MayaAPI():
         bot_center = ""
 
         frame_cmd = "'Frame \: %{eif\:n+"
-        frame_cmd += "%s\:d}' (%s)"  % (first, frame_count+1)
+        frame_cmd += "%s\:d}' (%s)"  % (start_frame, frame_count+1)
         bot_right = frame_cmd
+        
+        try:
+            input_path = input_path.replace(".####.", ".%04d.")
+        except:
+            pass
 
         if last_frame == 1:
             return
-        print ("~!~!~!~", font_size, text_x_padding, text_y_padding)
-        cmd = '%s -framerate %s -y -start_number %s ' % (ffmpeg, frame_rate, first)
+        print ("______________________________________________________________________________________________________")
+        print (input_path)
+        print ("~!~!~!~", font_size, text_x_padding, text_y_padding, last_frame)
+        print (output_path)
+        cmd = '%s -framerate %s -y -start_number %s ' % (ffmpeg, frame_rate, start_frame)
         cmd += '-i %s' % (input_path)
         cmd += ' -vf "drawbox=y=0 :color=black :width=iw: height=%s :t=fill, ' % (slate_size)
         cmd += 'drawbox=y=ih-%s :color=black :width=iw: height=%s :t=fill, ' % (slate_size, slate_size)
@@ -243,6 +258,27 @@ class MayaAPI():
         os.system(cmd)
         return output_path
     
+    def get_frame_number(self, path):
+        print ("++++++++++++++++++++++++++++++++++++++")
+        dir_path = os.path.dirname(path)
+        files = glob.glob(f"{dir_path}/*")
+        files = sorted(files)
+        print ("----------------------------------------------------------")
+        print (files)
+        for index, file in enumerate(files):
+            p = re.compile("[.]\d{4}[.]")
+            frame = p.search(file)
+            if frame:
+                frame = frame.group()[1:5]
+                files[index] = frame
+            else:
+                files.remove(file)
+                
+        p_start = min(files)
+        p_last = max(files)
+        
+        print (p_start, p_last)      
+        return p_start, p_last
 
 ################################## 매치무브 ###################################3
 
@@ -308,12 +344,13 @@ class MayaAPI():
         cmds.arnoldRender(batch=True)
         thumbnail_path = self.convert_exr_into_jpg(outpath)
         return thumbnail_path
+
         
     def convert_exr_into_jpg(self, input_file):
         output_file = input_file.replace(".####.exr", ".jpg")
         files = glob.glob(f"{os.path.dirname(output_file)}/*")
         input_file = max(files, key=os.path.getmtime)
-        print (input_file, output_file)
+        print ("kkkk", input_file, output_file)
         try:
             # FFmpeg 명령어 구성
             command = [
@@ -382,7 +419,6 @@ class MayaAPI():
 
         return json_file_name, json_file_path
 
-    @staticmethod
     def get_custom_shader_list(self):
         """
         Maya 씬에서 기본 쉐이더를 제외한 사용자 정의 쉐이더 목록을 가져옵니다.
@@ -486,7 +522,7 @@ class MayaAPI():
         print("텍스처 파일 이름 목록:", textures)
         return textures
 
-    def get_custom_shader_list():
+    def get_custom_shader_list(self):
         """
         Maya에서 새로 생성된 쉐이더 목록을 가져옵니다.
         
