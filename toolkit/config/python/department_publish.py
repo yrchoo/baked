@@ -148,9 +148,16 @@ class MOD(DepartmentWork):
     
     def render_data(self, render_path):
         # self.maya_api = 
-        print (render_path)
-        print (os.path.splitext(render_path))
-        self.maya.render_turntable(render_path)
+        input_path = self.maya.render_turntable(render_path) 
+        thumbnail_path = self.maya.convert_exr_into_jpg(input_path)
+        print (thumbnail_path, "thumbnail path입니당")
+        
+        return thumbnail_path
+
+    def set_render_ext(self): #######
+        """ 렌더 확장자 정해주는 메서드 """
+
+        return "exr"
 
     def get_ready_for_publish(self):
         """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
@@ -216,7 +223,11 @@ class LKD(DepartmentWork):
         return "exr"
     
     def render_data(self, render_path): #################################### exr rendering
-        thumbnail_path = self.maya.render_turntable(render_path) 
+        print ("redner data ///")
+        input_path = self.maya.render_turntable(render_path, "LKD") 
+        thumbnail_path = self.maya.convert_exr_into_jpg(input_path)
+        print (thumbnail_path, "thumbnail path입니당")
+        
         return thumbnail_path
     
     def save_data(self, publish_dict):
@@ -225,11 +236,11 @@ class LKD(DepartmentWork):
         self.save_scene_file(scene_path) # mb
 
         ma_file = self.get_current_file_name().replace(".mb", ".ma")
-        json_file = self.get_current_file_name().replace(".mb", ".json")
+        json_file = self.get_current_file_name().replace(".mb", ".json") # json 이름 .json
         ma_file_path = publish_dict[ma_file]['path']
-        json_file_path = publish_dict[json_file]['path'].replace(".ma", ".json")
+        json_file_path = publish_dict[json_file]['path'].replace(".ma", ".json") #/home
 
-        publish_dict[json_file]['path'] = json_file
+        publish_dict[json_file]['path'] = json_file_path #/home/rapa..
         publish_dict[scene_file]['path'] = scene_path # mb
 
         self.maya.export_shader(ma_file_path, json_file_path) #ma, #json
