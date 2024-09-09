@@ -19,7 +19,7 @@ class DepartmentWork():
     """
     DepartmentWork
     - 각 부서별로 공통되는 메서드를 구현하기 위한 부모 클래스입니다.
-    - 부서별로 필요한 퍼블리쉬할 정보들을 테이블 위젯을 구성합니다.
+    - 부서별로 필요한 퍼블리쉬할 정보들을 트리 위젯을 구성합니다.
     """
 
     def __init__(self, treewidget, tool):
@@ -147,24 +147,24 @@ class MOD(DepartmentWork):
         return publish_dict
     
     def render_data(self, render_path):
-        # self.maya_api = 
+        """ 인풋받은 경로에 렌더하는 메서드입니다."""
+        """ 모델링은 턴테이블로 렌더링 해줍니다."""
         input_path = self.maya.render_turntable(render_path) 
         thumbnail_path = self.maya.convert_exr_into_jpg(input_path)
-        print (thumbnail_path, "thumbnail path입니당")
+        print ("153 /// redner_data", thumbnail_path, "thumbnail path입니당")
         
         return thumbnail_path
 
     def set_render_ext(self): #######
-        """ 렌더 확장자 정해주는 메서드 """
-
+        """ 렌더 확장자 정해주는 메서드입니다. """
         return "exr"
 
     def get_ready_for_publish(self):
-        """ 퍼블리쉬 하기전 데이터 처리하는 메서드 """
+        """ 퍼블리쉬 하기전 데이터 처리하는 메서드입니다. """
         self.maya.modeling_publish_set(self)
     
     def save_data(self, publish_dict):
-        """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
+        """ 선택된 노드, 오브젝트 별로 export 하는 메서드입니다. """
         self.get_ready_for_publish()
         scene_path = publish_dict[self.get_current_file_name()]['path']
         self.save_scene_file(scene_path)
@@ -175,7 +175,7 @@ class MOD(DepartmentWork):
 
 class RIG(DepartmentWork):
     def make_data(self):
-        """ 선택된 object/node 가져오는 메서드 """
+        """ 선택된 object/node 가져오는 메서드입니다. """
         selected_data = self._check_selection()
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         try:
@@ -190,7 +190,7 @@ class RIG(DepartmentWork):
         self.maya.render_turntable(render_path)
 
     def save_data(self, publish_dict):
-        """ 선택된 노드, 오브젝트 별로 export 하는 메서드 """
+        """ 선택된 노드, 오브젝트 별로 export 하는 메서드입니다. """
         scene_path = publish_dict[self.get_current_file_name()]['path']
         self.save_scene_file(scene_path)
         return publish_dict
@@ -206,8 +206,7 @@ class LKD(DepartmentWork):
         self.lookdev_list.extend(shader_list)
     
     def make_data(self):
-        """ 쉐이더 텍스쳐 데이터 따로 가져오는 메서드 """
-        """ 룩뎁인 경우 디스크립션이 하나면 되는데.. """
+        """ 쉐이더 텍스쳐 데이터 따로 가져오는 메서드입니다. """
 
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         ma_file = self.get_current_file_name().replace(".mb", ".ma")
@@ -218,7 +217,7 @@ class LKD(DepartmentWork):
         return publish_dict
 
     def set_render_ext(self): #######
-        """ 렌더 확장자 정해주는 메서드 """
+        """ 렌더 확장자 정해주는 메서드입니다. """
 
         return "exr"
     
@@ -244,16 +243,16 @@ class LKD(DepartmentWork):
         publish_dict[scene_file]['path'] = scene_path # mb
 
         self.maya.export_shader(ma_file_path, json_file_path) #ma, #json
-        print ("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
+        print ("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
         print (scene_path)
         print (publish_dict)
         print (publish_dict[scene_file]['path'])
-        print ("~~~", publish_dict)
+        print ("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
         return publish_dict
 
 class ANI(DepartmentWork): 
     def make_data(self):
-        """ 선택된 object/node 가져오는 메서드 """
+        """ 선택된 object/node 가져오는 메서드입니다. """
         selected_data = self._check_selection()
         publish_dict = {self.get_current_file_name():{'description':'', 'file type':'', 'ext': '', 'path':''}}
         try:
@@ -265,7 +264,7 @@ class ANI(DepartmentWork):
         return publish_dict
     
     def set_render_ext(self):
-        """ 렌더 확장자 정해주는 메서드 """
+        """ 렌더 확장자 정해주는 메서드입니다. """
         return "exr"
     
     def render_data(self, path):
@@ -309,11 +308,11 @@ class LGT(DepartmentWork):
 
 
     def set_render_ext(self):
-        """ 렌더 확장자 정해주는 메서드 """
+        """ 렌더 확장자 정해주는 메서드입니다. """
         return "exr"
     
     def save_data(self, publish_dict):
-        """ 파일 타입별로 파일 저장하는 메서드 """
+        """ 파일 타입별로 파일 저장하는 메서드입니다. """
         for file, info in list(publish_dict.items()):
             if 'Lighting' in info['file type']:
                 scene_path = publish_dict[self.get_current_file_name()]['path']
@@ -330,9 +329,6 @@ class LGT(DepartmentWork):
                 self.save_scene_file(scene_path)
         return publish_dict
     
-    def render_data(self, image_path):
-        # 누크에서는 바로 thumbnail을 render하지 않습니다
-        pass
 
 class MM(DepartmentWork):
     def make_data(self):
@@ -347,7 +343,7 @@ class MM(DepartmentWork):
         return publish_dict
     
     def set_render_ext(self):
-        """ 렌더 확장자 정해주는 메서드 """
+        """ 렌더 확장자 정해주는 메서드입니다. """
         return "exr"
     
     def save_data(self, publish_dict):
@@ -375,7 +371,7 @@ class CMP(DepartmentWork):
         return publish_dict
     
     def save_data(self, publish_dict):
-        """데이터 저장하기"""
+        """데이터 저장하는 메서드입니다."""
         scene_path = publish_dict[self.get_current_file_name()]['path']
         self.save_scene_file(scene_path) # nknc
         for file, info in list(publish_dict.items()): # 딕셔너리 내용이 달라지는 것을 방지하기 위해 list화 합니다.
