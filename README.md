@@ -15,4 +15,4 @@ https://walnut-christmas-c19.notion.site/File-Open-Load-3071b83ac5914aa0b3794a28
 https://walnut-christmas-c19.notion.site/Sub-Part-fe3af19385d74a13a485adc4cca57188?pvs=4
 
 ### Publisher 
-https://www.notion.so/Team-Project-Publisher-a00ddd96498945609b11f9bc9b483226?pvs=4
+https://reliable-artichoke-f7d.notion.site/Team-Project-Publisher-a00ddd96498945609b11f9bc9b483226?pvs=4
