@@ -412,7 +412,7 @@ class Publisher(QWidget):
 
         elif button.text() == "Capture": # 캡쳐를 하는 경우
             parse = re.compile("[v]\d{3}")
-            for file in files:
+            for file in files: 
                 version = parse.search(os.path.basename(file)).group()[1:]
                 if version == self.user_data["version"]:
                     recent_image_file = file
@@ -450,7 +450,7 @@ class Publisher(QWidget):
             scaled_pixmap = pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio)
             self.ui.label_thumbnail.setPixmap(scaled_pixmap) # 가장 최근 사진으로 뽑기
         except:
-        print (f"420 /// _thumbnail_pixmap - self.preview_info : {self.preview_info}")
+            print (f"420 /// _thumbnail_pixmap - self.preview_info : {self.preview_info}")
 
     def _get_frame_number(self, files):
         """ 
@@ -626,7 +626,7 @@ class Publisher(QWidget):
         """ 전 업해주는 메서드입니다. """
         user_info = self.user_data
         file_path = self._get_path_using_template('dev')
-        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         print (file_path)
         if os.path.exists(file_path):
             version = int(user_info["version"])
