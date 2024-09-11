@@ -178,7 +178,7 @@ class Publisher(QWidget):
     ########################## 저장하고 버전 관리 #############################
 
     def _get_path_using_template(self, work, ext=""):
-        """ yaml 템플릿을 이용해서 저장할 경로, 파일 이름 만드는 메서드 """
+        """ yaml 템플릿을 이용해서 저장할 경로, 파일 이름 만드는 메서드입니다. """
 
         yaml_path, _ = self._import_yaml_template()
         file_info_dict = self.user_data
@@ -519,14 +519,14 @@ class Publisher(QWidget):
         6) dev 폴더에 버전 올라가서 저장되게 해줍니다.
         """
 
-        self.tree.clearSelection()                                # 1
+        self.tree.clearSelection()                        
         # self.connect_department()
-        self._save_file_pub()                                     # 2
+        self._save_file_pub()                                     
         input_path = self.preview_info['input path']
-        self._apply_ffmpeg(input_path, self.user_data['project']) # 3
-        version = self._create_version_data()                     # 4
-        self._create_published_file(version)                      # 5
-        self._save_file_dev_version_up()                          # 6
+        self._apply_ffmpeg(input_path, self.user_data['project']) 
+        version = self._create_version_data()                     
+        self._create_published_file(version)                      
+        self._save_file_dev_version_up()                          
         self.close()
     
     def _save_file_pub(self):
@@ -578,7 +578,7 @@ class Publisher(QWidget):
             self.preview_info['output_path'] = output_path
             self.preview_info['output_path_jpg'] = output_path
             
-        else: # jpg/exr sequence 일때 (mov 일때는 그냥 배제합시다)
+        else: # jpg/exr sequence 일때 
             print ("이미지 시퀀스 ffmpeg 파일 경로 작성합니다")
             output_path = self._get_path_using_template("ffmpeg")
             self.preview_info['output_path'] = output_path
@@ -638,11 +638,9 @@ class Publisher(QWidget):
     ############### 샷그리드에 파일 올리는 메서드들은 따로 파일 만들예정 ###############
     
     def _create_version_data(self):
-        """ (5) 샷그리드 versions에 오리는 메서드 """
+        """ 샷그리드 versions에 오리는 메서드입니다. """
         print (f"REVIEW     /// {self.publish_dict}")
 
-        # if self.tool == "maya" and self.user_data['task'] == "LGT": # 라이팅 마야작업은 펍만되고 버전은 안 만들어져 (리소스로서만 쓰이지) => 근데 리뷰 받고 싶을 수도 있잖아.? 흠 
-        #     return
         # version
         version = self.user_data['version']
         version = f'v{version}'
@@ -668,7 +666,6 @@ class Publisher(QWidget):
         print("#####################################")
         print(version, task, description, preview_path, shot, asset)
         version = self.sg.create_new_version_entity(version, task, description, preview_path, shot, asset)
-        # 호출 JSON().save_json(pub_data)
 
         if not version :
             self.back_up_data = {
@@ -691,14 +688,9 @@ class Publisher(QWidget):
         return version
 
     def _create_published_file(self, version):
-        """ (4) 샷그리드 published_file 에 pub 파일들 올리는 메서드 """
+        """ 샷그리드 published_file 에 pub 파일들 올리는 메서드입니다. """
         print (f"PUBLISHED /// {self.publish_dict}")
 
-
-        # if not version:
-        #     self.sg.create_new_publish_entity(version, file_path, description, preview_path, published_file_type)
-        #     return
-        # 현재 나와 버전 code를 가진 version을 가져온다
         last_version = self.sg.sg.find_one("Version", 
                                            [['code', 'is_not', f"v{self.user_data['version']}"], ['sg_task', 'is', version['sg_task']], ['entity', 'is', version['entity']]],
                                            ['id', 'published_files', 'code',], 
@@ -710,14 +702,9 @@ class Publisher(QWidget):
         if last_version:
             for file in last_version['published_files']:
                 pub_files_list[file['name']] = file
-            # for file in last_version['published_files']:
-            #     file = self.sg.sg.find_one("PublishedFile", 
-            #                                 [['id','is',file['id']]], 
-            #                                 ['id', 'code'])
-            #     pub_files_list[file['code']] = file # pub_files_list['ABC_0010_ANI_v001.abc] = {Published_File_Entity}
+
         for detail in self.publish_dict.values():
             # 현재 새로 올리려는 파일의 v000을 제외한 앞 부분을 읽어와서 비교한 뒤
-            print (detail)
             file_path = detail['path']
             if pub_files_list :
                 parse = re.compile("[v]\d{3}")

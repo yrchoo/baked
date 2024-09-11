@@ -56,8 +56,7 @@ class Review(QWidget):
         self.maya = MayaAPI()
 
     def _set_event(self):
-        """이벤트 발생 메서드"""
-        pass
+        """이벤트 발생 메서드입니다."""
 
         self.ui.pushButton_cancel.clicked.connect(self._close_ui)
         self.ui.pushButton_upload.clicked.connect(self._process_review_funcs)
@@ -73,7 +72,9 @@ class Review(QWidget):
         self.button_group.buttonClicked.connect(self._show_thumbnail)
 
     def _set_ui(self):
-        """ui 셋업해주는 메서드"""
+        """
+        초기 ui 세팅하는 메서드입니다.
+        """
         ui_file_path = '/home/rapa/baked/toolkit/config/python/upload_review.ui' 
         ui_file = QFile(ui_file_path)
 
@@ -96,6 +97,9 @@ class Review(QWidget):
             self.ui.comboBox_link.setCurrentText(self.user_data['asset'])
 
     def _link_setting(self):
+        """
+        링크할 asset/shot 을 유저에 맞게 설정해주는 메서드 입니다.
+        """
         self._show_link_entity()
         if self.user_data['task'].lower() in self.asset_steps_dict:
             self.ui.comboBox_link.setCurrentText(self.user_data['asset'])
@@ -103,6 +107,9 @@ class Review(QWidget):
             self.ui.comboBox_link.setCurrentText(self.user_data['shot'])
 
     def _task_setting(self):
+        """
+        task 를 유저에 맞게 설정해주는 메서드 입니다.
+        """
         if self.user_data['shot']:  # 현재 link 타입 설정하기
             self.ui.comboBox_link.setCurrentText(self.user_data['shot'])
         elif self.user_data['asset']:
@@ -114,6 +121,9 @@ class Review(QWidget):
             self.ui.comboBox_task.setCurrentText(self.shot_steps_dict[self.user_data['task'].lower()])
 
     def _get_user_info(self, user_data):
+        """ 
+        유저에 대한 정보 가저오는 메서드, 유저 정보기반 딕셔너리 재구성 해주는 메서드 입니다.
+        """ 
         if self.tool == "maya":
             current_file = self.maya.get_file_name()
         elif self.tool == "nuke":
@@ -130,7 +140,9 @@ class Review(QWidget):
         return user_data
     
     def _get_version_from_current_file(self, file):
-        """ 현재 작업하는 파일 버전 가져오는 메서드 """
+        """ 
+        현재 작업하는 파일 버전 가져오는 메서드입니다.
+        """
 
         p = re.compile("[v]\d{3}")      
         p_version = p.search(file)  
@@ -139,7 +151,9 @@ class Review(QWidget):
             return version   
     
     def _connect_department(self):
-        """나중에는 ui에서 가져오는 거롤"""
+        """
+        user_data 에서 나온 task부서와 일치하는 이름의 클래스를 호출하는 메서드입니다. 
+        """
         reversed_task_dict = dict(map(reversed, self.task_dict.items()))
         task = self.ui.comboBox_task.currentText()
         self.department = reversed_task_dict[task].upper()
@@ -170,7 +184,7 @@ class Review(QWidget):
         return file_path
 
     def _get_path_using_template(self, work, ext=""):
-        """ yaml 템플릿을 이용해서 저장할 경로, 파일 이름 만드는 메서드 """
+        """ yaml 템플릿을 이용해서 저장할 경로, 파일 이름 만드는 메서드입니다. """
 
         yaml_path, _ = self._import_yaml_template()
         file_info_dict = self.user_data
@@ -232,8 +246,10 @@ class Review(QWidget):
     ############################# Flow: publish/versions에 올리기 ########################################
     
     def _show_thumbnail(self, button, jpg_path=None):
-        """썸네일 보여주는 메서드"""
-
+        """
+        라디오 버튼 선택에 따라 (playblast, render, capture) 썸네일을 보여주는 메서드입니다.
+        선택에 맞게 image path 를 재구성해주고, 구성된 path 에 썸네일 파일이 존재하면 보여주고 없는 경우 No image found 글을 보여줍니다.
+        """
         image_path = ""
         if button.text() == "PlayBlast":
             image_path = self._get_path_using_template("playblast")
@@ -242,6 +258,9 @@ class Review(QWidget):
         elif button.text() == "Render":
             ext = self.dep_class.set_render_ext()
             image_path = self._get_path_using_template("render", ext) # 부서별로 펍할 external 입력받기
+
+        print ("------------------------------------------------")
+        print (f"/// _show_thumbnail - image_path : {image_path}")
 
         path = self._check_validate(image_path)    
         files = glob.glob(f"{path}/*")
@@ -307,8 +326,11 @@ class Review(QWidget):
 
 
     def _get_frame_number(self, files):
-        """ 플레이블라스트, 렌더, 캡처를 통해 받은 파일 경로로 프레임 넘버 가져오기 """
-        
+        """ 
+        플레이블라스트, 렌더, 캡처를 통해 받은 파일 경로로 프레임 넘버 가져오는 메서드입니다.
+        프레임 넘버는 이미지 경로가 있는 폴더에서 .숫자4개.로 이루어져있는 파일들을 추적하여
+        minimum, maximum 값을 가져오는 방법을 이용합니다.
+        """
         if len(files) == 1:
             return 1, None
         
@@ -328,12 +350,19 @@ class Review(QWidget):
         p_start = min(files)
         p_last = max(files)
         
-        print (p_start, p_last)      
-        return p_start, p_last
+        if p_start, p_last :
+            print (f"프레임 넘버가 존재합니다.")         
+            p_start = min(files)
+            p_last = max(files)
+            return p_start, p_last
         
     def _make_thumbnail(self): 
-        """ 썸네일 새로 만들어주는 메서드 """
-        # Lighting, Comp 팀은 지원해주지 않기
+        """ 
+        썸네일 새로 만들어주는 메서드입니다.
+        새로운 썸네일을 만들기 위해 +New 라는 pushbutton 을 눌렀을 경우 발생하는 이벤트입니다.
+        yaml에서 이미지 경로를 만들어 해당 위치에 썸네일을 만들고, 
+        show_thumbnail 메서드를 호출하여 실시간으로 ui에 보여주는 메서드입니다.
+        """
 
         if self.ui.radioButton_playblast.isChecked():
             image_path = self._get_path_using_template("playblast")
@@ -345,7 +374,6 @@ class Review(QWidget):
         elif self.ui.radioButton_capture.isChecked():
             image_path = self._get_path_using_template("capture")
             self._check_validate(image_path)
-            print (image_path, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz")
             self.cap = SubWindow_Open(image_path) ### qq
             self.cap.show()
             self._show_thumbnail(self.ui.radioButton_capture)
@@ -358,8 +386,9 @@ class Review(QWidget):
             self._show_thumbnail(self.ui.radioButton_render, thumbnail_path)
 
     def _apply_ffmpeg(self, input_path, project_name):
-        """ (3) ffmpeg 만드는 메서드"""
-        """ 예린님 코드로 연결시키기"""
+        """ 
+        ffmpeg 이용하여 slate를 넣는 메서드입니다.
+        """
         
         print ("_____", os.path.split(input_path))
         print ("*****", os.path.splitext(input_path)[1])
@@ -369,7 +398,7 @@ class Review(QWidget):
             self.preview_info['output_path'] = output_path
             self.preview_info['output_path_jpg'] = output_path
             
-        else: # jpg/exr sequence 일때 (mov 일때는 그냥 배제합시다)
+        else: # jpg/exr sequence 일때 
             print ("이미지 시퀀스 ffmpeg 파일 경로 작성합니다")
             output_path = self._get_path_using_template("ffmpeg")
             self.preview_info['output_path'] = output_path
@@ -390,10 +419,13 @@ class Review(QWidget):
 
             self._export_slate_image(output_path)
 
-        print(f"%%%%%%%%%%%%%%%%%%%%%{self.preview_info}")
         
     def _export_slate_image(self,  input_mov):
-        """ffmpeg 이미지로 한장 가져오기"""
+        """
+        ffmpeg 이미지로 한장 가져오는 메서드 입니다.
+        published_file types에 썸네일을 올리기 위해서는 jpg, png 이미지 타입을 올려야 합니다.
+        mov로 뽑은 내용을 jpg, img로 export 해줍니다.
+        """
         mov_dir = os.path.dirname(input_mov)
         mov_name = os.path.basename(input_mov)
         mov_name, _ = os.path.splitext(mov_name)
@@ -413,6 +445,9 @@ class Review(QWidget):
         self.close()
 
     def _update_version_data(self):
+        """
+        샷그리드 Versions에 thumbnail, description 내용을 업데이트 해주는 메서드입니다.
+        """
 
         # version
         version = self.user_data['version']
@@ -443,13 +478,12 @@ class Review(QWidget):
         return version
     
     def _update_playlist(self, version):
-        pass
-        # last_version = self.sg.sg.find_one("Version", 
-        #                                    [['code', 'is_not', f"v{self.user_data['version']}"], ['sg_task', 'is', version['sg_task']], ['entity', 'is', version['entity']]],
-        #                                    ['id', 'published_files', 'code',], 
-        #                                    order=[{'field_name': 'created_at', 'direction': 'desc'}])
-        # print ("****", last_version)
-        # self.sg.add_new_version_to_playlist(last_version, version)
+        last_version = self.sg.sg.find_one("Version", 
+                                           [['code', 'is_not', f"v{self.user_data['version']}"], ['sg_task', 'is', version['sg_task']], ['entity', 'is', version['entity']]],
+                                           ['id', 'published_files', 'code',], 
+                                           order=[{'field_name': 'created_at', 'direction': 'desc'}])
+        print ("****", last_version)
+        self.sg.add_new_version_to_playlist(last_version, version)
 
 
 if __name__ == "__main__":
