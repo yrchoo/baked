@@ -1,8 +1,6 @@
 # baked
 Shotgrid Loader &amp; Publisher Team Project
 
-## Yerin
----
 
 ### Loader
 https://walnut-christmas-c19.notion.site/Loader-2c6ed07368d9449cbd681e51cac6ea8c?pvs=4
